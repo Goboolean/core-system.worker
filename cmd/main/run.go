@@ -9,5 +9,5 @@ import (
 
 
 func main() {
-	log.Fatal(compose.MockRun())
+	log.Print(compose.MockRun())
 }

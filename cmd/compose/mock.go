@@ -2,7 +2,7 @@ package compose
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -22,10 +22,9 @@ func MockRun() error {
 	go func() {
 		for {
 			deadline, _ := ctx.Deadline()
-			fmt.Printf("time left: %s", deadline.Sub(time.Now()).String())
+			log.Printf("time left: %s\n", deadline.Sub(time.Now()).String())
 			time.Sleep(1 * time.Second)
 		}
-
 	}()
 
 	select {
