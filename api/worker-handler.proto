@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "github.com/Goboolean/worker/api";
+
+service WorkerHandler {
+  rpc WaitForTask (WorkerStatus) returns (TaskStatus) {}
+}
+
+
+
+message WorkerStatus {
+  int64 worker_id = 1;
+}
+
+message TaskStatus {
+  string task_type = 1;
+  string model_name = 2;
+  string stock_id = 3;
+}
