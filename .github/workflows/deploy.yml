@@ -1,0 +1,44 @@
+name: deploy
+
+env:
+  HOST:     ${{ secrets.HOST }}
+  USERNAME: ${{ secrets.USERNAME }}
+  KEY:      ${{ secrets.SSH_KEY }}
+  PORT:     ${{ secrets.PORT }}
+  PATH:     ${{ secrets.PATH }}
+
+on:
+  workflow_run:
+    workflows: ["test"]
+    types:
+      - completed
+
+jobs:
+  on-success:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Send
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ env.USERNAME }}
+          key: ${{ env.KEY }}
+          port: ${{ env.PORT }}
+          source: "."
+          target: ${{ env.PATH }}
+
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ env.USERNAME }}
+          key: ${{ env._KEY }}
+          port: ${{ env.PORT }}
+          script: |
+            cd ${{ env.PATH }}
+            make build-app
+
