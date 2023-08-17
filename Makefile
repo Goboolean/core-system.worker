@@ -1,6 +1,8 @@
-build-app: echo "build-app"
+build-app:
+	ls -la
 
-test-app: exit 0
+test-app:
+	ls -la
 
 
 GRPC_PROTO_PATH = ./api/worker-handler.proto
