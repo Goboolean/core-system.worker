@@ -5,7 +5,7 @@ env:
   USERNAME: ${{ secrets.TEST_USERNAME }}
   KEY:      ${{ secrets.TEST_SSH_KEY }}
   PORT:     ${{ secrets.TEST_PORT }}
-  PATH:     ${{ secrets.TEST_PATH }}
+  DIR:      ${{ secrets.TEST_DIR }}
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
           key: ${{ env.KEY }}
           port: ${{ env.PORT }}
           source: "."
-          target: ${{ env.PATH }}
+          target: ${{ env.DIR }}
 
       - name: Test
         uses: appleboy/ssh-action@master
@@ -37,6 +37,6 @@ jobs:
           key: ${{ env.KEY }}
           port: ${{ env.PORT }}
           script: |
-            cd ${{ env.PATH }}
+            cd ${{ env.DIR }}
             make test-app
 

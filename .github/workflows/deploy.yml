@@ -5,7 +5,7 @@ env:
   USERNAME: ${{ secrets.USERNAME }}
   KEY:      ${{ secrets.SSH_KEY }}
   PORT:     ${{ secrets.PORT }}
-  PATH:     ${{ secrets.PATH }}
+  DIR:      ${{ secrets.DIR }}
 
 on:
   workflow_run:
@@ -36,9 +36,9 @@ jobs:
         with:
           host: ${{ env.HOST }}
           username: ${{ env.USERNAME }}
-          key: ${{ env._KEY }}
+          key: ${{ env.KEY }}
           port: ${{ env.PORT }}
           script: |
-            cd ${{ env.PATH }}
+            cd ${{ env.DIR }}
             make build-app
 
