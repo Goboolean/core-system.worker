@@ -1,4 +1,4 @@
-name: Test
+name: test
 
 env:
   HOST:     ${{ secrets.TEST_HOST }}
