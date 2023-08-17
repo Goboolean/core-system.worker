@@ -1,23 +1,13 @@
-name: Deploy
-
-env:
-  HOST:     ${{ secrets.HOST }}
-  USERNAME: ${{ secrets.USERNAME }}
-  KEY:      ${{ secrets.SSH_KEY }}
-  PORT:     ${{ secrets.PORT }}
-  DIR:      ${{ secrets.DIR }}
+name: Test and Deploy
 
 on:
-  workflow_run:
-    workflows: [test]
-    branches: [feature/cicd]
-    types:
-      - completed
-
+  push:
+    branches:
+      - feature/cicd
+      
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -25,20 +15,48 @@ jobs:
       - name: Send
         uses: appleboy/scp-action@master
         with:
-          host: ${{ env.HOST }}
-          username: ${{ env.USERNAME }}
-          key: ${{ env.KEY }}
-          port: ${{ env.PORT }}
+          host: ${{ secrets.TEST_HOST }}
+          username: ${{ secrets.TEST_USERNAME }}
+          key: ${{ secrets.TEST_KEY }}
+          port: ${{ secrets.TEST_PORT }}
           source: "."
-          target: ${{ env.DIR }}
+          target: ${{ secrets.TEST_DIR }}
+
+      - name: Test
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TEST_HOST }}
+          username: ${{ secrets.TEST_USERNAME }}
+          key: ${{ secrets.TEST_KEY }}
+          port: ${{ secrets.TEST_PORT }}
+          script: |
+            cd ${{ secrets.TEST_DIR }}
+            make test-app
+
+  deploy:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Send
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          source: "."
+          target: ${{ secrets.DIR }}
 
       - name: Deploy
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.HOST }}
-          username: ${{ env.USERNAME }}
-          key: ${{ env.KEY }}
-          port: ${{ env.PORT }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
           script: |
-            cd ${{ env.DIR }}
+            cd ${{ secrets.DIR }}
             make build-app
