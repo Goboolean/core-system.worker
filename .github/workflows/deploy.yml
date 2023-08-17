@@ -1,4 +1,4 @@
-name: deploy
+name: Deploy
 
 env:
   HOST:     ${{ secrets.HOST }}
@@ -10,11 +10,12 @@ env:
 on:
   workflow_run:
     workflows: [test]
+    branches: feature/cicd
     types:
       - completed
 
 jobs:
-  on-success:
+  Deploy:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
