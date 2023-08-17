@@ -1,0 +1,62 @@
+name: Deploy on Release Server
+
+on:
+  push:
+    branches:
+      - main
+      
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Send
+        uses: appleboy/scp-action@master
+        with:
+          host:     ${{ secrets.DEVELOP_HOST }}
+          username: ${{ secrets.DEVELOP_USERNAME }}
+          key:      ${{ secrets.DEVELOP_SSH_KEY }}
+          port:     ${{ secrets.DEVELOP_PORT }}
+          source:   "."
+          target:   ${{ secrets.DEVELOP_DIR }}
+
+      - name: Test
+        uses: appleboy/ssh-action@master
+        with:
+          host:     ${{ secrets.DEVELOP_HOST }}
+          username: ${{ secrets.DEVELOP_USERNAME }}
+          key:      ${{ secrets.DEVELOP_SSH_KEY }}
+          port:     ${{ secrets.DEVELOP_PORT }}
+          script: |
+            cd ${{ secrets.DEVELOP_DIR }}
+            make test-app
+
+  deploy:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Send
+        uses: appleboy/scp-action@master
+        with:
+          host:     ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key:      ${{ secrets.SSH_KEY }}
+          port:     ${{ secrets.PORT }}
+          source:   "."
+          target:   ${{ secrets.DIR }}
+
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host:     ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key:      ${{ secrets.SSH_KEY }}
+          port:     ${{ secrets.PORT }}
+          script: |
+            cd ${{ secrets.DIR }}
+            make build-app
