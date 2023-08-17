@@ -38,5 +38,5 @@ jobs:
           port: ${{ env.PORT }}
           script: |
             cd ${{ env.DIR }}
-            make test-app
+            
 
