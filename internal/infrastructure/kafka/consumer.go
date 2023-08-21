@@ -16,9 +16,14 @@ type Deserializer interface {
 }
 
 type ProtoDeserializer struct {}
-func (s *ProtoSerializer) Deserialize(topic string, payload []byte) (interface{}, error) {
+
+func (s *ProtoDeserializer) Deserialize(topic string, payload []byte) (interface{}, error) {
 	var v proto.Message
 	return v, proto.Unmarshal(payload, v)
+}
+
+func newDeserializer() Deserializer {
+	return &ProtoDeserializer{}
 }
 
 

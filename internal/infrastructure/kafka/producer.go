@@ -23,6 +23,10 @@ func (s *ProtoSerializer) Serialize(topic string, v interface{}) ([]byte, error)
 	return proto.Marshal(v.(proto.Message))
 }
 
+func newSerializer() Serializer {
+	return &ProtoSerializer{}
+}
+
 
 
 type Producer struct {
