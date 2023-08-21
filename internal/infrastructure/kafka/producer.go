@@ -45,13 +45,13 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		producer: p,
 	}
 
-	registry_url, exists, err := c.GetStringKeyOptional("REGISTRY_URL")
+	registry_host, exists, err := c.GetStringKeyOptional("REGISTRY_HOST")
 	if err != nil {
 		return nil, err
 	}
 
 	if exists {
-		r, err := schemaregistry.NewClient(schemaregistry.NewConfig(registry_url))
+		r, err := schemaregistry.NewClient(schemaregistry.NewConfig(registry_host))
 		if err != nil {
 			return nil, err
 		}
