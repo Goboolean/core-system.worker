@@ -1,6 +1,9 @@
 package kafka
 
 import (
+	"context"
+	"time"
+
 	"github.com/Goboolean/common/pkg/resolver"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry"
@@ -77,4 +80,42 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 func (p *Producer) Register(topic string, schema proto.Message) (int64, error) {
 	_, err := p.serial.Serialize(topic, schema)
 	return 0, err
+}
+
+
+func (p *Producer) Produce(topic string, msg proto.Message) error {
+	payload, err := p.serial.Serialize(topic, msg)
+	if err != nil {
+		return err
+	}
+
+	if err = p.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic},
+		Value:          payload,
+	}, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+func (p *Producer) Flush(ctx context.Context) (int, error) {
+
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return 0, ErrDeadlineSettingRequired
+	}
+
+	left := p.producer.Flush(int(time.Until(deadline).Milliseconds()))
+	if left != 0 {
+		return left, ErrFailedToFlush
+	}
+
+	return 0, nil
+}
+
+
+func (p *Producer) Close() {
+	p.producer.Close()
 }
