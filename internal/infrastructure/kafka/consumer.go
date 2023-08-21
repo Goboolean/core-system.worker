@@ -1,6 +1,9 @@
 package kafka
 
 import (
+	"context"
+	"time"
+
 	"github.com/Goboolean/common/pkg/resolver"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry"
@@ -82,4 +85,23 @@ func (c *Consumer) Subscribe(topic string, schema proto.Message) error {
 	}
 
 	return nil
+}
+
+
+func (c *Consumer) Close() {
+	c.consumer.Close()
+}
+
+
+func (c *Consumer) Ping(ctx context.Context) error {
+	// It requires ctx to be deadline set, otherwise it will return error
+	// It will return error if there is no response within deadline
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return ErrDeadlineSettingRequired
+	}
+
+	remaining := time.Until(deadline)
+	_, err := c.consumer.GetMetadata(nil, true, int(remaining.Milliseconds()))
+	return err
 }

@@ -123,3 +123,17 @@ func (p *Producer) Flush(ctx context.Context) (int, error) {
 func (p *Producer) Close() {
 	p.producer.Close()
 }
+
+
+func (p *Producer) Ping(ctx context.Context) error {
+	// It requires ctx to be deadline set, otherwise it will return error
+	// It will return error if there is no response within deadline
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return ErrDeadlineSettingRequired
+	}
+
+	remaining := time.Until(deadline)
+	_, err := p.producer.GetMetadata(nil, true, int(remaining.Milliseconds()))
+	return err
+}
