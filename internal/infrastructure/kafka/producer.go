@@ -6,15 +6,26 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry/serde/protobuf"
-	log "github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 )
 
+
+
+type Serializer interface {
+	Serialize(topic string, v interface{}) ([]byte, error)
+}
+
+type ProtoSerializer struct {}
+func (s *ProtoSerializer) Serialize(topic string, v interface{}) ([]byte, error) {
+	return proto.Marshal(v.(proto.Message))
+}
 
 
 
 type Producer struct {
 	producer *kafka.Producer
-	serial   serde.Serializer
+	serial   Serializer
+	registry schemaregistry.Client
 }
 
 func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
@@ -30,34 +41,40 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		"go.delivery.reports": true,
 	})
 
+	instance := &Producer{
+		producer: p,
+	}
+
 	registry_url, exists, err := c.GetStringKeyOptional("REGISTRY_URL")
 	if err != nil {
 		return nil, err
 	}
 
-	var (
-		r schemaregistry.Client
-		s serde.Serializer
-	)
-
 	if exists {
-		r, err = schemaregistry.NewClient(schemaregistry.NewConfig(registry_url))
+		r, err := schemaregistry.NewClient(schemaregistry.NewConfig(registry_url))
 		if err != nil {
 			return nil, err
 		}
 
-		s, err = protobuf.NewSerializer(r, serde.ValueSerde, protobuf.NewSerializerConfig())
+		s, err := protobuf.NewSerializer(r, serde.ValueSerde, protobuf.NewSerializerConfig())
 		if err != nil {
 			return nil, err
 		}
-	}
+		instance.serial = s
 
-	instance := &Producer{
-		producer: p,
-		serial:   s,
+	} else {
+		instance.serial = &ProtoSerializer{}
 	}
 
 	return instance, nil
 }
 
 
+// The schema argument can be provided by protobuf generated struct,
+// initialized with default values.
+// This function returns the ID of the schema in the registry.
+// TODO: implement a returning ID logic.
+func (p *Producer) Register(topic string, schema proto.Message) (int64, error) {
+	_, err := p.serial.Serialize(topic, schema)
+	return 0, err
+}
