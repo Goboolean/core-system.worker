@@ -70,7 +70,7 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		instance.serial = s
 
 	} else {
-		instance.serial = &ProtoSerializer{}
+		instance.serial = newSerializer()
 	}
 
 	return instance, nil

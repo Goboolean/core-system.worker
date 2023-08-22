@@ -10,19 +10,19 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry/serde/protobuf"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 
 
 type Deserializer interface {
-	Deserialize(topic string, payload []byte) (interface{}, error)
+	DeserializeInto(topic string, payload []byte, msg interface{}) error
 }
 
 type ProtoDeserializer struct {}
 
-func (s *ProtoDeserializer) Deserialize(topic string, payload []byte) (interface{}, error) {
-	var v proto.Message
-	return v, proto.Unmarshal(payload, v)
+func (s *ProtoDeserializer) DeserializeInto(topic string, payload []byte, msg interface{}) error {
+	return proto.Unmarshal(payload, msg.(proto.Message))
 }
 
 func newDeserializer() Deserializer {
@@ -32,7 +32,7 @@ func newDeserializer() Deserializer {
 
 type Consumer struct {
 	consumer *kafka.Consumer
-	deserial *protobuf.Deserializer
+	deserial Deserializer
 }
 
 func NewConsumer(c *resolver.ConfigMap) (*Consumer, error) {
@@ -64,26 +64,35 @@ func NewConsumer(c *resolver.ConfigMap) (*Consumer, error) {
 	if exists {
 		sr, err := schemaregistry.NewClient(schemaregistry.NewConfig(registry_url))
 		if err != nil {
-		   return nil, err
+			return nil, err
 		}
 
 		d, err := protobuf.NewDeserializer(sr, serde.ValueSerde, protobuf.NewDeserializerConfig())
 		if err != nil {
-		   return nil, err
+			return nil, err
 		}
 
 		instance.deserial = d
+	} else {
+		instance.deserial = newDeserializer()
 	}
 
 	return instance, nil
 }
 
 
-func (c *Consumer) Subscribe(topic string, schema proto.Message) error {
-	if err := c.deserial.ProtoRegistry.RegisterMessage(schema.ProtoReflect().Type()); err != nil {
-		return err
+func (c *Consumer) Subscribe(topic string, schema protoreflect.MessageType) error {
+
+	_, ok := c.deserial.(*protobuf.Deserializer)
+	if ok {
+		if err := c.deserial.(*protobuf.Deserializer).ProtoRegistry.RegisterMessage(schema); err != nil {
+			return err
+		}
 	}
 
+	if err := c.consumer.SubscribeTopics([]string{topic}, nil); err != nil {
+		return err
+	}
 	return nil
 }
 
