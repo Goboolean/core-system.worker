@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/Goboolean/common/pkg/resolver"
@@ -9,6 +10,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry/serde/protobuf"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -33,6 +35,10 @@ type Producer struct {
 	producer *kafka.Producer
 	serial   Serializer
 	registry schemaregistry.Client
+
+	wg     sync.WaitGroup
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // example:
@@ -53,8 +59,13 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		"go.delivery.reports": true,
 	})
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	instance := &Producer{
 		producer: p,
+		wg: sync.WaitGroup{},
+		ctx: ctx,
+		cancel: cancel,
 	}
 
 	registry_host, exists, err := c.GetStringKeyOptional("REGISTRY_HOST")
@@ -78,6 +89,7 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		instance.serial = newSerializer()
 	}
 
+	instance.traceEvent()
 	return instance, nil
 }
 
@@ -125,8 +137,38 @@ func (p *Producer) Flush(ctx context.Context) (int, error) {
 }
 
 
+func (p *Producer) traceEvent() {
+
+	go func() {
+		p.wg.Add(1)
+		defer p.wg.Done()
+
+		for e := range p.producer.Events() {
+			switch ev := e.(type) {
+			case *kafka.Message:
+				if ev.TopicPartition.Error != nil {
+					log.WithFields(log.Fields{
+						"topic": *ev.TopicPartition.Topic,
+						"data":  ev.Value,
+						"info":  ev.TopicPartition.Error,
+					}).Error("Producer failed to deliver event to kafka")
+				} else {
+					log.WithFields(log.Fields{
+						"topic": *ev.TopicPartition.Topic,
+						"data":  ev.Value,
+						"info":  ev.TopicPartition.String(),
+					}).Trace("Producer delivered event to kafka")
+				}
+			}
+		}
+	}()
+}
+
+
 func (p *Producer) Close() {
 	p.producer.Close()
+	p.cancel()
+	p.wg.Wait()
 }
 
 
