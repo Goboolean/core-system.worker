@@ -32,16 +32,16 @@ func newDeserializer() Deserializer {
 }
 
 
-type SubscribeListener interface {
-	OnReceiveMessage(ctx context.Context, stock proto.Message) error
+type SubscribeListener[T proto.Message] interface {
+	OnReceiveMessage(ctx context.Context, msg T) error
 }
 
 
-type Consumer struct {
+type Consumer[T proto.Message] struct {
 	consumer *kafka.Consumer
 	deserial Deserializer
 
-	listener SubscribeListener
+	listener SubscribeListener[T]
 	topic string
 
 	wg     sync.WaitGroup
@@ -55,7 +55,7 @@ type Consumer struct {
 //   "REGISTRY_HOST":  os.Getenv("KAFKA_REGISTRY_HOST"), // optional
 //   "GROUP_ID":       "GROUP_ID",
 // }, subscribeListenerImpl)
-func NewConsumer(c *resolver.ConfigMap, l SubscribeListener) (*Consumer, error) {
+func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T]) (*Consumer[T], error) {
 
 	bootstrap_host, err := c.GetStringKey("BOOTSTRAP_HOST")
 	if err != nil {
@@ -74,7 +74,7 @@ func NewConsumer(c *resolver.ConfigMap, l SubscribeListener) (*Consumer, error) 
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	instance := &Consumer{
+	instance := &Consumer[T]{
 		consumer: conn,
 		listener: l,
 		wg: sync.WaitGroup{},
@@ -107,7 +107,7 @@ func NewConsumer(c *resolver.ConfigMap, l SubscribeListener) (*Consumer, error) 
 }
 
 
-func (c *Consumer) Subscribe(topic string, schema protoreflect.MessageType) error {
+func (c *Consumer[T]) Subscribe(topic string, schema protoreflect.MessageType) error {
 
 	_, ok := c.deserial.(*protobuf.Deserializer)
 	if ok {
@@ -124,7 +124,7 @@ func (c *Consumer) Subscribe(topic string, schema protoreflect.MessageType) erro
 }
 
 
-func (c *Consumer) readMessage() {
+func (c *Consumer[T]) readMessage() {
 	go func() {
 		c.wg.Add(1)
 		defer c.wg.Done()
@@ -139,7 +139,7 @@ func (c *Consumer) readMessage() {
 				continue
 			}
 
-			var event proto.Message
+			var event T
 			if err := c.deserial.DeserializeInto(c.topic, msg.Value, event); err != nil {
 				log.WithFields(log.Fields{
 					"topic": *msg.TopicPartition.Topic,
@@ -163,14 +163,14 @@ func (c *Consumer) readMessage() {
 }
 
 
-func (c *Consumer) Close() {
+func (c *Consumer[T]) Close() {
 	c.consumer.Close()
 	c.cancel()
 	c.wg.Wait()
 }
 
 
-func (c *Consumer) Ping(ctx context.Context) error {
+func (c *Consumer[T]) Ping(ctx context.Context) error {
 	// It requires ctx to be deadline set, otherwise it will return error
 	// It will return error if there is no response within deadline
 	deadline, ok := ctx.Deadline()

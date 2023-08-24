@@ -7,32 +7,32 @@ import (
 	"time"
 
 	"github.com/Goboolean/common/pkg/resolver"
+	"github.com/Goboolean/core-system.worker/api/kafka/model.latest"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/kafka"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/proto"
 )
 
 
 type SubscribeListenerImpl struct {
-	channel chan proto.Message
+	channel chan *model_latest.Event
 }
 
-func newSubscribeListenerImpl(ch chan proto.Message) *SubscribeListenerImpl {
+func newSubscribeListenerImpl(ch chan *model_latest.Event) *SubscribeListenerImpl {
 	return &SubscribeListenerImpl{
 		channel: ch,
 	}
 }
 
-func (s *SubscribeListenerImpl) OnReceiveMessage(ctx context.Context, msg proto.Message) error {
+func (s *SubscribeListenerImpl) OnReceiveMessage(ctx context.Context, msg *model_latest.Event) error {
 	s.channel <- msg
 	return nil
 }
 
 
 
-func SetupConsumer(ch chan proto.Message) *kafka.Consumer {
+func SetupConsumer(ch chan *model_latest.Event) *kafka.Consumer[*model_latest.Event] {
 
-	c, err := kafka.NewConsumer(&resolver.ConfigMap{
+	c, err := kafka.NewConsumer[*model_latest.Event](&resolver.ConfigMap{
 		"BOOTSTRAP_HOST": os.Getenv("KAFKA_BOOTSTRAP_HOST"),
 		"GROUP_ID": "TEST_GROUP",
 	}, newSubscribeListenerImpl(ch))
@@ -42,14 +42,14 @@ func SetupConsumer(ch chan proto.Message) *kafka.Consumer {
 	return c
 }
 
-func TeardownConsumer(c *kafka.Consumer) {
+func TeardownConsumer(c *kafka.Consumer[*model_latest.Event]) {
 	c.Close()
 }
 
 
 func Test_Consumer(t *testing.T) {
 
-	c := SetupConsumer(make(chan proto.Message, 10))
+	c := SetupConsumer(make(chan *model_latest.Event, 10))
 	defer TeardownConsumer(c)
 
 	t.Run("Ping", func(t *testing.T) {
