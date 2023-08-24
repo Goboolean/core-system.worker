@@ -35,6 +35,11 @@ type Producer struct {
 	registry schemaregistry.Client
 }
 
+// example:
+// p, err := NewProducer(&resolver.ConfigMap{
+//   "BOOTSTRAP_HOST": os.Getenv("KAFKA_BOOTSTRAP_HOST"),
+//   "REGISTRY_HOST":  os.Getenv("KAFKA_REGISTRY_HOST"), // optional
+// })
 func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 
 	bootstrap_host, err := c.GetStringKey("BOOTSTRAP_HOST")

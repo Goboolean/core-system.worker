@@ -30,12 +30,25 @@ func newDeserializer() Deserializer {
 }
 
 
+type SubscribeListener interface {
+	OnReceiveMessage(ctx context.Context, stock proto.Message) error
+}
+
+
 type Consumer struct {
 	consumer *kafka.Consumer
 	deserial Deserializer
+
+	listener SubscribeListener
 }
 
-func NewConsumer(c *resolver.ConfigMap) (*Consumer, error) {
+// example:
+// p, err := NewConsumer(&resolver.ConfigMap{
+//   "BOOTSTRAP_HOST": os.Getenv("KAFKA_BOOTSTRAP_HOST"),
+//   "REGISTRY_HOST":  os.Getenv("KAFKA_REGISTRY_HOST"), // optional
+//   "GROUP_ID":       "GROUP_ID",
+// }, subscribeListenerImpl)
+func NewConsumer(c *resolver.ConfigMap, l SubscribeListener) (*Consumer, error) {
 
 	bootstrap_host, err := c.GetStringKey("BOOTSTRAP_HOST")
 	if err != nil {
@@ -54,6 +67,7 @@ func NewConsumer(c *resolver.ConfigMap) (*Consumer, error) {
 
 	instance := &Consumer{
 		consumer: con,
+		listener: l,
 	}
 
 	registry_url, exists, err := c.GetStringKeyOptional("REGISTRY_URL")
