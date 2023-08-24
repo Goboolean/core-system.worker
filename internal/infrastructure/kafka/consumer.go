@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/Goboolean/common/pkg/resolver"
@@ -9,6 +10,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/schemaregistry/serde/protobuf"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -40,6 +42,11 @@ type Consumer struct {
 	deserial Deserializer
 
 	listener SubscribeListener
+	topic string
+
+	wg     sync.WaitGroup
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // example:
@@ -60,14 +67,19 @@ func NewConsumer(c *resolver.ConfigMap, l SubscribeListener) (*Consumer, error) 
 		return nil, err
 	}
 
-	con, err := kafka.NewConsumer(&kafka.ConfigMap{
+	conn, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":   bootstrap_host,
 		"group.id":            group_id,
 	})
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	instance := &Consumer{
-		consumer: con,
+		consumer: conn,
 		listener: l,
+		wg: sync.WaitGroup{},
+		ctx: ctx,
+		cancel: cancel,
 	}
 
 	registry_url, exists, err := c.GetStringKeyOptional("REGISTRY_URL")
@@ -107,12 +119,54 @@ func (c *Consumer) Subscribe(topic string, schema protoreflect.MessageType) erro
 	if err := c.consumer.SubscribeTopics([]string{topic}, nil); err != nil {
 		return err
 	}
+	c.topic = topic
 	return nil
+}
+
+
+func (c *Consumer) readMessage() {
+	go func() {
+		c.wg.Add(1)
+		defer c.wg.Done()
+
+		for {
+			if err := c.ctx.Err(); err != nil {
+				return
+			}
+
+			msg, err := c.consumer.ReadMessage(time.Second * 1)
+			if err != nil {
+				continue
+			}
+
+			var event proto.Message
+			if err := c.deserial.DeserializeInto(c.topic, msg.Value, event); err != nil {
+				log.WithFields(log.Fields{
+					"topic": *msg.TopicPartition.Topic,
+					"data":  msg.Value,
+					"error": err,
+				}).Error("Failed to deserialize data")
+				continue
+			}
+
+			ctx, cancel := context.WithTimeout(c.ctx, time.Second*5)
+			if err := c.listener.OnReceiveMessage(ctx, event); err != nil {
+				log.WithFields(log.Fields{
+					"topic": *msg.TopicPartition.Topic,
+					"data":  msg.Value,
+					"error": err,
+				}).Error("Failed to process data")
+			}
+			cancel()
+		}
+	}()
 }
 
 
 func (c *Consumer) Close() {
 	c.consumer.Close()
+	c.cancel()
+	c.wg.Wait()
 }
 
 
