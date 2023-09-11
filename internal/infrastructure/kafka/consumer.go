@@ -185,7 +185,6 @@ func (c *Consumer[T]) readMessage(ctx context.Context, wg *sync.WaitGroup) {
 func (c *Consumer[T]) consumeMessage(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	defer wg.Done()
-	defer log.Trace("Consumer event tracing is stopped")
 
 	for {
 		select {
