@@ -106,3 +106,50 @@ func Test_Consumer(t *testing.T) {
 		}
 	})
 }
+
+
+func Test_ConsumerWithRegistry(t *testing.T) {
+	t.Skip("Skip this test because of the registry is not ready.")
+
+	const topic = "default-topic"
+	var event = &model_latest.Event{}
+
+	var channel = make(chan *model_latest.Event, 10)
+
+	c := SetupConsumer(channel)
+	defer TeardownConsumer(c)
+	p := SetupProducer()
+	defer TeardownProducer(p)
+
+	t.Run("Ping", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+	
+		err := c.Ping(ctx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Subscribe", func(t *testing.T) {
+		err := c.Subscribe(topic, event.ProtoReflect().Type())
+		assert.NoError(t, err)
+	})
+
+	t.Run("ConsumeMessage", func(t *testing.T) {
+		_, err := p.Register(topic, event)
+		assert.NoError(t, err)
+
+		err = p.Produce(topic, event)
+		assert.NoError(t, err)
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second * 5)
+		defer cancel()
+
+		select {
+		case <-ctx.Done():
+			assert.Fail(t, "timeout")
+			break
+		case <-channel:
+			break
+		}
+	})
+}
