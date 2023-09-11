@@ -65,6 +65,8 @@ type Consumer[T proto.Message] struct {
 //   "BOOTSTRAP_HOST": os.Getenv("KAFKA_BOOTSTRAP_HOST"),
 //   "REGISTRY_HOST":  os.Getenv("KAFKA_REGISTRY_HOST"), // optional
 //   "GROUP_ID":       "GROUP_ID",
+//   "PROCESSOR_COUNT": os.Getenv("KAFKA_PROCESSOR_COUNT"),
+//   "TOPIC":          "TOPIC",
 // }, subscribeListenerImpl)
 func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T]) (*Consumer[T], error) {
 
@@ -130,6 +132,9 @@ func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T])
 
 
 func (c *Consumer[T]) Subscribe(topic string, schema protoreflect.MessageType) error {
+	if c.topic == "" {
+		return ErrTopicAlreadySubscribed
+	}
 
 	_, ok := c.deserial.(*protobuf.Deserializer)
 	if ok {
