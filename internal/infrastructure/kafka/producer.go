@@ -25,7 +25,7 @@ func (s *ProtoSerializer) Serialize(topic string, v interface{}) ([]byte, error)
 	return proto.Marshal(v.(proto.Message))
 }
 
-func newSerializer() Serializer {
+func defaultSerializer() Serializer {
 	return &ProtoSerializer{}
 }
 
@@ -86,10 +86,10 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		instance.serial = s
 
 	} else {
-		instance.serial = newSerializer()
+		instance.serial = defaultSerializer()
 	}
 
-	instance.traceEvent()
+	instance.traceEvent(ctx, &instance.wg)
 	return instance, nil
 }
 
@@ -137,11 +137,11 @@ func (p *Producer) Flush(ctx context.Context) (int, error) {
 }
 
 
-func (p *Producer) traceEvent() {
+func (p *Producer) traceEvent(ctx context.Context, wg *sync.WaitGroup) {
 
 	go func() {
-		p.wg.Add(1)
-		defer p.wg.Done()
+		wg.Add(1)
+		defer wg.Done()
 
 		for e := range p.producer.Events() {
 			switch ev := e.(type) {

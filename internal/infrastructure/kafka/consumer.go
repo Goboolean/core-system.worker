@@ -27,7 +27,7 @@ func (s *ProtoDeserializer) DeserializeInto(topic string, payload []byte, msg in
 	return proto.Unmarshal(payload, msg.(proto.Message))
 }
 
-func newDeserializer() Deserializer {
+func defaultDeserializer() Deserializer {
 	return &ProtoDeserializer{}
 }
 
@@ -106,7 +106,7 @@ func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T])
 
 		instance.deserial = d
 	} else {
-		instance.deserial = newDeserializer()
+		instance.deserial = defaultDeserializer()
 	}
 
 	go instance.readMessage(ctx, &instance.wg)
