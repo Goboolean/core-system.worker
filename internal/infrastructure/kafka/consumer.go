@@ -24,7 +24,17 @@ type Deserializer interface {
 type ProtoDeserializer struct {}
 
 func (s *ProtoDeserializer) DeserializeInto(topic string, payload []byte, msg interface{}) error {
-	return proto.Unmarshal(payload, msg.(proto.Message))
+	var err error
+	defer func() {
+		if r := recover(); r != nil {
+			err = ErrReceivedMsgIsNotProtoMessage
+		}
+	}()
+
+	if err := proto.Unmarshal(payload, msg.(proto.Message)); err != nil {
+		return err
+	}
+	return err
 }
 
 func defaultDeserializer() Deserializer {
@@ -81,6 +91,7 @@ func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T])
 	conn, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":   bootstrap_host,
 		"group.id":            group_id,
+		"auto.offset.reset": "earliest",
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -91,6 +102,7 @@ func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T])
 		wg: sync.WaitGroup{},
 		ctx: ctx,
 		cancel: cancel,
+		channel: make(chan T, 100),
 	}
 
 	if exists {
@@ -126,7 +138,7 @@ func (c *Consumer[T]) Subscribe(topic string, schema protoreflect.MessageType) e
 		}
 	}
 
-	if err := c.consumer.SubscribeTopics([]string{topic}, nil); err != nil {
+	if err := c.consumer.Subscribe(topic, nil); err != nil {
 		return err
 	}
 	c.topic = topic
@@ -159,6 +171,11 @@ func (c *Consumer[T]) readMessage(ctx context.Context, wg *sync.WaitGroup) {
 				continue
 			}
 
+			log.WithFields(log.Fields{
+				"topic": *msg.TopicPartition.Topic,
+				"data":  msg.Value,
+			}).Trace("Consumer received message")
+
 			c.channel <- event
 		}
 	}()
@@ -168,6 +185,7 @@ func (c *Consumer[T]) readMessage(ctx context.Context, wg *sync.WaitGroup) {
 func (c *Consumer[T]) consumeMessage(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	defer wg.Done()
+	defer log.Trace("Consumer event tracing is stopped")
 
 	for {
 		select {
@@ -188,8 +206,9 @@ func (c *Consumer[T]) consumeMessage(ctx context.Context, wg *sync.WaitGroup) {
 
 
 func (c *Consumer[T]) Close() {
-	c.consumer.Close()
 	c.cancel()
+	time.Sleep(time.Second * 1)
+	c.consumer.Close()
 	c.wg.Wait()
 }
 
