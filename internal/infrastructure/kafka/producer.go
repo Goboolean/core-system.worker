@@ -77,7 +77,7 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		r, err := schemaregistry.NewClient(schemaregistry.NewConfig(registry_host))
 		if err != nil {
 			return nil, err
-		}
+		}		
 
 		s, err := protobuf.NewSerializer(r, serde.ValueSerde, protobuf.NewSerializerConfig())
 		if err != nil {
@@ -182,5 +182,16 @@ func (p *Producer) Ping(ctx context.Context) error {
 
 	remaining := time.Until(deadline)
 	_, err := p.producer.GetMetadata(nil, true, int(remaining.Milliseconds()))
-	return err
+	if err != nil {
+		return err
+	}
+
+	if p.registry != nil {
+		_, err := p.registry.GetAllVersions("schema")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
