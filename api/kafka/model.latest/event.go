@@ -5,6 +5,4 @@ import (
 )
 
 
-type Event struct {
-	model_v1.Event
-}
+type Event = model_v1.Event
