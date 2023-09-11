@@ -6,3 +6,5 @@ import (
 
 
 type Event = model_v1.Event
+
+type EventMinimal = model_v1.EventMinimal
