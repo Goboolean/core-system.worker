@@ -43,6 +43,7 @@ type Consumer[T proto.Message] struct {
 
 	listener SubscribeListener[T]
 	topic string
+	channel chan T
 
 	wg     sync.WaitGroup
 	ctx    context.Context
@@ -149,17 +150,31 @@ func (c *Consumer[T]) readMessage() {
 				continue
 			}
 
+			c.channel <- event
+		}
+	}()
+}
+
+
+func (c *Consumer[T]) consumeMessage(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case event := <-c.channel:
 			ctx, cancel := context.WithTimeout(c.ctx, time.Second*5)
 			if err := c.listener.OnReceiveMessage(ctx, event); err != nil {
 				log.WithFields(log.Fields{
-					"topic": *msg.TopicPartition.Topic,
-					"data":  msg.Value,
+					"event":  event,
 					"error": err,
 				}).Error("Failed to process data")
 			}
 			cancel()
 		}
-	}()
+	}
 }
 
 
