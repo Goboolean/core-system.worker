@@ -38,6 +38,8 @@ func SetupProducerWithRegistry() *kafka.Producer {
 }
 
 func TeardownProducer(p *kafka.Producer) {
+	mutex.Lock()
+	defer mutex.Unlock()
 	p.Close()
 }
 
