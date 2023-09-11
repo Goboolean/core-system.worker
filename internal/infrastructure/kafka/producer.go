@@ -53,6 +53,11 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		return nil, err
 	}
 
+	registry_host, exists, err := c.GetStringKeyOptional("REGISTRY_HOST")
+	if err != nil {
+		return nil, err
+	}
+
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers":   bootstrap_host,
 		"acks":                -1,
@@ -66,11 +71,6 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		wg: sync.WaitGroup{},
 		ctx: ctx,
 		cancel: cancel,
-	}
-
-	registry_host, exists, err := c.GetStringKeyOptional("REGISTRY_HOST")
-	if err != nil {
-		return nil, err
 	}
 
 	if exists {

@@ -51,7 +51,7 @@ type Consumer[T proto.Message] struct {
 }
 
 // example:
-// p, err := NewConsumer(&resolver.ConfigMap{
+// p, err := NewConsumer[*model.Event](&resolver.ConfigMap{
 //   "BOOTSTRAP_HOST": os.Getenv("KAFKA_BOOTSTRAP_HOST"),
 //   "REGISTRY_HOST":  os.Getenv("KAFKA_REGISTRY_HOST"), // optional
 //   "GROUP_ID":       "GROUP_ID",
@@ -64,6 +64,16 @@ func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T])
 	}
 
 	group_id, err := c.GetStringKey("GROUP_ID")
+	if err != nil {
+		return nil, err
+	}
+
+	registry_url, exists, err := c.GetStringKeyOptional("REGISTRY_URL")
+	if err != nil {
+		return nil, err
+	}
+
+	processor_count, err := c.GetIntKey("PROCESSOR_COUNT")
 	if err != nil {
 		return nil, err
 	}
@@ -83,11 +93,6 @@ func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T])
 		cancel: cancel,
 	}
 
-	registry_url, exists, err := c.GetStringKeyOptional("REGISTRY_URL")
-	if err != nil {
-		return nil, err
-	}
-
 	if exists {
 		sr, err := schemaregistry.NewClient(schemaregistry.NewConfig(registry_url))
 		if err != nil {
@@ -104,6 +109,10 @@ func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T])
 		instance.deserial = newDeserializer()
 	}
 
+	go instance.readMessage(ctx, &instance.wg)
+	for i := 0; i < processor_count; i++ {
+		go instance.consumeMessage(ctx, &instance.wg)
+	}
 	return instance, nil
 }
 
@@ -125,7 +134,7 @@ func (c *Consumer[T]) Subscribe(topic string, schema protoreflect.MessageType) e
 }
 
 
-func (c *Consumer[T]) readMessage() {
+func (c *Consumer[T]) readMessage(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		c.wg.Add(1)
 		defer c.wg.Done()
