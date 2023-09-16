@@ -3,10 +3,8 @@ package model
 import (
 	"context"
 
-	"github.com/Goboolean/worker/internal/infrastructure/minio"
+	"github.com/Goboolean/core-system.worker/internal/infrastructure/minio"
 )
-
-
 
 type ModelAdapter struct {
 	storage minio.Storage
@@ -17,7 +15,6 @@ func New(storage *minio.Storage) *ModelAdapter {
 		storage: *storage,
 	}
 }
-
 
 func (a *ModelAdapter) NewSession(ctx context.Context, name string) (*ModelSessionImpl, error) {
 	f, err := a.storage.GetFile(ctx, name)

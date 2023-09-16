@@ -3,10 +3,8 @@ package out
 import (
 	"context"
 
-	"github.com/Goboolean/worker/internal/domain/vo"
+	"github.com/Goboolean/core-system.worker/internal/domain/vo"
 )
-
-
 
 type RealDataFetcher interface {
 	GetChannel(context.Context, string) <-chan *vo.StockAggregate
