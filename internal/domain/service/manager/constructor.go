@@ -3,14 +3,11 @@ package manager
 import (
 	"context"
 
-	"github.com/Goboolean/worker/internal/domain/entity"
-	"github.com/Goboolean/worker/internal/domain/port/out"
-	"github.com/Goboolean/worker/internal/domain/vo"
+	"github.com/Goboolean/core-system.worker/internal/domain/entity"
+	"github.com/Goboolean/core-system.worker/internal/domain/port/out"
+	"github.com/Goboolean/core-system.worker/internal/domain/vo"
 	log "github.com/sirupsen/logrus"
 )
-
-
-
 
 type Manager struct {
 	w out.WorkDispatcher
@@ -21,12 +18,9 @@ type Manager struct {
 	event out.ResultDispatcher
 }
 
-
 func New(ctx context.Context) *Manager {
 	return &Manager{}
 }
-
-
 
 // If run returns error in the middle of running task, it means task is not successfully finished
 func (m *Manager) Run(ctx context.Context) error {
@@ -38,7 +32,7 @@ func (m *Manager) Run(ctx context.Context) error {
 	// 1. Connect to Worker Manager as a Websocket.
 	// Next, wait for any task to be allocated.
 
-	taskEvent, ok := <- m.w.RegisterWorker()
+	taskEvent, ok := <-m.w.RegisterWorker()
 	if !ok {
 		return ErrRegisterFailed
 	}
@@ -82,7 +76,7 @@ func (m *Manager) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			// Case: model is finished with exit code 1
 			if err := context.Cause(ctx); err != nil {
-				return err				
+				return err
 			}
 
 			// Case: model is finished with exit code 0
@@ -90,7 +84,7 @@ func (m *Manager) Run(ctx context.Context) error {
 				return nil
 			}
 
-		case result := <- _model.Result():
+		case result := <-_model.Result():
 
 			ctx := context.WithoutCancel(ctx)
 			if err := m.event.SendResult(ctx, result); err != nil {
