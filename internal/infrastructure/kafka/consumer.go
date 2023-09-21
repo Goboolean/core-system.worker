@@ -132,7 +132,7 @@ func NewConsumer[T proto.Message](c *resolver.ConfigMap, l SubscribeListener[T])
 
 
 func (c *Consumer[T]) Subscribe(topic string, schema protoreflect.MessageType) error {
-	if c.topic == "" {
+	if c.topic != "" {
 		return ErrTopicAlreadySubscribed
 	}
 
@@ -179,6 +179,7 @@ func (c *Consumer[T]) readMessage(ctx context.Context, wg *sync.WaitGroup) {
 			log.WithFields(log.Fields{
 				"topic": *msg.TopicPartition.Topic,
 				"data":  msg.Value,
+				"key":   msg.Key,
 			}).Trace("Consumer received message")
 
 			c.channel <- event
