@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package model.v1;
+
+option go_package = "github.com/Goboolean/core-system.worker/api/model.v1";
+
+
+message Event {
+    string event_uuid = 1;
+    string event_type = 2;
+    string stock_id   = 3;
+    string model_name = 4;
+}
+
+message EventMinimal {
+    string event_uuid = 1;
+    string event_type = 2;
+}
