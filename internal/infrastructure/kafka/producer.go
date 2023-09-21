@@ -150,13 +150,14 @@ func (p *Producer) traceEvent(ctx context.Context, wg *sync.WaitGroup) {
 					log.WithFields(log.Fields{
 						"topic": *ev.TopicPartition.Topic,
 						"data":  ev.Value,
-						"info":  ev.TopicPartition.Error,
+						"error":  ev.TopicPartition.Error,
 					}).Error("Producer failed to deliver event to kafka")
 				} else {
 					log.WithFields(log.Fields{
 						"topic": *ev.TopicPartition.Topic,
 						"data":  ev.Value,
-						"info":  ev.TopicPartition.String(),
+						"partition":  ev.TopicPartition.Partition,
+						"offset": ev.TopicPartition.Offset,
 					}).Trace("Producer delivered event to kafka")
 				}
 			}

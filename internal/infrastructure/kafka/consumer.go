@@ -179,7 +179,8 @@ func (c *Consumer[T]) readMessage(ctx context.Context, wg *sync.WaitGroup) {
 			log.WithFields(log.Fields{
 				"topic": *msg.TopicPartition.Topic,
 				"data":  msg.Value,
-				"key":   msg.Key,
+				"partition":  msg.TopicPartition.Partition,
+				"offset": msg.TopicPartition.Offset,
 			}).Trace("Consumer received message")
 
 			c.channel <- event
