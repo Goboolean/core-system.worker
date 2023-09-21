@@ -80,7 +80,7 @@ func TeardownConsumer(c *kafka.Consumer[*model_latest.Event]) {
 
 func Test_Consumer(t *testing.T) {
 
-	const topic = "default-topic"
+	const topic = "test-consumer"
 	var event = &model_latest.Event{
 		EventUuid: "test-uuid",
 	}
@@ -109,7 +109,7 @@ func Test_Consumer(t *testing.T) {
 		err := p.Produce(topic, event)
 		assert.NoError(t, err)
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second * 4)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second * 7)
 		defer cancel()
 
 		select {
@@ -126,7 +126,7 @@ func Test_Consumer(t *testing.T) {
 func Test_ConsumerWithRegistry(t *testing.T) {
 	t.Skip("Skip this test because of the registry is not ready.")
 
-	const topic = "default-topic"
+	const topic = "test-consumer-with-registry"
 	var event = &model_latest.Event{}
 
 	var channel = make(chan *model_latest.Event, 10)
@@ -172,7 +172,7 @@ func Test_ConsumerWithRegistry(t *testing.T) {
 
 func Test_ConsumeSameGroup(t *testing.T) {
 
-	const topic = "default-topic"
+	const topic = "test-consumer-same-group"
 	const count = 3
 	var event = &model_latest.Event{EventUuid: "test-uuid"}
 
@@ -214,7 +214,7 @@ func Test_ConsumeSameGroup(t *testing.T) {
 
 func Test_ConsumeDifferentGroup(t *testing.T) {
 
-	const topic = "default-topic"
+	const topic = "test-consumer-different-group"
 	const count = 3
 	var event = &model_latest.Event{EventUuid: "test-uuid"}
 

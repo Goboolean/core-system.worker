@@ -50,7 +50,7 @@ func Test_Producer(t *testing.T) {
 	p := SetupProducer()
 	defer TeardownProducer(p)
 
-	const topic = "default-topic"
+	const topic = "test-producer"
 	var event = &model_latest.Event{
 		EventUuid: "test-uuid",
 	}
@@ -90,7 +90,7 @@ func Test_ProducerWithRegistry(t *testing.T) {
 	p := SetupProducerWithRegistry()
 	defer TeardownProducer(p)
 
-	const topic = "default-topic"
+	const topic = "test-producer-with-registry"
 	var event = &model_latest.Event{
 		EventUuid: "test-uuid",
 	}
