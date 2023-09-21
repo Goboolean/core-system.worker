@@ -1,11 +1,8 @@
-GRPC_PROTO_PATH = ./api/worker-handler.proto
-GRPC_GEN_PATH = .
-
-grpc-generate:
+proto-generate:
 	protoc \
-		--go_out=${GRPC_GEN_PATH}  --go_opt=paths=source_relative \
-		--go-grpc_out=$(GRPC_GEN_PATH) --go-grpc_opt=paths=source_relative \
-    ${GRPC_PROTO_PATH}
+		--go_out=. \
+		--go_opt=paths=source_relative \
+    ./api/model.*/event.proto
 
 make-app: kubectl apply -f build/deploy.yml
 
