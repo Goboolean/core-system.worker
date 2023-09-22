@@ -6,9 +6,12 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/domain/vo"
 )
 
+type ModelGeneratorPort interface {
+	
+}
 
 
-type ModelPorts interface {
+type ModelPort interface {
 	NewSession(ctx context.Context, name string) (ModelSession, error)
 }
 
