@@ -7,5 +7,5 @@ import (
 )
 
 type ResultDispatcher interface {
-	SendResult(context.Context, vo.Result) error
+	SendResult(context.Context, *vo.Result) error
 }

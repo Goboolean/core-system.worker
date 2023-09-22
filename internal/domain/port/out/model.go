@@ -1,6 +1,10 @@
 package out
 
-import "context"
+import (
+	"context"
+
+	"github.com/Goboolean/core-system.worker/internal/domain/vo"
+)
 
 
 
@@ -10,7 +14,7 @@ type ModelPorts interface {
 
 type ModelSession interface {
 	// TODO : change interface{} to specific type
-	GetInputChan()  chan<- interface{}
-	GetOutputChan() <-chan interface{}
+	GetInputChan()  chan<- *vo.StockAggregate
+	GetOutputChan() <-chan *vo.Result
 	Close() error
 }

@@ -86,7 +86,7 @@ func (m *Manager) Run(ctx context.Context) error {
 				return nil
 			}
 
-		case result := <-_model.Result():
+		case result := <-_model.ResultReceiver():
 
 			ctx := context.WithoutCancel(ctx)
 			if err := m.event.SendResult(ctx, result); err != nil {
