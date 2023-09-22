@@ -2,47 +2,36 @@ package entity
 
 import (
 	"context"
-	"io"
 
-	"github.com/Goboolean/worker/internal/domain/port/out"
-	"github.com/Goboolean/worker/internal/domain/vo"
-	log "github.com/sirupsen/logrus"
+	"github.com/Goboolean/core-system.worker/internal/domain/port/out"
+	"github.com/Goboolean/core-system.worker/internal/domain/vo"
 )
 
-
-
-
 type Model struct {
-	data  <-chan *vo.StockAggregate
-
-	stdin io.WriteCloser
-	stdout io.ReadCloser
+	data <-chan *vo.StockAggregate
 
 	session out.ModelSession
 }
-
 
 func NewModel(ctx context.Context, stockId string) (*Model, error) {
 	return &Model{}, nil
 }
 
 
-// Multiple provider can be set.
-func (m *Model) SetDataProvider(ch <-chan *vo.StockAggregate) {
+func (m *Model) SetDataProvider(sink <-chan *vo.StockAggregate) {
+
+	source := m.session.GetInputChan()
 
 	go func() {
-		for data := range ch {
-			var v interface{} = data
-			_, err := m.stdin.Write(v.([]byte))
-			if err != nil {
-				log.Error(err)
-			}
+		for data := range sink {
+			source <- data
 		}
 	}()
 }
 
-func (m *Model) Result() chan vo.Result {
-	return nil
+
+func (m *Model) ResultReceiver() <-chan *vo.Result {
+	return m.session.GetOutputChan()
 }
 
 func (m *Model) Close() error {
