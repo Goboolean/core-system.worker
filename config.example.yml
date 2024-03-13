@@ -1,0 +1,17 @@
+pipeline:
+  fetchJob:
+    name: "fetch__real-stock" #단순 예시, uuid가 올 수도 있음
+    timeSilce: "5m"
+    additionalParmas:
+  modelExecJob:
+    name: "model__fractal-stock-probeDist" #단순 예시, uuid가 올 수도 있음
+    additionalParmas:
+  adaptJob:
+    name: "adapt__probeDist-to-probeDist"
+    additionalParmas:
+  analyzerJob:
+    name: "analyze__Kelly-bet"
+    initialAsset: 100
+    additionalParmas:
+      - tendencyIndex: 3.0 #투자 성향. 높을수록 공격형. 안정형이면 캘리기준보다 작게 배팅, 높으면 더 크게 배팅
+  
