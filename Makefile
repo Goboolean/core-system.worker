@@ -12,12 +12,3 @@ delete: kubectl delete deployment worker-deployment
 
 build-dockerfile: docker build -t worker -f build/Dockerfile .
 
-get-schema:
-	curl -L https://raw.githubusercontent.com/Goboolean/shared/main/api/sql/schema.sql -o ${SQL_API_PATH}/schema.sql
-
-sqlc-generate:
-	sqlc generate -f ${SQL_API_PATH}/sqlc.yml
-	
-sqlc-check:
-	sqlc compile -f ${SQL_API_PATH}/sqlc.yml
-
