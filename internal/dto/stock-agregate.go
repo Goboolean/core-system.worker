@@ -4,9 +4,9 @@ package dto
 type StockAggregate struct {
 	OpenTime   int64
 	ClosedTime int64
-	Open       float64
-	Closed     float64
-	High       float64
-	Low        float64
-	Volume     float64
+	Open       float32
+	Closed     float32
+	High       float32
+	Low        float32
+	Volume     float32
 }

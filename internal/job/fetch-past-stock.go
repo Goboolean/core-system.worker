@@ -16,8 +16,8 @@ type PastStockFetcher struct {
 
 	pastRepo infrastructure.MongoClientStock
 
-	in  chan any `type:none`
-	out chan any `type:` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	in  chan any `type:"none"`
+	out chan any `type:"[]StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	err chan error
 }
@@ -70,11 +70,11 @@ func (f *PastStockFetcher) Execute(ctx context.Context) chan error {
 					res = append(res, dto.StockAggregate{
 						OpenTime:   element.Timestamp,
 						ClosedTime: time.Now().Add(5 * 60 * time.Second).Unix(),
-						Open:       float64(element.Open),
-						Closed:     float64(element.Close),
-						Low:        float64(element.Low),
-						High:       float64(element.High),
-						Volume:     float64(element.Volume),
+						Open:       element.Open,
+						Closed:     element.Close,
+						Low:        element.Low,
+						High:       element.High,
+						Volume:     float32(element.Volume),
 					})
 				}
 
