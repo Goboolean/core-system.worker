@@ -41,7 +41,11 @@ func (c *MongoClientStock) GetCount() (int, error) {
 	panic("Not Implied")
 }
 
+func (c *MongoClientStock) ping(ctx context.Context) error {
+	panic("Not Implied")
+}
+
 // TODO: 커넥션 닫는 부분 구현
 func (c *MongoClientStock) Close() {
-
+	panic("Not Implied")
 }
