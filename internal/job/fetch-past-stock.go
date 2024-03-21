@@ -22,7 +22,7 @@ type PastStockFetcher struct {
 	err chan error
 }
 
-func NewExampleJob(mongo infrastructure.MongoClientStock, parmas UserParams) *PastStockFetcher {
+func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas UserParams) *PastStockFetcher {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &PastStockFetcher{
 		batchSize: 100,
