@@ -1,8 +1,11 @@
 pipeline:
   fetchJob:
-    name: "fetch__real-stock" #단순 예시, uuid가 올 수도 있음
+    isRealTime: true //boolean
+    productType: "stock" // "stock"|"crypto"...etc
+    startTime: 1234523445 // int64 시작 시각 타임스탬프. 
     timeSilce: "5m"
     additionalParmas:
+      -key1: "value1"
   modelExecJob:
     name: "model__fractal-stock-probeDist" #단순 예시, uuid가 올 수도 있음
     additionalParmas:
