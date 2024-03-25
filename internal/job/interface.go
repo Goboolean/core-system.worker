@@ -4,8 +4,6 @@ import (
 	"context"
 )
 
-type UserParams map[string]float32
-
 // Job represents a job that can be executed.
 type Job interface {
 	// Execute executes the job with the given context.

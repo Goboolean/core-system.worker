@@ -1,7 +1,16 @@
 package job
 
-type JobProvider func(userParams map[string]float32) Job
+type UserParams map[string]string
 
+func (p UserParams) IsKeyNullOrEmpty(key string) bool {
+	if val, ok := p[key]; !ok || val == "" {
+		return true
+	} else {
+		return false
+	}
+}
+
+type JobProvider func(userParams UserParams) Job
 type JobFactory struct {
 	jobRegistry map[string]JobProvider
 }
