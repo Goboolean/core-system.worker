@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"time"
 
+	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
 )
 
 var (
-	InvalidStockId = errors.New("fetch: can't parse stockId")
+	InvalidStockId       = errors.New("fetch: can't parse stockId")
+	DocumentTypeMismatch = errors.New("fetch: mongo: document type mismatch")
 )
 
 type PastStockFetcher struct {
@@ -17,7 +20,7 @@ type PastStockFetcher struct {
 
 	timeSlice           string
 	isFetchingFullRange bool
-	startTimestamp      int64
+	startTimestamp      int64 // Unix timestamp of start time
 	stockId             string
 	pastRepo            infrastructure.MongoClientStock
 
@@ -68,48 +71,51 @@ func (f *PastStockFetcher) Execute(ctx context.Context) chan error {
 	go func() {
 		defer close(f.out)
 		defer close(errChan)
-		defer f.pastRepo.Close()
+		for {
+			select {
+			case <-ctx.Done():
+				//외부에서 종료 처리가 왔을 때 처리
+				return
+			default:
+				f.pastRepo.SetTarget(f.stockId, f.timeSlice)
+				var quantity int
+				var index int
+				var err error
+				var count int = f.pastRepo.GetCount(ctx)
 
-		select {
-		case <-ctx.Done():
-			//외부에서 종료 처리가 왔을 때 처리
-			return
-		default:
-			count, _ := f.pastRepo.GetCount()
-			//몇 개인지 가져온다.
+				if f.isFetchingFullRange {
+					index = 0
+					quantity = count
+				} else {
 
-			//제일 과거 데이터부터 batch size만큼 가져온다.
-			//만약 남은 데이터가 batch size보다 작으면 종료
+					index, err = f.pastRepo.FindLatestIndexBy(ctx, f.startTimestamp)
+					if err != nil {
+						panic(err)
+					}
 
-			// 궁금증 둘 중에서 어떻게 구현해야 하지?
-			//0~99, 100~199, ...?
-			//0~100, 1~101, 2~103 ...?
-			for i := 0; i < count/f.batchSize; i++ {
+					//1,2,3,4,5
+					quantity = count - index
+				}
 
-				res := make([]dto.StockAggregate, f.batchSize)
-				data, err := f.pastRepo.FetchItems(ctx, i*f.batchSize, (i+1)*f.batchSize-1)
+				duration, _ := time.ParseDuration(f.timeSlice)
+				err = f.pastRepo.ForEachDocument(ctx, index, quantity, func(schema interface{}) {
+					doc, _ := schema.(infrastructure.StockDocument)
+
+					f.out <- &dto.StockAggregate{
+						OpenTime:   doc.Timestamp,
+						ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
+						Open:       doc.Open,
+						Closed:     doc.Close,
+						High:       doc.High,
+						Low:        doc.Low,
+						Volume:     float32(doc.Volume),
+					}
+				})
 				if err != nil {
-					errChan <- err
-					return
+					panic(err)
 				}
-
-				// TODO: timeslice를 duration으로 변환하는 부분 개발
-				for _, element := range data {
-					res = append(res, dto.StockAggregate{
-						OpenTime:   element.Timestamp,
-						ClosedTime: time.Now().Add(5 * 60 * time.Second).Unix(),
-						Open:       element.Open,
-						Closed:     element.Close,
-						Low:        element.Low,
-						High:       element.High,
-						Volume:     float32(element.Volume),
-					})
-				}
-
-				f.out <- res
 			}
 
-			break
 		}
 	}()
 	return errChan
