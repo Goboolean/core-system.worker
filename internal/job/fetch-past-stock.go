@@ -2,37 +2,65 @@ package job
 
 import (
 	"context"
-	"time"
+	"errors"
+	"strconv"
 
-	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+)
+
+var (
+	InvalidStockId = errors.New("fetch: can't parse stockId")
 )
 
 type PastStockFetcher struct {
 	Job
 
-	batchSize int
-	timeSlice string
-
-	pastRepo infrastructure.MongoClientStock
+	timeSlice           string
+	isFetchingFullRange bool
+	startTimestamp      int64
+	stockId             string
+	pastRepo            infrastructure.MongoClientStock
 
 	in  chan any `type:"none"`
-	out chan any `type:"[]StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	err chan error
 }
 
-func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas UserParams) *PastStockFetcher {
+func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *UserParams) (*PastStockFetcher, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
+	var err error = nil
 	instance := &PastStockFetcher{
-		batchSize: 100,
-		timeSlice: "5m",
-		pastRepo:  mongo,
-		out:       make(chan any),
-		err:       make(chan error),
+		timeSlice:           "1m",
+		pastRepo:            mongo,
+		isFetchingFullRange: true,
+		out:                 make(chan any),
+		err:                 make(chan error),
 	}
 
-	return instance
+	if !parmas.IsKeyNullOrEmpty("stockId") {
+
+		val, ok := (*parmas)["stockId"]
+		if !ok {
+			return nil, InvalidStockId
+		}
+
+		instance.stockId = val
+	}
+
+	if !parmas.IsKeyNullOrEmpty("startDate") {
+		instance.isFetchingFullRange = false
+
+		val, err := strconv.ParseInt((*parmas)["startDate"], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		instance.startTimestamp = val
+
+	}
+
+	return instance, err
 }
 
 func (f *PastStockFetcher) Execute(ctx context.Context) chan error {
