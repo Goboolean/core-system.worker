@@ -2,6 +2,8 @@ package infrastructure
 
 import (
 	"context"
+
+	"github.com/Goboolean/common/pkg/resolver"
 )
 
 type StockDocument struct {
@@ -15,37 +17,50 @@ type StockDocument struct {
 	Timestamp int64
 }
 
-type MongoClientStock struct {
+type MongoClientStock interface {
+	SetTarget(stockId string, timeslice string)
+	// GetCount gets count of targeted document
+	GetCount(ctx context.Context) int
+	// FindLatestIndexBy finds the index of the most recent document created before or on the given date.
+	FindLatestIndexBy(ctx context.Context, timestamp int64) (int, error)
+	// ForEachDocument iterates over a range of documents starting from the specified index and executes the given action
+	ForEachDocument(ctx context.Context, startIndex int, quantity int, action func(schema interface{})) error
+}
+
+type MongoClientStockImpl struct {
 	stockId   string
 	timeSlice string
 }
 
-func NewMongoClientStock() (*MongoClientStock, error) {
-	return &MongoClientStock{}, nil
+func NewMongoClientStock(c *resolver.ConfigMap) (*MongoClientStockImpl, error) {
+	return &MongoClientStockImpl{}, nil
 }
 
-func (c *MongoClientStock) SetStockId(id string) {
-	c.stockId = id
+// SetTarget sets the target for a specific stock and timeslice.
+func (c *MongoClientStockImpl) SetTarget(stockID string, timeslice int) {
+
 }
 
-func (c *MongoClientStock) SetTimeSlice(timeSlice string) {
-	c.timeSlice = timeSlice
-}
-
-// TODO: 가장 오래된 document가 0번째일 때 startIndex번째부터 endIndex번째 document를 가져오는 부분 구현
-func (c *MongoClientStock) FetchItems(ctx context.Context, startIndex int, endIndex int) ([]StockDocument, error) {
+// GetCount gets count of targeted document
+func (c *MongoClientStockImpl) GetCount(ctx context.Context) int {
 	panic("Not Implied")
 }
 
-func (c *MongoClientStock) GetCount() (int, error) {
+// FindLatestIndexBy finds the index of the most recent document created before or on the given date.
+func (c *MongoClientStockImpl) FindLatestIndexBy(ctx context.Context, timestamp int64) (int, error) {
 	panic("Not Implied")
 }
 
-func (c *MongoClientStock) ping(ctx context.Context) error {
+// ForEachDocument iterates over a range of documents starting from the specified index and executes the given action
+func (c *MongoClientStockImpl) ForEachDocument(ctx context.Context, startIndex int, quantity int, action func(schema interface{})) error {
+	panic("Not Implied")
+}
+
+func (c *MongoClientStockImpl) Ping(ctx context.Context) error {
 	panic("Not Implied")
 }
 
 // TODO: 커넥션 닫는 부분 구현
-func (c *MongoClientStock) Close() {
+func (c *MongoClientStockImpl) Close() {
 	panic("Not Implied")
 }
