@@ -24,7 +24,7 @@ type MongoClientStock interface {
 	// FindLatestIndexBy finds the index of the most recent document created before or on the given date.
 	FindLatestIndexBy(ctx context.Context, timestamp int64) (int, error)
 	// ForEachDocument iterates over a range of documents starting from the specified index and executes the given action
-	ForEachDocument(ctx context.Context, startIndex int, quantity int, action func(schema interface{})) error
+	ForEachDocument(ctx context.Context, startIndex int, quantity int, action func(doc StockDocument)) error
 }
 
 type MongoClientStockImpl struct {
@@ -52,7 +52,7 @@ func (c *MongoClientStockImpl) FindLatestIndexBy(ctx context.Context, timestamp 
 }
 
 // ForEachDocument iterates over a range of documents starting from the specified index and executes the given action
-func (c *MongoClientStockImpl) ForEachDocument(ctx context.Context, startIndex int, quantity int, action func(schema interface{})) error {
+func (c *MongoClientStockImpl) ForEachDocument(ctx context.Context, startIndex int, quantity int, action func(doc StockDocument)) error {
 	panic("Not Implied")
 }
 

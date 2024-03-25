@@ -98,9 +98,7 @@ func (f *PastStockFetcher) Execute(ctx context.Context) chan error {
 				}
 
 				duration, _ := time.ParseDuration(f.timeSlice)
-				err = f.pastRepo.ForEachDocument(ctx, index, quantity, func(schema interface{}) {
-					doc, _ := schema.(infrastructure.StockDocument)
-
+				err = f.pastRepo.ForEachDocument(ctx, index, quantity, func(doc infrastructure.StockDocument) {
 					f.out <- &dto.StockAggregate{
 						OpenTime:   doc.Timestamp,
 						ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
