@@ -112,6 +112,8 @@ func (f *PastStockFetcher) Execute(ctx context.Context) chan error {
 				if err != nil {
 					panic(err)
 				}
+
+				return
 			}
 
 		}
