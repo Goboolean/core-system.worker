@@ -78,7 +78,9 @@ func (f *PastStockFetcher) Execute(ctx context.Context) chan error {
 				return
 			default:
 				f.pastRepo.SetTarget(f.stockId, f.timeSlice)
+				//가져올 데이터의 개수
 				var quantity int
+				//처음 가져올 데이터의 Index
 				var index int
 				var err error
 				var count int = f.pastRepo.GetCount(ctx)
