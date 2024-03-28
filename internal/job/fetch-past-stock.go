@@ -2,37 +2,68 @@ package job
 
 import (
 	"context"
+	"errors"
+	"strconv"
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
 )
 
+var (
+	InvalidStockId       = errors.New("fetch: can't parse stockId")
+	DocumentTypeMismatch = errors.New("fetch: mongo: document type mismatch")
+)
+
 type PastStockFetcher struct {
 	Job
 
-	batchSize int
-	timeSlice string
-
-	pastRepo infrastructure.MongoClientStock
+	timeSlice           string
+	isFetchingFullRange bool
+	startTimestamp      int64 // Unix timestamp of start time
+	stockId             string
+	pastRepo            infrastructure.MongoClientStock
 
 	in  chan any `type:"none"`
-	out chan any `type:"[]StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	err chan error
 }
 
-func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas UserParams) *PastStockFetcher {
+func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *UserParams) (*PastStockFetcher, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
+	var err error = nil
 	instance := &PastStockFetcher{
-		batchSize: 100,
-		timeSlice: "5m",
-		pastRepo:  mongo,
-		out:       make(chan any),
-		err:       make(chan error),
+		timeSlice:           "1m",
+		pastRepo:            mongo,
+		isFetchingFullRange: true,
+		out:                 make(chan any),
+		err:                 make(chan error),
 	}
 
-	return instance
+	if !parmas.IsKeyNullOrEmpty("stockId") {
+
+		val, ok := (*parmas)["stockId"]
+		if !ok {
+			return nil, InvalidStockId
+		}
+
+		instance.stockId = val
+	}
+
+	if !parmas.IsKeyNullOrEmpty("startDate") {
+		instance.isFetchingFullRange = false
+
+		val, err := strconv.ParseInt((*parmas)["startDate"], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		instance.startTimestamp = val
+
+	}
+
+	return instance, err
 }
 
 func (f *PastStockFetcher) Execute(ctx context.Context) chan error {
@@ -40,48 +71,53 @@ func (f *PastStockFetcher) Execute(ctx context.Context) chan error {
 	go func() {
 		defer close(f.out)
 		defer close(errChan)
-		defer f.pastRepo.Close()
+		for {
+			select {
+			case <-ctx.Done():
+				//외부에서 종료 처리가 왔을 때 처리
+				return
+			default:
+				f.pastRepo.SetTarget(f.stockId, f.timeSlice)
+				//가져올 데이터의 개수
+				var quantity int
+				//처음 가져올 데이터의 Index
+				var index int
+				var err error
+				var count int = f.pastRepo.GetCount(ctx)
 
-		select {
-		case <-ctx.Done():
-			//외부에서 종료 처리가 왔을 때 처리
-			return
-		default:
-			count, _ := f.pastRepo.GetCount()
-			//몇 개인지 가져온다.
+				if f.isFetchingFullRange {
+					index = 0
+					quantity = count
+				} else {
 
-			//제일 과거 데이터부터 batch size만큼 가져온다.
-			//만약 남은 데이터가 batch size보다 작으면 종료
+					index, err = f.pastRepo.FindLatestIndexBy(ctx, f.startTimestamp)
+					if err != nil {
+						panic(err)
+					}
 
-			// 궁금증 둘 중에서 어떻게 구현해야 하지?
-			//0~99, 100~199, ...?
-			//0~100, 1~101, 2~103 ...?
-			for i := 0; i < count/f.batchSize; i++ {
+					//1,2,3,4,5
+					quantity = count - index
+				}
 
-				res := make([]dto.StockAggregate, f.batchSize)
-				data, err := f.pastRepo.FetchItems(ctx, i*f.batchSize, (i+1)*f.batchSize-1)
+				duration, _ := time.ParseDuration(f.timeSlice)
+				err = f.pastRepo.ForEachDocument(ctx, index, quantity, func(doc infrastructure.StockDocument) {
+					f.out <- &dto.StockAggregate{
+						OpenTime:   doc.Timestamp,
+						ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
+						Open:       doc.Open,
+						Closed:     doc.Close,
+						High:       doc.High,
+						Low:        doc.Low,
+						Volume:     float32(doc.Volume),
+					}
+				})
 				if err != nil {
-					errChan <- err
-					return
+					panic(err)
 				}
 
-				// TODO: timeslice를 duration으로 변환하는 부분 개발
-				for _, element := range data {
-					res = append(res, dto.StockAggregate{
-						OpenTime:   element.Timestamp,
-						ClosedTime: time.Now().Add(5 * 60 * time.Second).Unix(),
-						Open:       element.Open,
-						Closed:     element.Close,
-						Low:        element.Low,
-						High:       element.High,
-						Volume:     float32(element.Volume),
-					})
-				}
-
-				f.out <- res
+				return
 			}
 
-			break
 		}
 	}()
 	return errChan
