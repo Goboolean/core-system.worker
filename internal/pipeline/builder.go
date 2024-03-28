@@ -20,7 +20,7 @@ func NewPipelineBuilder(jobFactory job.JobFactory) *PipelineBuilder {
 	}
 }
 
-func (b *PipelineBuilder) Build(spec Spec, UserParams job.UserParams) (*Pipeline, error) {
+func (b *PipelineBuilder) Build(spec Spec, UserParams *job.UserParams) (*Pipeline, error) {
 	fetch, err := b.factory.CreateJob(spec.FetchJobName, UserParams)
 	if err != nil {
 		return nil, err

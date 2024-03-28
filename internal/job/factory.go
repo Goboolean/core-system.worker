@@ -10,7 +10,7 @@ func (p UserParams) IsKeyNullOrEmpty(key string) bool {
 	}
 }
 
-type JobProvider func(userParams UserParams) Job
+type JobProvider func(userParams *UserParams) Job
 type JobFactory struct {
 	jobRegistry map[string]JobProvider
 }
@@ -22,7 +22,7 @@ func NewJobFactory() *JobFactory {
 	return instance
 }
 
-func (f *JobFactory) CreateJob(name string, params UserParams) (Job, error) {
+func (f *JobFactory) CreateJob(name string, params *UserParams) (Job, error) {
 
 	provider, ok := f.jobRegistry[name]
 
