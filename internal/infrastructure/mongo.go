@@ -53,6 +53,7 @@ func (c *MongoClientStockImpl) FindLatestIndexBy(ctx context.Context, timestamp 
 
 // ForEachDocument iterates over a range of documents starting from the specified index and executes the given action
 func (c *MongoClientStockImpl) ForEachDocument(ctx context.Context, startIndex int, quantity int, action func(doc StockDocument)) error {
+	//별도의 go루틴을 생성하지 말고 동기식으로 구현해주세요
 	panic("Not Implied")
 }
 
