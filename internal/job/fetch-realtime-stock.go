@@ -53,7 +53,14 @@ func (j *FetchRealtimeStockJob) Execute(ctx context.Context) {
 		})
 
 		for {
-			select {}
+			select {
+			case <-ctx.Done():
+				return
+				//case <- karfka:
+
+				// 알맞게 변환하기
+				// out에다가 던지기
+			}
 		}
 	}()
 
