@@ -49,6 +49,11 @@ func NewKServeClient(c *resolver.ConfigMap) (*KServeClientImpl, error) {
 	//default value
 	instance := defaultKSserveClient
 
+	id, err := c.GetStringKey("modelID")
+	if err != nil {
+		return nil, err
+	}
+
 	host, err := c.GetStringKey("host")
 	if err != nil {
 		return nil, err
@@ -65,6 +70,7 @@ func NewKServeClient(c *resolver.ConfigMap) (*KServeClientImpl, error) {
 	}
 
 	instance.host = host
+	instance.modelId = id
 	instance.param1 = float32(param1)
 	instance.param2 = float32(param2)
 
@@ -113,6 +119,6 @@ func (c *KServeClientImpl) RequestInference(ctx context.Context, shape []int, in
 func generateInferenceUrl(host, modelName string) *url.URL {
 	return &url.URL{
 		Host: host,
-		Path: fmt.Sprint("v2/models/%s/infer", modelName),
+		Path: fmt.Sprintf("v2/models/%s/infer", modelName),
 	}
 }
