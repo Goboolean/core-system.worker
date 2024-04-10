@@ -22,7 +22,7 @@ type KServeClient interface {
 
 // KServeClientImpl is a struct that represents the implementation of the KServeClient interface.
 type KServeClientImpl struct {
-	modelName         string
+	modelId           string
 	host              string
 	inferenceEndpoint *url.URL
 
