@@ -2,7 +2,6 @@ package job_test
 
 import (
 	"context"
-	"sync"
 	"testing"
 
 	"github.com/Goboolean/common/pkg/resolver"
@@ -16,9 +15,10 @@ import (
 func TestPastStock(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 
+		//Arrange
 		mongo, _ := mock.NewMongoClientStock(&resolver.ConfigMap{}, []*infrastructure.StockDocument{
 			&infrastructure.StockDocument{
-				Symbol:    "aapl",
+				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
 				High:      150,
@@ -28,7 +28,7 @@ func TestPastStock(t *testing.T) {
 				Timestamp: 1711758929,
 			},
 			&infrastructure.StockDocument{
-				Symbol:    "aapl",
+				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
 				High:      150,
@@ -38,7 +38,7 @@ func TestPastStock(t *testing.T) {
 				Timestamp: 1711759229,
 			},
 			&infrastructure.StockDocument{
-				Symbol:    "aapl",
+				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
 				High:      150,
@@ -48,7 +48,7 @@ func TestPastStock(t *testing.T) {
 				Timestamp: 1711759529,
 			},
 			&infrastructure.StockDocument{
-				Symbol:    "aapl",
+				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
 				High:      150,
@@ -66,26 +66,19 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 		}
 
+		//Act
 		fetch.Execute(ctx)
 		out := fetch.OutputChan()
 		res := []*dto.StockAggregate{}
-
-		wg := sync.WaitGroup{}
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for data := range out {
-				val, ok := data.(*dto.StockAggregate)
-				if !ok {
-					panic("Type miss match")
-				}
-				res = append(res, val)
+		for data := range out {
+			val, ok := data.(*dto.StockAggregate)
+			if !ok {
+				panic("Type miss match")
 			}
-		}()
+			res = append(res, val)
+		}
 
-		wg.Wait()
-
+		//Assert
 		exp := []*dto.StockAggregate{
 			&dto.StockAggregate{
 				OpenTime:   1711758929,
