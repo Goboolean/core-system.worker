@@ -14,6 +14,17 @@ import (
 	kserve "github.com/Goboolean/core-system.worker/internal/dto/Kserve"
 )
 
+var defaultKSserveClient = &KServeClientImpl{
+	host:   "",
+	param1: 0.0,
+	param2: 1.0,
+	http: &http.Client{
+		Transport: &http.Transport{
+			IdleConnTimeout: 600 * time.Second,
+		},
+	},
+}
+
 // KServeClient is an interface that defines the role of sending and receiving requests to KServe.
 type KServeClient interface {
 	SetModelName(name string)
@@ -36,16 +47,7 @@ type KServeClientImpl struct {
 func NewKServeClient(c *resolver.ConfigMap) (*KServeClientImpl, error) {
 
 	//default value
-	instance := &KServeClientImpl{
-		host:   "",
-		param1: 0.0,
-		param2: 1.0,
-		http: &http.Client{
-			Transport: &http.Transport{
-				IdleConnTimeout: 600 * time.Second,
-			},
-		},
-	}
+	instance := defaultKSserveClient
 
 	host, err := c.GetStringKey("host")
 	if err != nil {
