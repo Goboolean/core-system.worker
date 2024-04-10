@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -74,7 +75,7 @@ func (c *KServeClientImpl) SetModelName(name string) {
 }
 
 // RequestInference sends an inference request to KServe and returns the output and any error that occurred.
-func (c *KServeClientImpl) RequestInference(shape []int, input []float32) (output []float32, err error) {
+func (c *KServeClientImpl) RequestInference(ctx context.Context, shape []int, input []float32) (output []float32, err error) {
 	bodyJson, err := json.Marshal(
 		kserve.InferenceReq{
 			Name:     "input",
@@ -87,13 +88,14 @@ func (c *KServeClientImpl) RequestInference(shape []int, input []float32) (outpu
 		return nil, err
 	}
 
-	req := http.Request{
+	req := &http.Request{
 		Method: http.MethodPost,
 		URL:    c.inferenceEndpoint,
 		Body:   io.NopCloser(bytes.NewBuffer(bodyJson)),
 	}
+	req = req.WithContext(ctx)
 
-	res, err := c.http.Do(&req)
+	res, err := c.http.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +105,7 @@ func (c *KServeClientImpl) RequestInference(shape []int, input []float32) (outpu
 	res.Body.Read(b)
 
 	json.Unmarshal(b, &out)
-	return out.Outputs[0].Data.([]float32)
+	return out.Outputs[0].Data.([]float32), nil
 }
 
 func generateInferenceUrl(host, modelName string) *url.URL {
