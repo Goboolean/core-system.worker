@@ -28,7 +28,7 @@ var defaultKSserveClient = &KServeClientImpl{
 // KServeClient is an interface that defines the role of sending and receiving requests to KServe.
 type KServeClient interface {
 	SetModelName(name string)
-	RequestInference(shape []int, input []float32) (output []float32, err error)
+	RequestInference(ctx context.Context, shape []int, input []float32) (output []float32, err error)
 }
 
 // KServeClientImpl is a struct that represents the implementation of the KServeClient interface.
