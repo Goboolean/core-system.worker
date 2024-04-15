@@ -37,7 +37,7 @@ func NewMongoClientStock(c *resolver.ConfigMap) (*MongoClientStockImpl, error) {
 }
 
 // SetTarget sets the target for a specific stock and timeslice.
-func (c *MongoClientStockImpl) SetTarget(stockID string, timeslice int) {
+func (c *MongoClientStockImpl) SetTarget(stockID string, timeslice string) {
 
 }
 
