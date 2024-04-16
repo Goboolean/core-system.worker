@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"sync"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
@@ -23,6 +24,8 @@ type MockModelExecJob struct {
 
 	in  chan any `type:`
 	out chan any `type:` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+
+	wg sync.WaitGroup
 }
 
 func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params UserParams) (*MockModelExecJob, error) {
@@ -58,7 +61,9 @@ func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params UserPa
 
 func (j *MockModelExecJob) Execute(ctx context.Context) {
 
+	j.wg.Add(1)
 	go func() {
+		defer j.wg.Done()
 		defer close(j.out)
 		// Shape = [dto.StockAggregate의 필드 개수 = 7, batch size]
 		// 총 데이터 개수 = dto.StockAggregate의 필드 개수(7) * batch size
@@ -126,4 +131,8 @@ func (j *MockModelExecJob) SetInputChan(input chan any) {
 
 func (j *MockModelExecJob) OutputChan() chan any {
 	return j.out
+}
+
+func (j *MockModelExecJob) Close() {
+	j.wg.Wait()
 }
