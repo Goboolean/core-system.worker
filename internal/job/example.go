@@ -1,9 +1,9 @@
 package job
 
-/*
 import (
 	"context"
 	"strconv"
+	"sync"
 )
 
 type ExampleJob struct {
@@ -14,6 +14,7 @@ type ExampleJob struct {
 
 	in  chan any `type:`
 	out chan any `type:` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	wg  sync.WaitGroup
 }
 
 func NewExampleJob(params UserParams) (*ExampleJob, error) {
@@ -37,9 +38,12 @@ func NewExampleJob(params UserParams) (*ExampleJob, error) {
 }
 
 func (j *ExampleJob) Execute(ctx context.Context) {
+	j.wg.Add(1)
 	go func() {
+		defer j.wg.Done()
+		defer close(j.out)
 		for {
-			defer close(j.out)
+
 			select {
 			case <-ctx.Done():
 				//종료 처리가 왔을 때 처리
@@ -66,4 +70,7 @@ func (j *ExampleJob) SetInputChan(input chan any) {
 func (j *ExampleJob) OutputChan() chan any {
 	return j.out
 }
-*/
+
+func (j *ExampleJob) Close() {
+	j.wg.Wait()
+}
