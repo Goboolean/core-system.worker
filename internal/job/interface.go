@@ -16,5 +16,5 @@ type Job interface {
 	OutputChan() chan any
 
 	// returns a channel that will be closed when the job is done.
-	Done() chan bool
+	Close() chan bool
 }
