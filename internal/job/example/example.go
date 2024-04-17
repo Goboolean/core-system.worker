@@ -1,12 +1,7 @@
-package job
+package example
 
-import (
-	"context"
-	"strconv"
-	"sync"
-)
-
-type ExampleJob struct {
+/*
+type Example struct {
 	Job
 
 	//user param의 type은 float32
@@ -17,9 +12,9 @@ type ExampleJob struct {
 	wg  sync.WaitGroup
 }
 
-func NewExampleJob(params UserParams) (*ExampleJob, error) {
+func NewExample(params UserParams) (*Job, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
-	instance := &ExampleJob{
+	instance := &Example{
 		out: make(chan any),
 	}
 
@@ -37,7 +32,7 @@ func NewExampleJob(params UserParams) (*ExampleJob, error) {
 	return instance, nil
 }
 
-func (j *ExampleJob) Execute(ctx context.Context) {
+func (j *Example) Execute(ctx context.Context) {
 	j.wg.Add(1)
 	go func() {
 		defer j.wg.Done()
@@ -63,14 +58,14 @@ func (j *ExampleJob) Execute(ctx context.Context) {
 
 }
 
-func (j *ExampleJob) SetInputChan(input chan any) {
+func (j *Example) SetInputChan(input chan any) {
 	j.in = input
 }
 
-func (j *ExampleJob) OutputChan() chan any {
+func (j *Example) OutputChan() chan any {
 	return j.out
 }
 
-func (j *ExampleJob) Close() {
+func (j *Example) Close() {
 	j.wg.Wait()
-}
+}*/

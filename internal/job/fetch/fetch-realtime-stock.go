@@ -1,4 +1,4 @@
-package job
+package fetch
 
 import (
 	"context"
@@ -6,10 +6,11 @@ import (
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
-type FetchRealtimeStockJob struct {
-	Job
+type RealtimeStock struct {
+	Fetcher
 
 	pastRepo infrastructure.MongoClientStock
 
@@ -21,16 +22,16 @@ type FetchRealtimeStockJob struct {
 	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 }
 
-func NewFetchRealtimeStockJob(params UserParams) *FetchRealtimeStockJob {
+func NewFetchRealtimeStockJob(params job.UserParams) *RealtimeStock {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
-	instance := &FetchRealtimeStockJob{
+	instance := &RealtimeStock{
 		out: make(chan any),
 	}
 
 	return instance
 }
 
-func (j *FetchRealtimeStockJob) Execute(ctx context.Context) {
+func (j *RealtimeStock) Execute(ctx context.Context) {
 
 	go func() {
 		defer close(j.out)
@@ -66,10 +67,10 @@ func (j *FetchRealtimeStockJob) Execute(ctx context.Context) {
 
 }
 
-func (j *FetchRealtimeStockJob) SetInputChan(input chan any) {
+func (j *RealtimeStock) SetInputChan(input chan any) {
 	j.in = input
 }
 
-func (j *FetchRealtimeStockJob) OutputChan() chan any {
+func (j *RealtimeStock) OutputChan() chan any {
 	return j.out
 }

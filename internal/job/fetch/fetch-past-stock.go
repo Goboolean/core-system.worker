@@ -1,4 +1,4 @@
-package job
+package fetch
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
 var (
@@ -15,8 +16,8 @@ var (
 	DocumentTypeMismatch = errors.New("fetch: mongo: document type mismatch")
 )
 
-type PastStockFetcher struct {
-	Job
+type PastStock struct {
+	Fetcher
 
 	timeSlice           string
 	isFetchingFullRange bool
@@ -29,10 +30,10 @@ type PastStockFetcher struct {
 
 }
 
-func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *UserParams) (*PastStockFetcher, error) {
+func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	var err error = nil
-	instance := &PastStockFetcher{
+	instance := &PastStock{
 		timeSlice:           "1m",
 		pastRepo:            mongo,
 		isFetchingFullRange: true,
@@ -64,7 +65,7 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *UserPara
 	return instance, err
 }
 
-func (f *PastStockFetcher) Execute(ctx context.Context) {
+func (f *PastStock) Execute(ctx context.Context) {
 	go func() {
 		defer close(f.out)
 
@@ -109,10 +110,6 @@ func (f *PastStockFetcher) Execute(ctx context.Context) {
 	}()
 }
 
-func (j *PastStockFetcher) SetInputChan(input chan any) {
-	j.in = input
-}
-
-func (j *PastStockFetcher) OutputChan() chan any {
+func (j *PastStock) Output() chan any {
 	return j.out
 }
