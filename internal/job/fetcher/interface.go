@@ -1,10 +1,9 @@
-package modelExecute
+package fetcher
 
 import "github.com/Goboolean/core-system.worker/internal/job"
 
-type ModelExecutor interface {
+type Fetcher interface {
 	job.Common
 
-	SetInput(chan any)
 	Output() chan any
 }

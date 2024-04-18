@@ -1,4 +1,4 @@
-package fetch_test
+package fetcher_test
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/mock"
 	"github.com/Goboolean/core-system.worker/internal/job"
-	"github.com/Goboolean/core-system.worker/internal/job/fetch"
+	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,7 +62,7 @@ func TestPastStock(t *testing.T) {
 
 		ctx, _ := context.WithCancel(context.TODO())
 
-		fetch, err := fetch.NewPastStockFetcher(mongo, &job.UserParams{"timeslice": "1m"})
+		fetch, err := fetcher.NewPastStockFetcher(mongo, &job.UserParams{"timeslice": "1m"})
 		if err != nil {
 			t.Error(err)
 		}

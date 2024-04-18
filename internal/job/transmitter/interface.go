@@ -1,9 +1,9 @@
-package fetch
+package transmitter
 
 import "github.com/Goboolean/core-system.worker/internal/job"
 
-type Fetcher interface {
+type Transmitter interface {
 	job.Common
 
-	Output() chan any
+	SetInput(chan any)
 }

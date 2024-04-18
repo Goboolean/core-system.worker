@@ -2,11 +2,11 @@ package pipeline
 
 import (
 	"github.com/Goboolean/core-system.worker/internal/job"
-	"github.com/Goboolean/core-system.worker/internal/job/adapt"
-	"github.com/Goboolean/core-system.worker/internal/job/analyze"
-	"github.com/Goboolean/core-system.worker/internal/job/fetch"
-	modelExecute "github.com/Goboolean/core-system.worker/internal/job/model-execute"
-	"github.com/Goboolean/core-system.worker/internal/job/transmit"
+	"github.com/Goboolean/core-system.worker/internal/job/adapter"
+	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
+	"github.com/Goboolean/core-system.worker/internal/job/executer"
+	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
+	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
 )
 
 type Spec struct {
@@ -18,27 +18,27 @@ type Spec struct {
 }
 
 func Build(spec Spec, UserParams *job.UserParams) (*Pipeline, error) {
-	fetch, err := fetch.Create(spec.FetchJobName, UserParams)
+	fetch, err := fetcher.Create(spec.FetchJobName, UserParams)
 	if err != nil {
 		return nil, err
 	}
 
-	modelExec, err := modelExecute.Create(spec.ModelExecJobName, UserParams)
+	modelExec, err := executer.Create(spec.ModelExecJobName, UserParams)
 	if err != nil {
 		return nil, err
 	}
 
-	adapt, err := adapt.Create(spec.AdaptJobName, UserParams)
+	adapt, err := adapter.Create(spec.AdaptJobName, UserParams)
 	if err != nil {
 		return nil, err
 	}
 
-	analyze, err := analyze.Create(spec.ResAnalyzeJob, UserParams)
+	analyze, err := analyzer.Create(spec.ResAnalyzeJob, UserParams)
 	if err != nil {
 		return nil, err
 	}
 
-	transmit, err := transmit.Create(spec.TransmitJobName, UserParams)
+	transmit, err := transmitter.Create(spec.TransmitJobName, UserParams)
 	if err != nil {
 		return nil, err
 	}

@@ -4,28 +4,33 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Goboolean/core-system.worker/internal/job/adapt"
-	"github.com/Goboolean/core-system.worker/internal/job/analyze"
-	"github.com/Goboolean/core-system.worker/internal/job/fetch"
-	modelExecute "github.com/Goboolean/core-system.worker/internal/job/model-execute"
-	"github.com/Goboolean/core-system.worker/internal/job/transmit"
+	"github.com/Goboolean/core-system.worker/internal/job/adapter"
+	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
+	"github.com/Goboolean/core-system.worker/internal/job/executer"
+	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
+	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
 )
 
 var ErrTypeNotMatch = errors.New("pipeline: cannot build a pipeline because the types are not compatible between the jobs")
 
 // 아키텍처 설계 상 이 구조는 변경되면 안 된다.
 type Pipeline struct {
-	fetch      fetch.Fetcher
-	modelExec  modelExecute.ModelExecutor
-	adapt      adapt.Adapter
-	resAnalyze analyze.Analyzer
-	transmit   transmit.Transmitter
+	fetch      fetcher.Fetcher
+	modelExec  executer.ModelExecutor
+	adapt      adapter.Adapter
+	resAnalyze analyzer.Analyzer
+	transmit   transmitter.Transmitter
 
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-func newPipeline(fetch, modelExec, adapt, resAnalyze, transmit job.Job) (*Pipeline, error) {
+func newPipeline(
+	fetch fetcher.Fetcher,
+	modelExec executer.ModelExecutor,
+	adapt adapter.Adapter,
+	resAnalyze analyzer.Analyzer,
+	transmit transmitter.Transmitter) (*Pipeline, error) {
 
 	return &Pipeline{
 		fetch:      fetch,
