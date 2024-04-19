@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
@@ -27,7 +28,7 @@ type PastStock struct {
 
 	in  chan any `type:"none"`
 	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
-
+	wg  sync.WaitGroup
 }
 
 func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.UserParams) (*PastStock, error) {
@@ -66,7 +67,9 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.User
 }
 
 func (f *PastStock) Execute(ctx context.Context) {
+	f.wg.Add(1)
 	go func() {
+		defer f.wg.Done()
 		defer close(f.out)
 
 		f.pastRepo.SetTarget(f.stockId, f.timeSlice)
@@ -112,4 +115,9 @@ func (f *PastStock) Execute(ctx context.Context) {
 
 func (j *PastStock) Output() chan any {
 	return j.out
+}
+
+func (j *PastStock) Close() error {
+	j.wg.Done()
+	return nil
 }
