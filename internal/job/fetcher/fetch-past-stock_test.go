@@ -1,4 +1,4 @@
-package job_test
+package fetcher_test
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/mock"
 	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,14 +62,14 @@ func TestPastStock(t *testing.T) {
 
 		ctx, _ := context.WithCancel(context.TODO())
 
-		fetch, err := job.NewPastStockFetcher(mongo, &job.UserParams{"timeslice": "1m"})
+		fetch, err := fetcher.NewPastStockFetcher(mongo, &job.UserParams{"timeslice": "1m"})
 		if err != nil {
 			t.Error(err)
 		}
 
 		//Act
 		fetch.Execute(ctx)
-		out := fetch.OutputChan()
+		out := fetch.Output()
 		res := []*dto.StockAggregate{}
 		for data := range out {
 			val, ok := data.(*dto.StockAggregate)
@@ -117,7 +118,6 @@ func TestPastStock(t *testing.T) {
 				Volume:     12,
 			},
 		}
-
 		assert.Equal(t, exp, res)
 	})
 }

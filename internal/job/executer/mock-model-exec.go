@@ -1,4 +1,4 @@
-package job
+package executer
 
 import (
 	"context"
@@ -9,10 +9,11 @@ import (
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
-type MockModelExecJob struct {
-	Job
+type Mock struct {
+	ModelExecutor
 
 	//user param의 type은 float32
 	modelParam1 float32
@@ -28,9 +29,9 @@ type MockModelExecJob struct {
 	wg sync.WaitGroup
 }
 
-func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params UserParams) (*MockModelExecJob, error) {
+func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.UserParams) (*Mock, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
-	instance := &MockModelExecJob{
+	instance := &Mock{
 		maxRetry: 5,
 		out:      make(chan any),
 	}
@@ -59,7 +60,7 @@ func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params UserPa
 	return instance, nil
 }
 
-func (j *MockModelExecJob) Execute(ctx context.Context) {
+func (j *Mock) Execute(ctx context.Context) {
 
 	j.wg.Add(1)
 	go func() {
@@ -82,7 +83,7 @@ func (j *MockModelExecJob) Execute(ctx context.Context) {
 				data, ok := input.(*dto.StockAggregate)
 
 				if !ok {
-					panic(fmt.Errorf("model exec job: type mismatch. expected *dto.StockAggregate, got %s %w.", reflect.TypeOf(input), TypeMismatchError))
+					panic(fmt.Errorf("model exec job: type mismatch. expected *dto.StockAggregate, got %s %w", reflect.TypeOf(input), job.TypeMismatchError))
 				}
 
 				//데이터를 1차원 텐서 타입으로 변환한다.
@@ -125,14 +126,14 @@ func (j *MockModelExecJob) Execute(ctx context.Context) {
 
 }
 
-func (j *MockModelExecJob) SetInputChan(input chan any) {
+func (j *Mock) SetInputChan(input chan any) {
 	j.in = input
 }
 
-func (j *MockModelExecJob) OutputChan() chan any {
+func (j *Mock) OutputChan() chan any {
 	return j.out
 }
 
-func (j *MockModelExecJob) Close() {
+func (j *Mock) Close() {
 	j.wg.Wait()
 }
