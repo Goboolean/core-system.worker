@@ -1,5 +1,8 @@
 package example
 
 /*
-type Create func(name string, p *job.UserParams) (Adapter, error)
+func Create (name string, p *job.UserParams) (Adapter, error){
+	panic("not implemented")
+}
+
 */

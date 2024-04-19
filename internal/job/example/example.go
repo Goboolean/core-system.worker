@@ -32,7 +32,7 @@ func NewExample(params UserParams) (*Job, error) {
 	return instance, nil
 }
 
-func (j *Example) Execute(ctx context.Context) {
+func (e *Example) Execute(ctx context.Context) {
 	j.wg.Add(1)
 	go func() {
 		defer j.wg.Done()
