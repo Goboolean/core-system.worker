@@ -66,7 +66,7 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.User
 	return instance, err
 }
 
-func (f *PastStock) Execute(ctx context.Context) {
+func (j *PastStock) Execute(ctx context.Context) {
 	f.wg.Add(1)
 	go func() {
 		defer f.wg.Done()
