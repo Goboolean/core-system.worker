@@ -1,6 +1,13 @@
 package pipeline
 
-import "github.com/Goboolean/core-system.worker/internal/job"
+import (
+	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/job/adapter"
+	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
+	"github.com/Goboolean/core-system.worker/internal/job/executer"
+	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
+	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
+)
 
 type Spec struct {
 	FetchJobName     string
@@ -10,38 +17,28 @@ type Spec struct {
 	TransmitJobName  string
 }
 
-type PipelineBuilder struct {
-	factory job.JobFactory
-}
-
-func NewPipelineBuilder(jobFactory job.JobFactory) *PipelineBuilder {
-	return &PipelineBuilder{
-		factory: jobFactory,
-	}
-}
-
-func (b *PipelineBuilder) Build(spec Spec, UserParams *job.UserParams) (*Pipeline, error) {
-	fetch, err := b.factory.CreateJob(spec.FetchJobName, UserParams)
+func Build(spec Spec, UserParams *job.UserParams) (*Pipeline, error) {
+	fetch, err := fetcher.Create(spec.FetchJobName, UserParams)
 	if err != nil {
 		return nil, err
 	}
 
-	modelExec, err := b.factory.CreateJob(spec.ModelExecJobName, UserParams)
+	modelExec, err := executer.Create(spec.ModelExecJobName, UserParams)
 	if err != nil {
 		return nil, err
 	}
 
-	adapt, err := b.factory.CreateJob(spec.AdaptJobName, UserParams)
+	adapt, err := adapter.Create(spec.AdaptJobName, UserParams)
 	if err != nil {
 		return nil, err
 	}
 
-	analyze, err := b.factory.CreateJob(spec.ResAnalyzeJob, UserParams)
+	analyze, err := analyzer.Create(spec.ResAnalyzeJob, UserParams)
 	if err != nil {
 		return nil, err
 	}
 
-	transmit, err := b.factory.CreateJob(spec.TransmitJobName, UserParams)
+	transmit, err := transmitter.Create(spec.TransmitJobName, UserParams)
 	if err != nil {
 		return nil, err
 	}
