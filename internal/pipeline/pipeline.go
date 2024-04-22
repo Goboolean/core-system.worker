@@ -47,11 +47,11 @@ func (p *Pipeline) Run() {
 
 	p.modelExec.SetInput(p.fetch.Output())
 
-	p.fetch.Execute(p.ctx)
-	p.modelExec.Execute(p.ctx)
-	p.adapt.Execute(p.ctx)
-	p.resAnalyze.Execute(p.ctx)
-	p.transmit.Execute(p.ctx)
+	p.fetch.Execute()
+	p.modelExec.Execute()
+	p.adapt.Execute()
+	p.resAnalyze.Execute()
+	p.transmit.Execute()
 
 }
 
