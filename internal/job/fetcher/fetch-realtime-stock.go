@@ -31,18 +31,18 @@ func NewFetchRealtimeStockJob(params job.UserParams) *RealtimeStock {
 	return instance
 }
 
-func (j *RealtimeStock) Execute(ctx context.Context) {
+func (rt *RealtimeStock) Execute(ctx context.Context) {
 
 	go func() {
-		defer close(j.out)
+		defer close(rt.out)
 
 		//prefetch past stock data
-		count := j.pastRepo.GetCount(ctx)
-		duration, _ := time.ParseDuration(j.timeSlice)
+		count := rt.pastRepo.GetCount(ctx)
+		duration, _ := time.ParseDuration(rt.timeSlice)
 
-		j.pastRepo.ForEachDocument(ctx, (count-1)-(j.prefetchNum), j.prefetchNum, func(doc infrastructure.StockDocument) {
+		rt.pastRepo.ForEachDocument(ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc infrastructure.StockDocument) {
 
-			j.out <- &dto.StockAggregate{
+			rt.out <- &dto.StockAggregate{
 				OpenTime:   doc.Timestamp,
 				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
 				Open:       doc.Open,
@@ -67,10 +67,10 @@ func (j *RealtimeStock) Execute(ctx context.Context) {
 
 }
 
-func (j *RealtimeStock) SetInputChan(input chan any) {
-	j.in = input
+func (rt *RealtimeStock) SetInputChan(input chan any) {
+	rt.in = input
 }
 
-func (j *RealtimeStock) OutputChan() chan any {
-	return j.out
+func (rt *RealtimeStock) OutputChan() chan any {
+	return rt.out
 }
