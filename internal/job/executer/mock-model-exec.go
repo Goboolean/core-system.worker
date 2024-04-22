@@ -27,13 +27,19 @@ type Mock struct {
 	out chan any `type:` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	wg sync.WaitGroup
+
+	cancel context.CancelFunc
+	ctx    context.Context
 }
 
 func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.UserParams) (*Mock, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
+	ctx, cancel := context.WithCancel(context.Background())
 	instance := &Mock{
 		maxRetry: 5,
 		out:      make(chan any),
+		ctx:      ctx,
+		cancel:   cancel,
 	}
 
 	//여기에서 user param 초기화
@@ -60,7 +66,7 @@ func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.Us
 	return instance, nil
 }
 
-func (m *Mock) Execute(ctx context.Context) {
+func (m *Mock) Execute() {
 
 	m.wg.Add(1)
 	go func() {
@@ -72,7 +78,7 @@ func (m *Mock) Execute(ctx context.Context) {
 
 		for {
 			select {
-			case <-ctx.Done():
+			case <-m.ctx.Done():
 				return
 			case input, ok := <-m.in:
 				if !ok {
@@ -97,7 +103,7 @@ func (m *Mock) Execute(ctx context.Context) {
 				var out []float32
 				var err error
 				for i := 0; i < int(m.maxRetry); i++ {
-					out, err = m.kServeClient.RequestInference(ctx, []int{7, int(m.batchSize)}, acc)
+					out, err = m.kServeClient.RequestInference(m.ctx, []int{7, int(m.batchSize)}, acc)
 
 					if err == nil {
 						break
@@ -135,5 +141,6 @@ func (m *Mock) OutputChan() chan any {
 }
 
 func (m *Mock) Close() {
+	m.cancel()
 	m.wg.Wait()
 }
