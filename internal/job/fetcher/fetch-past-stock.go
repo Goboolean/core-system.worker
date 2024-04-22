@@ -66,26 +66,26 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.User
 	return instance, err
 }
 
-func (j *PastStock) Execute(ctx context.Context) {
-	f.wg.Add(1)
+func (ps *PastStock) Execute(ctx context.Context) {
+	ps.wg.Add(1)
 	go func() {
-		defer f.wg.Done()
-		defer close(f.out)
+		defer ps.wg.Done()
+		defer close(ps.out)
 
-		f.pastRepo.SetTarget(f.stockId, f.timeSlice)
+		ps.pastRepo.SetTarget(ps.stockId, ps.timeSlice)
 		//가져올 데이터의 개수
 		var quantity int
 		//처음 가져올 데이터의 Index
 		var index int
 		var err error
-		var count int = f.pastRepo.GetCount(ctx)
+		var count int = ps.pastRepo.GetCount(ctx)
 
-		if f.isFetchingFullRange {
+		if ps.isFetchingFullRange {
 			index = 0
 			quantity = count
 		} else {
 
-			index, err = f.pastRepo.FindLatestIndexBy(ctx, f.startTimestamp)
+			index, err = ps.pastRepo.FindLatestIndexBy(ctx, ps.startTimestamp)
 			if err != nil {
 				panic(err)
 			}
@@ -94,9 +94,9 @@ func (j *PastStock) Execute(ctx context.Context) {
 			quantity = count - index
 		}
 
-		duration, _ := time.ParseDuration(f.timeSlice)
-		err = f.pastRepo.ForEachDocument(ctx, index, quantity, func(doc infrastructure.StockDocument) {
-			f.out <- &dto.StockAggregate{
+		duration, _ := time.ParseDuration(ps.timeSlice)
+		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc infrastructure.StockDocument) {
+			ps.out <- &dto.StockAggregate{
 				OpenTime:   doc.Timestamp,
 				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
 				Open:       doc.Open,
@@ -113,8 +113,8 @@ func (j *PastStock) Execute(ctx context.Context) {
 	}()
 }
 
-func (j *PastStock) Output() chan any {
-	return j.out
+func (ps *PastStock) Output() chan any {
+	return ps.out
 }
 
 func (j *PastStock) Close() error {
