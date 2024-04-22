@@ -60,21 +60,21 @@ func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.Us
 	return instance, nil
 }
 
-func (j *Mock) Execute(ctx context.Context) {
+func (m *Mock) Execute(ctx context.Context) {
 
-	j.wg.Add(1)
+	m.wg.Add(1)
 	go func() {
-		defer j.wg.Done()
-		defer close(j.out)
+		defer m.wg.Done()
+		defer close(m.out)
 		// Shape = [dto.StockAggregate의 필드 개수 = 7, batch size]
 		// 총 데이터 개수 = dto.StockAggregate의 필드 개수(7) * batch size
-		acc := make([]float32, j.batchSize*7)
+		acc := make([]float32, m.batchSize*7)
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case input, ok := <-j.in:
+			case input, ok := <-m.in:
 				if !ok {
 					//입력 채널이 닫혔을 때 처리
 					return
@@ -89,15 +89,15 @@ func (j *Mock) Execute(ctx context.Context) {
 				//데이터를 1차원 텐서 타입으로 변환한다.
 				//데이터가 충분히 쌓일 때까지 다음 동작을 실행할 수 없도록 막는다.
 				acc = append(acc, data.High, data.Low, data.Open, data.Closed)
-				if len(acc) < int(j.batchSize) {
+				if len(acc) < int(m.batchSize) {
 					continue
 				}
 
 				//이를 http client를 이용해 kserve로 보낸다.
 				var out []float32
 				var err error
-				for i := 0; i < int(j.maxRetry); i++ {
-					out, err = j.kServeClient.RequestInference(ctx, []int{7, int(j.batchSize)}, acc)
+				for i := 0; i < int(m.maxRetry); i++ {
+					out, err = m.kServeClient.RequestInference(ctx, []int{7, int(m.batchSize)}, acc)
 
 					if err == nil {
 						break
@@ -111,7 +111,7 @@ func (j *Mock) Execute(ctx context.Context) {
 				//반환 받은 텐서 타입에서 알맞은 타입으로 가공한다.
 				//지금은 모델이 candlestick를 리턴한다고 가정한다.
 				//거래량 중요한 데이터가 아니므로 일단 0처리
-				j.out <- &dto.StockAggregate{
+				m.out <- &dto.StockAggregate{
 					OpenTime:   data.ClosedTime,
 					ClosedTime: data.ClosedTime + (data.ClosedTime - data.OpenTime),
 					High:       out[0],
@@ -126,14 +126,14 @@ func (j *Mock) Execute(ctx context.Context) {
 
 }
 
-func (j *Mock) SetInputChan(input chan any) {
-	j.in = input
+func (m *Mock) SetInputChan(input chan any) {
+	m.in = input
 }
 
-func (j *Mock) OutputChan() chan any {
-	return j.out
+func (m *Mock) OutputChan() chan any {
+	return m.out
 }
 
-func (j *Mock) Close() {
-	j.wg.Wait()
+func (m *Mock) Close() {
+	m.wg.Wait()
 }
