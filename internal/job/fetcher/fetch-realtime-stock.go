@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
@@ -20,6 +21,7 @@ type RealtimeStock struct {
 
 	in  chan any `type:"none"`
 	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	wg  sync.WaitGroup
 }
 
 func NewFetchRealtimeStockJob(params job.UserParams) *RealtimeStock {
@@ -32,8 +34,9 @@ func NewFetchRealtimeStockJob(params job.UserParams) *RealtimeStock {
 }
 
 func (rt *RealtimeStock) Execute(ctx context.Context) {
-
+	rt.wg.Add(1)
 	go func() {
+		defer rt.wg.Done()
 		defer close(rt.out)
 
 		//prefetch past stock data
@@ -73,4 +76,9 @@ func (rt *RealtimeStock) SetInputChan(input chan any) {
 
 func (rt *RealtimeStock) OutputChan() chan any {
 	return rt.out
+}
+
+func (j *RealtimeStock) Close() error {
+	j.wg.Wait()
+	return nil
 }
