@@ -19,7 +19,6 @@ type RealtimeStock struct {
 	prefetchNum int
 	timeSlice   string
 
-	in  chan any `type:"none"`
 	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 	wg  sync.WaitGroup
 }
@@ -70,11 +69,7 @@ func (rt *RealtimeStock) Execute(ctx context.Context) {
 
 }
 
-func (rt *RealtimeStock) SetInputChan(input chan any) {
-	rt.in = input
-}
-
-func (rt *RealtimeStock) OutputChan() chan any {
+func (rt *RealtimeStock) Output() chan any {
 	return rt.out
 }
 
