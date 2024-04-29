@@ -19,21 +19,17 @@ type RealtimeStock struct {
 	prefetchNum int
 	timeSlice   string
 
-	in  chan any `type:"none"`
-	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
-	wg  sync.WaitGroup
-
-	ctx    context.Context
-	cancel context.CancelFunc
+	in   chan any `type:"none"`
+	out  chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	wg   sync.WaitGroup
+	stop chan struct{}
 }
 
 func NewFetchRealtimeStockJob(params job.UserParams) *RealtimeStock {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
-	ctx, cancel := context.WithCancel(context.Background())
 	instance := &RealtimeStock{
-		out:    make(chan any),
-		ctx:    ctx,
-		cancel: cancel,
+		out:  make(chan any),
+		stop: make(chan struct{}),
 	}
 
 	return instance
@@ -43,13 +39,24 @@ func (rt *RealtimeStock) Execute() {
 	rt.wg.Add(1)
 	go func() {
 		defer rt.wg.Done()
+		defer func() {
+			if _, ok := <-rt.stop; ok {
+				close(rt.stop)
+			}
+		}()
 		defer close(rt.out)
 
+		ctx, cancel := context.WithCancel(context.Background())
+		go func() {
+			<-rt.stop
+			cancel()
+		}()
+
 		//prefetch past stock data
-		count := rt.pastRepo.GetCount(rt.ctx)
+		count := rt.pastRepo.GetCount(ctx)
 		duration, _ := time.ParseDuration(rt.timeSlice)
 
-		rt.pastRepo.ForEachDocument(rt.ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc infrastructure.StockDocument) {
+		rt.pastRepo.ForEachDocument(ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc infrastructure.StockDocument) {
 
 			rt.out <- &dto.StockAggregate{
 				OpenTime:   doc.Timestamp,
@@ -64,7 +71,7 @@ func (rt *RealtimeStock) Execute() {
 
 		for {
 			select {
-			case <-rt.ctx.Done():
+			case <-rt.stop:
 				return
 				//case <- karfka:
 
@@ -85,7 +92,7 @@ func (rt *RealtimeStock) OutputChan() chan any {
 }
 
 func (rt *RealtimeStock) Close() error {
-	rt.cancel()
+	close(rt.stop)
 	rt.wg.Wait()
 	return nil
 }

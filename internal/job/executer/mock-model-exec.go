@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
@@ -28,18 +29,15 @@ type Mock struct {
 
 	wg sync.WaitGroup
 
-	cancel context.CancelFunc
-	ctx    context.Context
+	stop chan struct{}
 }
 
 func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.UserParams) (*Mock, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
-	ctx, cancel := context.WithCancel(context.Background())
 	instance := &Mock{
 		maxRetry: 5,
 		out:      make(chan any),
-		ctx:      ctx,
-		cancel:   cancel,
+		stop:     make(chan struct{}),
 	}
 
 	//여기에서 user param 초기화
@@ -71,15 +69,24 @@ func (m *Mock) Execute() {
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
+		defer func() {
+			if _, ok := <-m.stop; ok {
+				close(m.stop)
+			}
+		}()
 		defer close(m.out)
 		// Shape = [dto.StockAggregate의 필드 개수 = 7, batch size]
 		// 총 데이터 개수 = dto.StockAggregate의 필드 개수(7) * batch size
 		acc := make([]float32, m.batchSize*7)
 
 		for {
+			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*60*time.Second))
+			go func() {
+				<-m.stop
+				cancel()
+			}()
+
 			select {
-			case <-m.ctx.Done():
-				return
 			case input, ok := <-m.in:
 				if !ok {
 					//입력 채널이 닫혔을 때 처리
@@ -103,7 +110,7 @@ func (m *Mock) Execute() {
 				var out []float32
 				var err error
 				for i := 0; i < int(m.maxRetry); i++ {
-					out, err = m.kServeClient.RequestInference(m.ctx, []int{7, int(m.batchSize)}, acc)
+					out, err = m.kServeClient.RequestInference(ctx, []int{7, int(m.batchSize)}, acc)
 
 					if err == nil {
 						break
@@ -140,7 +147,8 @@ func (m *Mock) OutputChan() chan any {
 	return m.out
 }
 
-func (m *Mock) Close() {
-	m.cancel()
+func (m *Mock) Close() error {
+	close(m.stop)
 	m.wg.Wait()
+	return nil
 }

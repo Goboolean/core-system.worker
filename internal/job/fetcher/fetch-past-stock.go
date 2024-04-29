@@ -28,16 +28,12 @@ type PastStock struct {
 
 	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
-	wg sync.WaitGroup
-
-	ctx    context.Context
-	cancel context.CancelFunc
+	wg   sync.WaitGroup
+	stop chan struct{}
 }
 
 func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
-
-	ctx, cancel := context.WithCancel(context.Background())
 
 	var err error = nil
 	instance := &PastStock{
@@ -45,8 +41,7 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.User
 		pastRepo:            mongo,
 		isFetchingFullRange: true,
 		out:                 make(chan any),
-		ctx:                 ctx,
-		cancel:              cancel,
+		stop:                make(chan struct{}),
 	}
 
 	if !parmas.IsKeyNullOrEmpty("stockId") {
@@ -78,7 +73,21 @@ func (ps *PastStock) Execute() {
 	ps.wg.Add(1)
 	go func() {
 		defer ps.wg.Done()
+		defer func() {
+			if _, ok := <-ps.stop; ok {
+				close(ps.stop)
+			}
+		}()
 		defer close(ps.out)
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		//stop sig를 받았을 때 하던 작업을 멈추고 강제종료 하기 위한 부분.
+		//graceful shutdown을 원하면 이 부분이 없어도 됩니다.
+		go func() {
+			<-ps.stop
+			cancel()
+		}()
 
 		ps.pastRepo.SetTarget(ps.stockId, ps.timeSlice)
 		//가져올 데이터의 개수
@@ -86,24 +95,23 @@ func (ps *PastStock) Execute() {
 		//처음 가져올 데이터의 Index
 		var index int
 		var err error
-		var count int = ps.pastRepo.GetCount(ps.ctx)
+		var count int = ps.pastRepo.GetCount(ctx)
 
 		if ps.isFetchingFullRange {
 			index = 0
 			quantity = count
 		} else {
 
-			index, err = ps.pastRepo.FindLatestIndexBy(ps.ctx, ps.startTimestamp)
+			index, err = ps.pastRepo.FindLatestIndexBy(ctx, startTimestamp)
 			if err != nil {
 				panic(err)
 			}
 
-			//1,2,3,4,5
 			quantity = count - index
 		}
 
 		duration, _ := time.ParseDuration(ps.timeSlice)
-		err = ps.pastRepo.ForEachDocument(ps.ctx, index, quantity, func(doc infrastructure.StockDocument) {
+		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc infrastructure.StockDocument) {
 			ps.out <- &dto.StockAggregate{
 				OpenTime:   doc.Timestamp,
 				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
@@ -126,7 +134,7 @@ func (ps *PastStock) Output() chan any {
 }
 
 func (ps *PastStock) Close() error {
-	ps.cancel()
+	close(ps.stop)
 	ps.wg.Wait()
 	return nil
 }
