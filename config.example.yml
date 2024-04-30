@@ -1,20 +1,16 @@
-pipeline:
-  fetchJob:
-    isRealTime: true //boolean
-    productType: "stock" // "stock"|"crypto"...etc
-    startTime: 1234523445 // int64 시작 시각 타임스탬프. 
-    timeSilce: "5m"
-    additionalParmas:
-      -key1: "value1"
-  modelExecJob:
-    name: "model__fractal-stock-probeDist" #단순 예시, uuid가 올 수도 있음
-    additionalParmas:
-  adaptJob:
-    name: "adapt__probeDist-to-probeDist"
-    additionalParmas:
-  analyzerJob:
-    name: "analyze__Kelly-bet"
-    initialAsset: 100
-    additionalParmas:
-      - tendencyIndex: 3.0 #투자 성향. 높을수록 공격형. 안정형이면 캘리기준보다 작게 배팅, 높으면 더 크게 배팅
-  
+task: "backTest" #"backTest"|"realtimeTrade"
+dataOrigin:
+  timeFrame:
+      seconds: 1 #string, seconds 초 단위, example: "300s"
+  productType: "stock" #"option"|"stock"|"crypto"
+  startTimestamp: #long(int64),Unix timestamp(epoch time), realtime일 때는 미적용.
+  endTimestamp: #long(int64),Unix timestamp(epoch time), realtime일 때는 미적용.
+model: #model field가 없으면 외부 모델을 사용하지 않는 유즈케이스이다.
+  id: "id" #string
+  batchSize: 100 #int
+  outputType: "candlestick" #"candlestick"|"valueList"|"probeDist"
+  params: #map[string]float32
+strategy:
+	id: "id" #string
+	inputType: "candlestick" #"candlestick"|"valueList"|"probeDist"
+  params: #map[string]float32
