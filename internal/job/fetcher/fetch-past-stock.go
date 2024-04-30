@@ -10,6 +10,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
 	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
 var (
@@ -29,7 +30,7 @@ type PastStock struct {
 	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	wg   sync.WaitGroup
-	stop chan struct{}
+	stop *util.StopNotifier
 }
 
 func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.UserParams) (*PastStock, error) {
@@ -41,7 +42,7 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.User
 		pastRepo:            mongo,
 		isFetchingFullRange: true,
 		out:                 make(chan any),
-		stop:                make(chan struct{}),
+		stop:                util.NewStopNotifier(),
 	}
 
 	if !parmas.IsKeyNullOrEmpty("stockId") {
@@ -73,11 +74,7 @@ func (ps *PastStock) Execute() {
 	ps.wg.Add(1)
 	go func() {
 		defer ps.wg.Done()
-		defer func() {
-			if _, ok := <-ps.stop; ok {
-				close(ps.stop)
-			}
-		}()
+		defer ps.stop.NotifyStop()
 		defer close(ps.out)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -85,7 +82,7 @@ func (ps *PastStock) Execute() {
 		//stop sig를 받았을 때 하던 작업을 멈추고 강제종료 하기 위한 부분.
 		//graceful shutdown을 원하면 이 부분이 없어도 됩니다.
 		go func() {
-			<-ps.stop
+			<-ps.stop.Done()
 			cancel()
 		}()
 
@@ -102,7 +99,7 @@ func (ps *PastStock) Execute() {
 			quantity = count
 		} else {
 
-			index, err = ps.pastRepo.FindLatestIndexBy(ctx, startTimestamp)
+			index, err = ps.pastRepo.FindLatestIndexBy(ctx, ps.startTimestamp)
 			if err != nil {
 				panic(err)
 			}
@@ -134,7 +131,7 @@ func (ps *PastStock) Output() chan any {
 }
 
 func (ps *PastStock) Close() error {
-	close(ps.stop)
+	ps.stop.NotifyStop()
 	ps.wg.Wait()
 	return nil
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
 	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
 type Mock struct {
@@ -29,7 +30,7 @@ type Mock struct {
 
 	wg sync.WaitGroup
 
-	stop chan struct{}
+	stop *util.StopNotifier
 }
 
 func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.UserParams) (*Mock, error) {
@@ -37,7 +38,7 @@ func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.Us
 	instance := &Mock{
 		maxRetry: 5,
 		out:      make(chan any),
-		stop:     make(chan struct{}),
+		stop:     util.NewStopNotifier(),
 	}
 
 	//여기에서 user param 초기화
@@ -69,11 +70,7 @@ func (m *Mock) Execute() {
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
-		defer func() {
-			if _, ok := <-m.stop; ok {
-				close(m.stop)
-			}
-		}()
+		defer m.stop.NotifyStop()
 		defer close(m.out)
 		// Shape = [dto.StockAggregate의 필드 개수 = 7, batch size]
 		// 총 데이터 개수 = dto.StockAggregate의 필드 개수(7) * batch size
@@ -82,7 +79,7 @@ func (m *Mock) Execute() {
 		for {
 			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*60*time.Second))
 			go func() {
-				<-m.stop
+				<-m.stop.Done()
 				cancel()
 			}()
 
@@ -148,7 +145,7 @@ func (m *Mock) OutputChan() chan any {
 }
 
 func (m *Mock) Close() error {
-	close(m.stop)
+	m.stop.NotifyStop()
 	m.wg.Wait()
 	return nil
 }
