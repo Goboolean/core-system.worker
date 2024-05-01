@@ -22,7 +22,7 @@ type ModelConfig struct {
 	Id         string             `yaml:"id"`
 	BatchSize  int                `yaml:"batchSize"`
 	OutputType string             `yaml:"outputType"`
-	Parmas     map[string]float32 `yaml:"params"`
+	Params     map[string]float32 `yaml:"params"`
 }
 
 type StrategyConfig struct {
