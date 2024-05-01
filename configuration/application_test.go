@@ -1,12 +1,10 @@
 package configuration_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/Goboolean/core-system.worker/configuration"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
 )
 
 func TestMain(m *testing.M) {
@@ -14,16 +12,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestUnmarshal(t *testing.T) {
-	//arrange
-	b, err := os.ReadFile("../config.example.yml")
-
-	if err != nil {
-		t.Error(err)
-	}
-
 	//act
-	var AppConfig configuration.AppConfig
-	err = yaml.Unmarshal(b, &AppConfig)
+	AppConfig, err := configuration.ImportAppConfigFromFile("../config.example.yml")
 
 	//assert
 	assert.NoError(t, err)
