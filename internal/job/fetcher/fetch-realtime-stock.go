@@ -1,7 +1,6 @@
 package fetcher
 
 import (
-	"context"
 	"sync"
 	"time"
 
@@ -23,7 +22,7 @@ type RealtimeStock struct {
 	wg  sync.WaitGroup
 }
 
-func NewFetchRealtimeStockJob(params job.UserParams) *RealtimeStock {
+func NewFetchRealtimeStockJob(mongo infrastructure.MongoClientStock, params *job.UserParams) *RealtimeStock {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &RealtimeStock{
 		out: make(chan any),
@@ -32,7 +31,7 @@ func NewFetchRealtimeStockJob(params job.UserParams) *RealtimeStock {
 	return instance
 }
 
-func (rt *RealtimeStock) Execute(ctx context.Context) {
+func (rt *RealtimeStock) Execute() {
 	rt.wg.Add(1)
 	go func() {
 		defer rt.wg.Done()
