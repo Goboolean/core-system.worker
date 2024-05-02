@@ -1,7 +1,6 @@
 package executer
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -29,7 +28,7 @@ type Mock struct {
 	wg sync.WaitGroup
 }
 
-func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.UserParams) (*Mock, error) {
+func NewMock(kServeClient infrastructure.KServeClient, params job.UserParams) (*Mock, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &Mock{
 		maxRetry: 5,
@@ -60,7 +59,7 @@ func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.Us
 	return instance, nil
 }
 
-func (m *Mock) Execute(ctx context.Context) {
+func (m *Mock) Execute() {
 
 	m.wg.Add(1)
 	go func() {
@@ -134,6 +133,7 @@ func (m *Mock) Output() chan any {
 	return m.out
 }
 
-func (m *Mock) Close() {
+func (m *Mock) Close() error {
 	m.wg.Wait()
+	return nil
 }

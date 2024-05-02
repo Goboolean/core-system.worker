@@ -10,7 +10,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/mock"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestPastStock(t *testing.T) {
@@ -62,7 +62,7 @@ func TestPastStock(t *testing.T) {
 
 		ctx, _ := context.WithCancel(context.TODO())
 
-		fetch, err := fetcher.NewPastStockFetcher(mongo, &job.UserParams{"timeslice": "1m"})
+		fetch, err := fetcher.NewPastStock(mongo, &job.UserParams{"timeslice": "1m"})
 		if err != nil {
 			t.Error(err)
 		}

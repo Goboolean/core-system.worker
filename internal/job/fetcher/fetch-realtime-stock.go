@@ -22,13 +22,13 @@ type RealtimeStock struct {
 	wg  sync.WaitGroup
 }
 
-func NewFetchRealtimeStockJob(mongo infrastructure.MongoClientStock, params *job.UserParams) *RealtimeStock {
+func NewRealtimeStock(mongo infrastructure.MongoClientStock, params *job.UserParams) (*RealtimeStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &RealtimeStock{
 		out: make(chan any),
 	}
 
-	return instance
+	return instance, nil
 }
 
 func (rt *RealtimeStock) Execute() {

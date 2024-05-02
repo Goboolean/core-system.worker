@@ -1,7 +1,6 @@
 package fetcher
 
 import (
-	"context"
 	"errors"
 	"strconv"
 	"sync"
@@ -31,7 +30,7 @@ type PastStock struct {
 	wg  sync.WaitGroup
 }
 
-func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.UserParams) (*PastStock, error) {
+func NewPastStock(mongo infrastructure.MongoClientStock, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	var err error = nil
 	instance := &PastStock{
@@ -66,7 +65,7 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.User
 	return instance, err
 }
 
-func (ps *PastStock) Execute(ctx context.Context) {
+func (ps *PastStock) Execute() {
 	ps.wg.Add(1)
 	go func() {
 		defer ps.wg.Done()
