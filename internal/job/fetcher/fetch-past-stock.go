@@ -35,10 +35,11 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.User
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	var err error = nil
 	instance := &PastStock{
-		timeSlice:           "1m",
-		pastRepo:            mongo,
-		isFetchingFullRange: true,
-		out:                 make(chan any),
+		pastRepo: mongo,
+		out:      make(chan any),
+
+		timeSlice:           DefaultTimeSlice,
+		isFetchingFullRange: DefaultIsFetchingFullRange,
 	}
 
 	if !parmas.IsKeyNullOrEmpty("stockId") {
