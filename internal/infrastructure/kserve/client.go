@@ -1,4 +1,4 @@
-package infrastructure
+package kserve
 
 import (
 	"bytes"
@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/Goboolean/common/pkg/resolver"
-	kserve "github.com/Goboolean/core-system.worker/internal/dto/Kserve"
+	"github.com/Goboolean/core-system.worker/internal/dto"
 )
 
-var defaultKSserveClient = &KServeClientImpl{
+var defaultKSserveClient = &ClientImpl{
 	host:   "",
 	param1: 0.0,
 	param2: 1.0,
@@ -25,14 +25,14 @@ var defaultKSserveClient = &KServeClientImpl{
 	},
 }
 
-// KServeClient is an interface that defines the role of sending and receiving requests to KServe.
-type KServeClient interface {
+// Client is an interface that defines the role of sending and receiving requests to KServe.
+type Client interface {
 	SetModelName(name string)
 	RequestInference(ctx context.Context, shape []int, input []float32) (output []float32, err error)
 }
 
-// KServeClientImpl is a struct that represents the implementation of the KServeClient interface.
-type KServeClientImpl struct {
+// ClientImpl is a struct that represents the implementation of the KServeClient interface.
+type ClientImpl struct {
 	modelId           string
 	host              string
 	inferenceEndpoint *url.URL
@@ -43,8 +43,8 @@ type KServeClientImpl struct {
 	http *http.Client
 }
 
-// NewKServeClient creates a new instance of KServeClientImpl.
-func NewKServeClient(c *resolver.ConfigMap) (*KServeClientImpl, error) {
+// NewClient creates a new instance of KServeClientImpl.
+func NewClient(c *resolver.ConfigMap) (*ClientImpl, error) {
 
 	//default value
 	instance := defaultKSserveClient
@@ -78,14 +78,14 @@ func NewKServeClient(c *resolver.ConfigMap) (*KServeClientImpl, error) {
 }
 
 // SetModelName sets the model name for the KServeClientImpl instance.
-func (c *KServeClientImpl) SetModelName(name string) {
+func (c *ClientImpl) SetModelName(name string) {
 	c.inferenceEndpoint = generateInferenceUrl(c.host, name)
 }
 
 // RequestInference sends an inference request to KServe and returns the output and any error that occurred.
-func (c *KServeClientImpl) RequestInference(ctx context.Context, shape []int, input []float32) (output []float32, err error) {
+func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []float32) (output []float32, err error) {
 	bodyJson, err := json.Marshal(
-		kserve.InferenceReq{
+		dto.InferenceReq{
 			Name:     "input",
 			Shape:    shape,
 			DataType: "FP32",
@@ -109,7 +109,7 @@ func (c *KServeClientImpl) RequestInference(ctx context.Context, shape []int, in
 	}
 
 	var b []byte
-	var out kserve.InferenceRes
+	var out dto.InferenceRes
 	res.Body.Read(b)
 
 	json.Unmarshal(b, &out)
