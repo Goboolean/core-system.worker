@@ -8,7 +8,6 @@ import (
 
 type jobProvider func(p *job.UserParams) (Analyzer, error)
 
-// wire의 한계로 여기서 수동DI 합니다.
 var providerRepo = map[Spec]jobProvider{
 	Spec{Id: "abc", InputType: "candlestick"}: func(p *job.UserParams) (Analyzer, error) {
 		return Dummy{}, nil

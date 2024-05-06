@@ -8,11 +8,14 @@ proto-generate:
 		--go_opt=paths=source_relative \
     ./api/kafka/model.*/event.proto
 
-make-app: kubectl apply -f build/deploy.yml
+make-app: 
+	kubectl apply -f build/deploy.yml
 
-delete: kubectl delete deployment worker-deployment
+delete: 
+	kubectl delete deployment worker-deployment
 
-build-dockerfile: docker build -t worker -f build/Dockerfile .
+build-dockerfile: 
+	docker build -t worker -f build/Dockerfile .
 
 wire-app: 
 	wire ${STAGE_PACKAGES}
