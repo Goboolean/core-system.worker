@@ -1,10 +1,12 @@
 package executer
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
@@ -28,7 +30,7 @@ type Mock struct {
 	wg sync.WaitGroup
 }
 
-func NewMock(kServeClient infrastructure.KServeClient, params job.UserParams) (*Mock, error) {
+func NewMock(kServeClient infrastructure.KServeClient, params *job.UserParams) (*Mock, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &Mock{
 		maxRetry: 5,
@@ -36,7 +38,7 @@ func NewMock(kServeClient infrastructure.KServeClient, params job.UserParams) (*
 	}
 
 	//여기에서 user param 초기화
-	if param1, ok := params["param1"]; ok {
+	if param1, ok := (*params)["param1"]; ok {
 		val, err := strconv.ParseFloat(param1, 32)
 
 		if err != nil {
@@ -46,7 +48,7 @@ func NewMock(kServeClient infrastructure.KServeClient, params job.UserParams) (*
 		instance.modelParam1 = float32(val)
 	}
 
-	if param1, ok := params["batchSize"]; ok {
+	if param1, ok := (*params)["batchSize"]; ok {
 		val, err := strconv.ParseInt(param1, 10, 32)
 
 		if err != nil {
@@ -70,6 +72,7 @@ func (m *Mock) Execute() {
 		acc := make([]float32, m.batchSize*7)
 
 		for {
+			ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(60*time.Second))
 			select {
 			case <-ctx.Done():
 				return
