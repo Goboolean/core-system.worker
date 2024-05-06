@@ -10,6 +10,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure"
 	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
 var (
@@ -26,20 +27,22 @@ type PastStock struct {
 	stockId             string
 	pastRepo            infrastructure.MongoClientStock
 
-	in  chan any `type:"none"`
 	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
-	wg  sync.WaitGroup
+
+	wg   sync.WaitGroup
+	stop *util.StopNotifier
 }
 
 func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
+
 	var err error = nil
 	instance := &PastStock{
-		pastRepo: mongo,
-		out:      make(chan any),
-
 		timeSlice:           DefaultTimeSlice,
 		isFetchingFullRange: DefaultIsFetchingFullRange,
+		pastRepo:            mongo,
+		stop:                util.NewStopNotifier(),
+		out:                 make(chan any),
 	}
 
 	if !parmas.IsKeyNullOrEmpty("stockId") {
@@ -67,11 +70,21 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.User
 	return instance, err
 }
 
-func (ps *PastStock) Execute(ctx context.Context) {
+func (ps *PastStock) Execute() {
 	ps.wg.Add(1)
 	go func() {
 		defer ps.wg.Done()
+		defer ps.stop.NotifyStop()
 		defer close(ps.out)
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		//stop sig를 받았을 때 하던 작업을 멈추고 강제종료 하기 위한 부분.
+		//graceful shutdown을 원하면 이 부분이 없어도 됩니다.
+		go func() {
+			<-ps.stop.Done()
+			cancel()
+		}()
 
 		ps.pastRepo.SetTarget(ps.stockId, ps.timeSlice)
 		//가져올 데이터의 개수
@@ -91,7 +104,6 @@ func (ps *PastStock) Execute(ctx context.Context) {
 				panic(err)
 			}
 
-			//1,2,3,4,5
 			quantity = count - index
 		}
 
@@ -118,7 +130,8 @@ func (ps *PastStock) Output() chan any {
 	return ps.out
 }
 
-func (j *PastStock) Close() error {
-	j.wg.Done()
+func (ps *PastStock) Close() error {
+	ps.stop.NotifyStop()
+	ps.wg.Wait()
 	return nil
 }
