@@ -1,6 +1,7 @@
 package fetcher
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -37,6 +38,7 @@ func (rt *RealtimeStock) Execute() {
 		defer rt.wg.Done()
 		defer close(rt.out)
 
+		ctx, _ := context.WithCancel(context.TODO())
 		//prefetch past stock data
 		count := rt.pastRepo.GetCount(ctx)
 		duration, _ := time.ParseDuration(rt.timeSlice)

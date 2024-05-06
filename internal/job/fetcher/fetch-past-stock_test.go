@@ -10,7 +10,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/mock"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
-	"gotest.tools/v3/assert"
+	"gotest.tools/assert"
 )
 
 func TestPastStock(t *testing.T) {

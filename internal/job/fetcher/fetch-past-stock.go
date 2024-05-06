@@ -1,6 +1,7 @@
 package fetcher
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"sync"
@@ -71,6 +72,7 @@ func (ps *PastStock) Execute() {
 		defer ps.wg.Done()
 		defer close(ps.out)
 
+		ctx, _ := context.WithCancel(context.TODO())
 		ps.pastRepo.SetTarget(ps.stockId, ps.timeSlice)
 		//가져올 데이터의 개수
 		var quantity int
