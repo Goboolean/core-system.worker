@@ -1,7 +1,6 @@
 package fetcher_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/Goboolean/common/pkg/resolver"
@@ -60,15 +59,13 @@ func TestPastStock(t *testing.T) {
 			},
 		})
 
-		ctx, _ := context.WithCancel(context.TODO())
-
 		fetch, err := fetcher.NewPastStockFetcher(mongo, &job.UserParams{"timeslice": "1m"})
 		if err != nil {
 			t.Error(err)
 		}
 
 		//Act
-		fetch.Execute(ctx)
+		fetch.Execute()
 		out := fetch.Output()
 		res := []*dto.StockAggregate{}
 		for data := range out {
