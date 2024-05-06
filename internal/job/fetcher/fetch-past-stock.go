@@ -38,11 +38,11 @@ func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.User
 
 	var err error = nil
 	instance := &PastStock{
-		timeSlice:           "1m",
+		timeSlice:           DefaultTimeSlice,
+		isFetchingFullRange: DefaultIsFetchingFullRange,
 		pastRepo:            mongo,
-		isFetchingFullRange: true,
-		out:                 make(chan any),
 		stop:                util.NewStopNotifier(),
+		out:                 make(chan any),
 	}
 
 	if !parmas.IsKeyNullOrEmpty("stockId") {

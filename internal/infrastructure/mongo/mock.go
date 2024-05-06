@@ -1,38 +1,37 @@
-package mock
+package mongo
 
 import (
 	"context"
 
 	"github.com/Goboolean/common/pkg/resolver"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure"
 )
 
-type Mock__MongoClientStock struct {
+type Mock__StockClient struct {
 	stockId   string
 	timeSlice string
 
-	data []*infrastructure.StockDocument
+	data []*StockDocument
 }
 
-func NewMongoClientStock(c *resolver.ConfigMap, data []*infrastructure.StockDocument) (*Mock__MongoClientStock, error) {
-	return &Mock__MongoClientStock{
+func Mock__NewStockClient(c *resolver.ConfigMap, data []*StockDocument) (*Mock__StockClient, error) {
+	return &Mock__StockClient{
 		data: data,
 	}, nil
 }
 
 // SetTarget sets the target for a specific stock and timeslice.
-func (c *Mock__MongoClientStock) SetTarget(stockID string, timeslice string) {
+func (c *Mock__StockClient) SetTarget(stockID string, timeslice string) {
 	c.stockId = stockID
 	c.timeSlice = timeslice
 }
 
 // GetCount gets count of targeted document
-func (c *Mock__MongoClientStock) GetCount(ctx context.Context) int {
+func (c *Mock__StockClient) GetCount(ctx context.Context) int {
 	return len(c.data)
 }
 
 // FindLatestIndexBy finds the index of the most recent document created before or on the given date.
-func (c *Mock__MongoClientStock) FindLatestIndexBy(ctx context.Context, timestamp int64) (int, error) {
+func (c *Mock__StockClient) FindLatestIndexBy(ctx context.Context, timestamp int64) (int, error) {
 
 	if c.data[0].Timestamp > timestamp {
 		return 0, nil
@@ -48,7 +47,7 @@ func (c *Mock__MongoClientStock) FindLatestIndexBy(ctx context.Context, timestam
 }
 
 // ForEachDocument iterates over a range of documents starting from the specified index and executes the given action
-func (c *Mock__MongoClientStock) ForEachDocument(ctx context.Context, startIndex int, quantity int, action func(doc infrastructure.StockDocument)) error {
+func (c *Mock__StockClient) ForEachDocument(ctx context.Context, startIndex int, quantity int, action func(doc StockDocument)) error {
 	for i := startIndex; i < startIndex+quantity; i++ {
 		select {
 		case <-ctx.Done():
@@ -60,11 +59,11 @@ func (c *Mock__MongoClientStock) ForEachDocument(ctx context.Context, startIndex
 	return nil
 }
 
-func (c *Mock__MongoClientStock) Ping(ctx context.Context) error {
+func (c *Mock__StockClient) Ping(ctx context.Context) error {
 	return nil
 }
 
 // TODO: 커넥션 닫는 부분 구현
-func (c *Mock__MongoClientStock) Close() {
+func (c *Mock__StockClient) Close() {
 	panic("Not Implied")
 }

@@ -36,7 +36,7 @@ type Mock struct {
 func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.UserParams) (*Mock, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &Mock{
-		maxRetry: 5,
+		maxRetry: DefaultMaxRetry,
 		out:      make(chan any),
 		stop:     util.NewStopNotifier(),
 	}
