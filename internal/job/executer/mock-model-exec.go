@@ -136,11 +136,11 @@ func (m *Mock) Execute() {
 
 }
 
-func (m *Mock) SetInputChan(input chan any) {
+func (m *Mock) SetInput(input chan any) {
 	m.in = input
 }
 
-func (m *Mock) OutputChan() chan any {
+func (m *Mock) Output() chan any {
 	return m.out
 }
 
