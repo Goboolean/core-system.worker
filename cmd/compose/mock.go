@@ -6,7 +6,7 @@ import (
 	"time"
 
 	_ "github.com/Goboolean/core-system.worker/internal/util/logger"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // It is a function for temporary use for testing kubernetes in advance.
@@ -23,7 +23,7 @@ func MockRun() error {
 	go func() {
 		for {
 			deadline, _ := ctx.Deadline()
-			logrus.Info("time left: %s\n", time.Until(deadline))
+			log.Info("time left: %s\n", time.Until(deadline))
 			time.Sleep(1 * time.Second)
 		}
 	}()
