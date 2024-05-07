@@ -110,13 +110,11 @@ func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []
 
 	var b []byte
 	var out dto.InferenceRes
-	_, err = res.Body.Read(b)
-	if err != nil {
+	if _, err = res.Body.Read(b); err != nil {
 		return nil, fmt.Errorf("inference: falid to read responce body %w", err)
 	}
 
-	err = json.Unmarshal(b, &out)
-	if err != nil {
+	if err = json.Unmarshal(b, &out); err != nil {
 		return nil, fmt.Errorf("inference: falid to unmarshal responce %w", err)
 
 	}
