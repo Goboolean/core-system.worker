@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/util"
 )
@@ -25,7 +25,7 @@ type PastStock struct {
 	isFetchingFullRange bool
 	startTimestamp      int64 // Unix timestamp of start time
 	stockId             string
-	pastRepo            infrastructure.MongoClientStock
+	pastRepo            mongo.StockClient
 
 	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
@@ -33,7 +33,7 @@ type PastStock struct {
 	stop *util.StopNotifier
 }
 
-func NewPastStockFetcher(mongo infrastructure.MongoClientStock, parmas *job.UserParams) (*PastStock, error) {
+func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 
 	var err error = nil
@@ -108,7 +108,7 @@ func (ps *PastStock) Execute() {
 		}
 
 		duration, _ := time.ParseDuration(ps.timeSlice)
-		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc infrastructure.StockDocument) {
+		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc mongo.StockDocument) {
 			ps.out <- &dto.StockAggregate{
 				OpenTime:   doc.Timestamp,
 				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),

@@ -5,19 +5,18 @@ import (
 
 	"github.com/Goboolean/common/pkg/resolver"
 	"github.com/Goboolean/core-system.worker/internal/dto"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure/mock"
+	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/assert"
 )
 
 func TestPastStock(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 
 		//Arrange
-		mongo, _ := mock.NewMongoClientStock(&resolver.ConfigMap{}, []*infrastructure.StockDocument{
-			&infrastructure.StockDocument{
+		mongo, _ := mongo.Mock__NewStockClient(&resolver.ConfigMap{}, []*mongo.StockDocument{
+			&mongo.StockDocument{
 				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
@@ -27,7 +26,7 @@ func TestPastStock(t *testing.T) {
 				Volume:    12,
 				Timestamp: 1711758929,
 			},
-			&infrastructure.StockDocument{
+			&mongo.StockDocument{
 				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
@@ -37,7 +36,7 @@ func TestPastStock(t *testing.T) {
 				Volume:    12,
 				Timestamp: 1711759229,
 			},
-			&infrastructure.StockDocument{
+			&mongo.StockDocument{
 				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
@@ -47,7 +46,7 @@ func TestPastStock(t *testing.T) {
 				Volume:    12,
 				Timestamp: 1711759529,
 			},
-			&infrastructure.StockDocument{
+			&mongo.StockDocument{
 				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
@@ -59,7 +58,7 @@ func TestPastStock(t *testing.T) {
 			},
 		})
 
-		fetch, err := fetcher.NewPastStockFetcher(mongo, &job.UserParams{"timeslice": "1m"})
+		fetch, err := fetcher.NewPastStock(mongo, &job.UserParams{"timeslice": "1m"})
 		if err != nil {
 			t.Error(err)
 		}
