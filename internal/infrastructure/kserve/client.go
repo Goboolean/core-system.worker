@@ -83,7 +83,7 @@ func (c *ClientImpl) SetModelName(name string) {
 }
 
 // RequestInference sends an inference request to KServe and returns the output and any error that occurred.
-func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []float32) (output []float32, err error) {
+func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []float32) ([]float32, error) {
 	bodyJson, err := json.Marshal(
 		dto.InferenceReq{
 			Name:     "input",
@@ -110,11 +110,11 @@ func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []
 
 	var b []byte
 	var out dto.InferenceRes
-	if _, err = res.Body.Read(b); err != nil {
+	if _, err := res.Body.Read(b); err != nil {
 		return nil, fmt.Errorf("inference: falid to read responce body %w", err)
 	}
 
-	if err = json.Unmarshal(b, &out); err != nil {
+	if err := json.Unmarshal(b, &out); err != nil {
 		return nil, fmt.Errorf("inference: falid to unmarshal responce %w", err)
 
 	}
