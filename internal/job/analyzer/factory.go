@@ -9,7 +9,7 @@ import (
 type jobProvider func(p *job.UserParams) (Analyzer, error)
 
 var providerRepo = map[Spec]jobProvider{
-	Spec{Id: "abc", InputType: "candlestick"}: func(p *job.UserParams) (Analyzer, error) {
+	{Id: "abc", InputType: "candlestick"}: func(p *job.UserParams) (Analyzer, error) {
 		return Dummy{}, nil
 	},
 }
@@ -18,7 +18,7 @@ func Create(spec Spec, p *job.UserParams) (Analyzer, error) {
 
 	var provider, ok = providerRepo[spec]
 	if !ok {
-		return nil, job.NotFoundJob
+		return nil, job.ErrNotFoundJob
 	}
 
 	f, err := provider(p)

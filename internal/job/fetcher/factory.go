@@ -13,11 +13,11 @@ var fetcherProviderRepo = map[Spec]jobProvider{
 	{Task: "realtimeTrade", ProductType: "stock"}: initalizeRealtimeStock,
 }
 
-func CreateFetcher(spec Spec, p *job.UserParams) (Fetcher, error) {
+func Create(spec Spec, p *job.UserParams) (Fetcher, error) {
 
 	var provider, ok = fetcherProviderRepo[spec]
 	if !ok {
-		return nil, job.NotFoundJob
+		return nil, fmt.Errorf("create fetch job: %w", job.ErrNotFoundJob)
 	}
 
 	f, err := provider(p)

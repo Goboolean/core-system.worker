@@ -3,6 +3,7 @@ package fetcher
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -14,8 +15,8 @@ import (
 )
 
 var (
-	InvalidStockId       = errors.New("fetch: can't parse stockId")
-	DocumentTypeMismatch = errors.New("fetch: mongo: document type mismatch")
+	ErrInvalidStockId       = errors.New("fetch: can't parse stockId")
+	ErrDocumentTypeMismatch = errors.New("fetch: mongo: document type mismatch")
 )
 
 type PastStock struct {
@@ -36,7 +37,6 @@ type PastStock struct {
 func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 
-	var err error = nil
 	instance := &PastStock{
 		timeSlice:           DefaultTimeSlice,
 		isFetchingFullRange: DefaultIsFetchingFullRange,
@@ -49,7 +49,7 @@ func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, 
 
 		val, ok := (*parmas)["stockId"]
 		if !ok {
-			return nil, InvalidStockId
+			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidStockId)
 		}
 
 		instance.stockId = val
@@ -60,14 +60,14 @@ func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, 
 
 		val, err := strconv.ParseInt((*parmas)["startDate"], 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("create past stock fetch job: %w", err)
 		}
 
 		instance.startTimestamp = val
 
 	}
 
-	return instance, err
+	return instance, nil
 }
 
 func (ps *PastStock) Execute() {
