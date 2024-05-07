@@ -108,17 +108,13 @@ func (m *Mock) Execute() {
 				var out []float32
 
 				b := backoff.WithMaxRetries(backoff.WithContext(backoff.NewExponentialBackOff(), ctx), uint64(m.maxRetry))
-				operation := func() error {
+
+				if err := backoff.Retry(func() error {
 					var err error
 					out, err = m.kServeClient.RequestInference(ctx, []int{7, int(m.batchSize)}, acc)
-					if err != nil {
-						return err
-					}
+					return err
 
-					return nil
-				}
-
-				if err := backoff.Retry(operation, b); err != nil {
+				}, b); err != nil {
 					panic(fmt.Errorf("model exec job: inference service returns error %w", err))
 				}
 
