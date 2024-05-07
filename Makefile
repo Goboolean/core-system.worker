@@ -17,6 +17,6 @@ delete:
 build-dockerfile: 
 	docker build -t worker -f build/Dockerfile .
 
-wire-app: 
+wire-job: 
 	wire ${STAGE_PACKAGES}
 

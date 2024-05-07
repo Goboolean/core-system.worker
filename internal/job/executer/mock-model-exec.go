@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+	"github.com/Goboolean/core-system.worker/internal/infrastructure/kserve"
 	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
 type Mock struct {
@@ -22,19 +23,22 @@ type Mock struct {
 	batchSize int32
 	maxRetry  int32
 
-	kServeClient infrastructure.KServeClient
+	kServeClient kserve.Client
 
 	in  chan any `type:`
 	out chan any `type:` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	wg sync.WaitGroup
+
+	stop *util.StopNotifier
 }
 
-func NewMock(kServeClient infrastructure.KServeClient, params *job.UserParams) (*Mock, error) {
+func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &Mock{
-		maxRetry: 5,
+		maxRetry: DefaultMaxRetry,
 		out:      make(chan any),
+		stop:     util.NewStopNotifier(),
 	}
 
 	//여기에서 user param 초기화
@@ -66,16 +70,20 @@ func (m *Mock) Execute() {
 	m.wg.Add(1)
 	go func() {
 		defer m.wg.Done()
+		defer m.stop.NotifyStop()
 		defer close(m.out)
 		// Shape = [dto.StockAggregate의 필드 개수 = 7, batch size]
 		// 총 데이터 개수 = dto.StockAggregate의 필드 개수(7) * batch size
 		acc := make([]float32, m.batchSize*7)
 
 		for {
-			ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(60*time.Second))
+			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*60*time.Second))
+			go func() {
+				<-m.stop.Done()
+				cancel()
+			}()
+
 			select {
-			case <-ctx.Done():
-				return
 			case input, ok := <-m.in:
 				if !ok {
 					//입력 채널이 닫혔을 때 처리
@@ -137,6 +145,7 @@ func (m *Mock) Output() chan any {
 }
 
 func (m *Mock) Close() error {
+	m.stop.NotifyStop()
 	m.wg.Wait()
 	return nil
 }

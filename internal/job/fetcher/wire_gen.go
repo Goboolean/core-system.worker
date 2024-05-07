@@ -8,7 +8,7 @@ package fetcher
 
 import (
 	"github.com/Goboolean/common/pkg/resolver"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
@@ -16,11 +16,11 @@ import (
 
 func initalizeRealtimeStock(p *job.UserParams) (Fetcher, error) {
 	fetcherMongoConfig := provideMongoConfig()
-	mongoClientStockImpl, err := provideMongo(fetcherMongoConfig)
+	stockClientImpl, err := provideMongo(fetcherMongoConfig)
 	if err != nil {
 		return nil, err
 	}
-	realtimeStock, err := NewRealtimeStock(mongoClientStockImpl, p)
+	realtimeStock, err := NewRealtimeStock(stockClientImpl, p)
 	if err != nil {
 		return nil, err
 	}
@@ -29,11 +29,11 @@ func initalizeRealtimeStock(p *job.UserParams) (Fetcher, error) {
 
 func initalizePastStock(p *job.UserParams) (Fetcher, error) {
 	fetcherMongoConfig := provideMongoConfig()
-	mongoClientStockImpl, err := provideMongo(fetcherMongoConfig)
+	stockClientImpl, err := provideMongo(fetcherMongoConfig)
 	if err != nil {
 		return nil, err
 	}
-	pastStock, err := NewPastStock(mongoClientStockImpl, p)
+	pastStock, err := NewPastStock(stockClientImpl, p)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func provideMongoConfig() mongoConfig {
 	return mongoConfig(resolver.ConfigMap{})
 }
 
-func provideMongo(c mongoConfig) (*infrastructure.MongoClientStockImpl, error) {
+func provideMongo(c mongoConfig) (*mongo.StockClientImpl, error) {
 	in := resolver.ConfigMap(c)
-	return infrastructure.NewMongoClientStock(&in)
+	return mongo.NewStockClientImpl(&in)
 }

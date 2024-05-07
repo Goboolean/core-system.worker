@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Goboolean/core-system.worker/internal/job/adapter"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
@@ -55,6 +56,23 @@ func (p *Pipeline) Run() {
 
 }
 
-func (p *Pipeline) Stop() {
-	p.cancel()
+func (p *Pipeline) Stop() error {
+
+	if err := p.fetch.Close(); err != nil {
+		return fmt.Errorf("pipeline: failed to shutdown fetch job %w", err)
+	}
+	if err := p.modelExec.Close(); err != nil {
+		return fmt.Errorf("pipeline: failed to shutdown model execute job %w", err)
+	}
+	if err := p.adapt.Close(); err != nil {
+		return fmt.Errorf("pipeline: failed to shutdown adapt job %w", err)
+	}
+	if err := p.resAnalyze.Close(); err != nil {
+		return fmt.Errorf("pipeline: failed to shutdown analyze job %w", err)
+	}
+	if err := p.transmit.Close(); err != nil {
+		return fmt.Errorf("pipeline: failed to shutdown transmit job %w", err)
+	}
+
+	return nil
 }

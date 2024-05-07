@@ -8,7 +8,7 @@ package executer
 
 import (
 	"github.com/Goboolean/common/pkg/resolver"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+	"github.com/Goboolean/core-system.worker/internal/infrastructure/kserve"
 	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
@@ -16,11 +16,11 @@ import (
 
 func initalizeMock(p *job.UserParams) (ModelExecutor, error) {
 	executerKServeConfig := provideKServeConfig()
-	kServeClientImpl, err := provideKServe(executerKServeConfig)
+	clientImpl, err := provideKServe(executerKServeConfig)
 	if err != nil {
 		return nil, err
 	}
-	mock, err := NewMock(kServeClientImpl, p)
+	mock, err := NewMock(clientImpl, p)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func provideKServeConfig() kServeConfig {
 	return kServeConfig(resolver.ConfigMap{})
 }
 
-func provideKServe(c kServeConfig) (*infrastructure.KServeClientImpl, error) {
+func provideKServe(c kServeConfig) (*kserve.ClientImpl, error) {
 	in := resolver.ConfigMap(c)
-	return infrastructure.NewKServeClient(&in)
+	return kserve.NewClient(&in)
 }
