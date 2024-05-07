@@ -111,7 +111,7 @@ func (m *Mock) Execute() {
 				operation := func() error {
 					var err error
 					out, err = m.kServeClient.RequestInference(ctx, []int{7, int(m.batchSize)}, acc)
-					if err == nil {
+					if err != nil {
 						return err
 					}
 
