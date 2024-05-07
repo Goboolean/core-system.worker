@@ -10,11 +10,11 @@ type jobProvider func(p *job.UserParams) (ModelExecutor, error)
 
 var providerRepo = map[Spec]jobProvider{}
 
-func CreateExecuter(spec Spec, p *job.UserParams) (ModelExecutor, error) {
+func Create(spec Spec, p *job.UserParams) (ModelExecutor, error) {
 
 	var provider, ok = providerRepo[spec]
 	if !ok {
-		return nil, job.NotFoundJob
+		return nil, fmt.Errorf("create model execute job: %w", job.ErrNotFoundJob)
 	}
 
 	f, err := provider(p)

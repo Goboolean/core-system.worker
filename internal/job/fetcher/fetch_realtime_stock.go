@@ -52,7 +52,7 @@ func (rt *RealtimeStock) Execute() {
 		count := rt.pastRepo.GetCount(ctx)
 		duration, _ := time.ParseDuration(rt.timeSlice)
 
-		rt.pastRepo.ForEachDocument(ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc mongo.StockDocument) {
+		err := rt.pastRepo.ForEachDocument(ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc mongo.StockDocument) {
 
 			rt.out <- &dto.StockAggregate{
 				OpenTime:   doc.Timestamp,
@@ -64,6 +64,10 @@ func (rt *RealtimeStock) Execute() {
 				Volume:     float32(doc.Volume),
 			}
 		})
+
+		if err != nil {
+			panic(err)
+		}
 
 		for {
 			select {
