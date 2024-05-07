@@ -74,4 +74,5 @@ func (p *Pipeline) Stop() error {
 		return fmt.Errorf("pipeline: failed to shutdown transmit job %w", err)
 	}
 
+	return nil
 }

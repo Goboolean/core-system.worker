@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+	"github.com/Goboolean/core-system.worker/internal/infrastructure/kserve"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/util"
 )
@@ -23,7 +23,7 @@ type Mock struct {
 	batchSize int32
 	maxRetry  int32
 
-	kServeClient infrastructure.KServeClient
+	kServeClient kserve.Client
 
 	in  chan any `type:`
 	out chan any `type:` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
@@ -33,7 +33,7 @@ type Mock struct {
 	stop *util.StopNotifier
 }
 
-func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.UserParams) (*Mock, error) {
+func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &Mock{
 		maxRetry: DefaultMaxRetry,
@@ -42,7 +42,7 @@ func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.Us
 	}
 
 	//여기에서 user param 초기화
-	if param1, ok := params["param1"]; ok {
+	if param1, ok := (*params)["param1"]; ok {
 		val, err := strconv.ParseFloat(param1, 32)
 
 		if err != nil {
@@ -52,7 +52,7 @@ func NewMockModelExecJob(kServeClient infrastructure.KServeClient, params job.Us
 		instance.modelParam1 = float32(val)
 	}
 
-	if param1, ok := params["batchSize"]; ok {
+	if param1, ok := (*params)["batchSize"]; ok {
 		val, err := strconv.ParseInt(param1, 10, 32)
 
 		if err != nil {
