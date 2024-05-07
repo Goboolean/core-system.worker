@@ -11,8 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestPastStock is a unit test function that tests the functionality of fetching past stock data.
+// It verifies that the fetched stock data matches the expected results.
 func TestPastStock(t *testing.T) {
-	t.Run("", func(t *testing.T) {
+	t.Run("Past stock fetch 테스트", func(t *testing.T) {
 
 		//Arrange
 		mongo, _ := mongo.Mock__NewStockClient(&resolver.ConfigMap{}, []*mongo.StockDocument{
