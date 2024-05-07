@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/dto"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure"
+	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/util"
 )
@@ -14,7 +14,7 @@ import (
 type RealtimeStock struct {
 	Fetcher
 
-	pastRepo infrastructure.MongoClientStock
+	pastRepo mongo.StockClient
 
 	//미리 가져올 데이터의 개수
 	prefetchNum int
@@ -25,14 +25,14 @@ type RealtimeStock struct {
 	stop *util.StopNotifier
 }
 
-func NewFetchRealtimeStockJob(params job.UserParams) *RealtimeStock {
+func NewRealtimeStock(mongo mongo.StockClient, params *job.UserParams) (*RealtimeStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &RealtimeStock{
 		out:  make(chan any),
 		stop: util.NewStopNotifier(),
 	}
 
-	return instance
+	return instance, nil
 }
 
 func (rt *RealtimeStock) Execute() {
@@ -52,7 +52,7 @@ func (rt *RealtimeStock) Execute() {
 		count := rt.pastRepo.GetCount(ctx)
 		duration, _ := time.ParseDuration(rt.timeSlice)
 
-		rt.pastRepo.ForEachDocument(ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc infrastructure.StockDocument) {
+		rt.pastRepo.ForEachDocument(ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc mongo.StockDocument) {
 
 			rt.out <- &dto.StockAggregate{
 				OpenTime:   doc.Timestamp,
