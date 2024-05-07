@@ -8,15 +8,17 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
+// TestPastStock is a unit test function that tests the functionality of fetching past stock data.
+// It verifies that the fetched stock data matches the expected results.
 func TestPastStock(t *testing.T) {
-	t.Run("", func(t *testing.T) {
+	t.Run("Past stock fetch 테스트", func(t *testing.T) {
 
 		//Arrange
 		mongo, _ := mongo.Mock__NewStockClient(&resolver.ConfigMap{}, []*mongo.StockDocument{
-			&mongo.StockDocument{
+			{
 				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
@@ -25,8 +27,7 @@ func TestPastStock(t *testing.T) {
 				Average:   0,
 				Volume:    12,
 				Timestamp: 1711758929,
-			},
-			&mongo.StockDocument{
+			}, {
 				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
@@ -35,8 +36,7 @@ func TestPastStock(t *testing.T) {
 				Average:   0,
 				Volume:    12,
 				Timestamp: 1711759229,
-			},
-			&mongo.StockDocument{
+			}, {
 				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
@@ -45,8 +45,7 @@ func TestPastStock(t *testing.T) {
 				Average:   0,
 				Volume:    12,
 				Timestamp: 1711759529,
-			},
-			&mongo.StockDocument{
+			}, {
 				Symbol:    "AAPL",
 				Open:      12,
 				Close:     150,
@@ -77,7 +76,7 @@ func TestPastStock(t *testing.T) {
 
 		//Assert
 		exp := []*dto.StockAggregate{
-			&dto.StockAggregate{
+			{
 				OpenTime:   1711758929,
 				ClosedTime: 1711758989,
 				Open:       12,
@@ -85,8 +84,7 @@ func TestPastStock(t *testing.T) {
 				High:       150,
 				Low:        23,
 				Volume:     12,
-			},
-			&dto.StockAggregate{
+			}, {
 				OpenTime:   1711759229,
 				ClosedTime: 1711759289,
 				Open:       12,
@@ -94,8 +92,7 @@ func TestPastStock(t *testing.T) {
 				High:       150,
 				Low:        23,
 				Volume:     12,
-			},
-			&dto.StockAggregate{
+			}, {
 				OpenTime:   1711759529,
 				ClosedTime: 1711759589,
 				Open:       12,
@@ -103,8 +100,7 @@ func TestPastStock(t *testing.T) {
 				High:       150,
 				Low:        23,
 				Volume:     12,
-			},
-			&dto.StockAggregate{
+			}, {
 				OpenTime:   1711759829,
 				ClosedTime: 1711759889,
 				Open:       12,
