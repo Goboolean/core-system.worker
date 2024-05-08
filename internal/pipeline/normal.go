@@ -15,38 +15,41 @@ import (
 var ErrTypeNotMatch = errors.New("pipeline: cannot build a pipeline because the types are not compatible between the jobs")
 
 // 아키텍처 설계 상 이 구조는 변경되면 안 된다.
-type Pipeline struct {
+type Normal struct {
+	//jobs
 	fetch      fetcher.Fetcher
 	modelExec  executer.ModelExecutor
 	adapt      adapter.Adapter
 	resAnalyze analyzer.Analyzer
 	transmit   transmitter.Transmitter
 
+	//utils
+
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-func newPipeline(
+func newNormalWithAdapter(
 	fetch fetcher.Fetcher,
 	modelExec executer.ModelExecutor,
 	adapt adapter.Adapter,
 	resAnalyze analyzer.Analyzer,
-	transmit transmitter.Transmitter) (*Pipeline, error) {
+	transmit transmitter.Transmitter) (*Normal, error) {
 
-	return &Pipeline{
+	instance := Normal{
 		fetch:      fetch,
 		modelExec:  modelExec,
 		adapt:      adapt,
 		resAnalyze: resAnalyze,
 		transmit:   transmit,
-	}, nil
+	}
+
+	return &instance, nil
 }
 
-func (p *Pipeline) Run() {
+func (p *Normal) Run() {
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 	//TODO: 하나의 컴포넌트에서 발행한 메시지를
-
-	p.modelExec.SetInput(p.fetch.Output())
 
 	p.fetch.Execute()
 	p.modelExec.Execute()
@@ -56,7 +59,7 @@ func (p *Pipeline) Run() {
 
 }
 
-func (p *Pipeline) Stop() error {
+func (p *Normal) Stop() error {
 
 	if err := p.fetch.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown fetch job %w", err)
