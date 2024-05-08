@@ -26,8 +26,8 @@ type Mock struct {
 
 	kServeClient kserve.Client
 
-	in  chan any `type:`
-	out chan any `type:` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	in  chan any `type:""`
+	out chan any `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	wg sync.WaitGroup
 
@@ -47,7 +47,7 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 		val, err := strconv.ParseFloat(param1, 32)
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("create mock model exec job: %w", err)
 		}
 
 		instance.modelParam1 = float32(val)
@@ -57,7 +57,7 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 		val, err := strconv.ParseInt(param1, 10, 32)
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("create mock model exec job: %w", err)
 		}
 
 		instance.batchSize = int32(val)
@@ -94,7 +94,7 @@ func (m *Mock) Execute() {
 				data, ok := input.(*dto.StockAggregate)
 
 				if !ok {
-					panic(fmt.Errorf("model exec job: type mismatch. expected *dto.StockAggregate, got %s %w", reflect.TypeOf(input), job.TypeMismatchError))
+					panic(fmt.Errorf("model exec job: type mismatch. expected *dto.StockAggregate, got %s %w", reflect.TypeOf(input), job.ErrTypeMismatch))
 				}
 
 				//데이터를 1차원 텐서 타입으로 변환한다.

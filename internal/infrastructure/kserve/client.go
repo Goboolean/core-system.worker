@@ -51,22 +51,22 @@ func NewClient(c *resolver.ConfigMap) (*ClientImpl, error) {
 
 	id, err := c.GetStringKey("modelID")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create kserve client: %w", err)
 	}
 
 	host, err := c.GetStringKey("host")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create kserve client: %w", err)
 	}
 
 	param1, err := c.GetFloatKey("param1")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create kserve client: %w", err)
 	}
 
 	param2, err := c.GetFloatKey("param2")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create kserve client: %w", err)
 	}
 
 	instance.host = host
@@ -83,7 +83,7 @@ func (c *ClientImpl) SetModelName(name string) {
 }
 
 // RequestInference sends an inference request to KServe and returns the output and any error that occurred.
-func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []float32) (output []float32, err error) {
+func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []float32) ([]float32, error) {
 	bodyJson, err := json.Marshal(
 		dto.InferenceReq{
 			Name:     "input",
@@ -93,7 +93,7 @@ func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []
 		})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("inference: falid to create request body  %w", err)
 	}
 
 	req := &http.Request{
@@ -105,14 +105,20 @@ func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []
 
 	res, err := c.http.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("inference: %w", err)
 	}
 
 	var b []byte
 	var out dto.InferenceRes
-	res.Body.Read(b)
+	if _, err := res.Body.Read(b); err != nil {
+		return nil, fmt.Errorf("inference: falid to read responce body %w", err)
+	}
 
-	json.Unmarshal(b, &out)
+	if err := json.Unmarshal(b, &out); err != nil {
+		return nil, fmt.Errorf("inference: falid to unmarshal responce %w", err)
+
+	}
+
 	return out.Outputs[0].Data.([]float32), nil
 }
 
