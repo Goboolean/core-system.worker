@@ -12,6 +12,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/kserve"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/util"
+	"github.com/cenkalti/backoff"
 )
 
 type Mock struct {
@@ -105,16 +106,15 @@ func (m *Mock) Execute() {
 
 				//이를 http client를 이용해 kserve로 보낸다.
 				var out []float32
-				var err error
-				for i := 0; i < int(m.maxRetry); i++ {
+
+				b := backoff.WithMaxRetries(backoff.WithContext(backoff.NewExponentialBackOff(), ctx), uint64(m.maxRetry))
+
+				if err := backoff.Retry(func() error {
+					var err error
 					out, err = m.kServeClient.RequestInference(ctx, []int{7, int(m.batchSize)}, acc)
+					return err
 
-					if err == nil {
-						break
-					}
-				}
-
-				if err != nil {
+				}, b); err != nil {
 					panic(fmt.Errorf("model exec job: inference service returns error %w", err))
 				}
 
