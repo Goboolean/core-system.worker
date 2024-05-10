@@ -47,6 +47,23 @@ func newNormalWithAdapter(
 	return &instance, nil
 }
 
+func newNormalWithoutAdapter(
+	fetch fetcher.Fetcher,
+	modelExec executer.ModelExecutor,
+	resAnalyze analyzer.Analyzer,
+	transmit transmitter.Transmitter) (*Normal, error) {
+
+	instance := Normal{
+		fetch:      fetch,
+		modelExec:  modelExec,
+		resAnalyze: resAnalyze,
+		transmit:   transmit,
+	}
+
+	return &instance, nil
+
+}
+
 func (p *Normal) Run() {
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 	//TODO: 하나의 컴포넌트에서 발행한 메시지를
