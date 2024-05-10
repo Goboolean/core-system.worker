@@ -61,7 +61,7 @@ func buildNormal(config configuration.AppConfig) (Pipeline, error) {
 	if err != nil{
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	IsAdapterRequred, adpatJob, err := adapter.Create(extractAdapterSpec(config), &p)
+	isAdapterRequred, adpatJob, err := adapter.Create(extractAdapterSpec(config), &p)
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	analyzeJob, err := analyzer.Create(extractAnalyzerSpec(config), &p)
@@ -72,7 +72,7 @@ func buildNormal(config configuration.AppConfig) (Pipeline, error) {
 	// 현재 생성자 미구현으로 dummy 객체로 대체
 	transmitJob, err := transmitter.Dummy{}
 
-	if IsAdapterRequred {
+	if isAdapterRequred {
 		if err != nil {
 			return nil, fmt.Errorf("build normal pipeline: %w", err)
 		}
