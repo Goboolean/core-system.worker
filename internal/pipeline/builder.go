@@ -61,8 +61,7 @@ func buildNormal(config configuration.AppConfig) (Pipeline, error) {
 	if err != nil{
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	modelExecJob, err :=  executer.Create(extractModelExecSpec(config), &p)
-	if err != nil{
+	IsAdapterRequred, adpatJob, err := adapter.Create(extractAdapterSpec(config), &p)
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	analyzeJob, err := analyzer.Create(extractAnalyzerSpec(config), &p)
@@ -73,10 +72,8 @@ func buildNormal(config configuration.AppConfig) (Pipeline, error) {
 	// 현재 생성자 미구현으로 dummy 객체로 대체
 	transmitJob, err := transmitter.Dummy{}
 
-	if AdapterIsRequred{
-		
-		adpatJob, err := adapter.Create(extractAdapterSpec(config), &p)
-		if err != nil{
+	if IsAdapterRequred {
+		if err != nil {
 			return nil, fmt.Errorf("build normal pipeline: %w", err)
 		}
 		return newNormalWithAdapter(
@@ -86,7 +83,7 @@ func buildNormal(config configuration.AppConfig) (Pipeline, error) {
 			analyzeJob,
 			transmitJob,
 		)
-	}else{
+	} else {
 		return newNormalWithoutAdapter(
 			fetchJob,
 			modelExecJob,
@@ -128,8 +125,8 @@ func extractAdapterSpec(config configuration.AppConfig) (bool, adapter.Spec) {
 
 func extractAnalyzerSpec(config configuration.AppConfig) analyzer.Spec {
 
-	sepc := analyzer.Spec{
-		Id: config.Strategy.Id,
+	spec := analyzer.Spec{
+		Id:        config.Strategy.Id,
 		InputType: config.Strategy.InputType,
 	}
 
