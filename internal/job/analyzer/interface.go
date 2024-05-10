@@ -7,7 +7,6 @@ import (
 type Analyzer interface {
 	job.Common
 
-	SetRefInput(chan any)
-	SetPredictInput(chan any)
+	SetInput(chan any)
 	Output() chan any
 }
