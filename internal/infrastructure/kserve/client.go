@@ -1,5 +1,7 @@
 package kserve
 
+//go:generate mockgen -destination=clinet_mock.go -package=kserve --build_flags=--mod=mod . Client
+
 import (
 	"bytes"
 	"context"
