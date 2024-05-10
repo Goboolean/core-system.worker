@@ -20,6 +20,7 @@ func TestUnmarshal(t *testing.T) {
 	assert.Equal(t, "backTest", AppConfig.Task)
 	assert.Equal(t, configuration.DataOrigin{
 		TimeFrame:      configuration.TimeFrame{Seconds: 1},
+		ProductId:      "stock.aapl.us",
 		ProductType:    "stock",
 		StartTimestamp: 12345678,
 		EndTimestamp:   12345678,
