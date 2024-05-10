@@ -146,11 +146,11 @@ func extractUserParams(config configuration.AppConfig) job.UserParams {
 	}
 
 	for k, v := range config.Model.Params {
-		p[strings.Join({"model", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
+		p[strings.Join([]string{"model", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
 	}
 
 	for k, v := range config.Strategy.Params {
-		p[strings.Join({"stretage", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
+		p[strings.Join([]string{"stretage", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
 	}
 
 	return p
