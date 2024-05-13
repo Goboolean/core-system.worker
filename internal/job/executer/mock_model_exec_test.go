@@ -65,21 +65,8 @@ func TestMock(t *testing.T) {
 		}
 		execute.SetInput(inChan)
 
-		//act
-		execute.Execute()
-		out := execute.Output()
-		res := []*dto.StockAggregate{}
-		for data := range out {
-			val, ok := data.(*dto.StockAggregate)
-			if !ok {
-				panic("Type miss match")
-			}
-			res = append(res, val)
-		}
-
-		//assert
 		//batch seze가 2이기 때문에 [1,2] [2,3]으로 묶어서 실행이 된다.
-		exp := []*dto.StockAggregate{
+		expect := []*dto.StockAggregate{
 			{
 				OpenTime:   1715329040, //미래 예측이므로 out.Opentime = 두 번째 input.ClosedTime
 				ClosedTime: 1715329050, //미래 예측이므로 out.CloseTime = 두 번째 input.ClosedTime + (input.ClosedTime - input.OpenTime)
@@ -98,6 +85,21 @@ func TestMock(t *testing.T) {
 				Volume:     0,
 			},
 		}
-		assert.Equal(t, exp, res)
+
+		//act
+		execute.Execute()
+		out := execute.Output()
+		res := []*dto.StockAggregate{}
+		for data := range out {
+			val, ok := data.(*dto.StockAggregate)
+			if !ok {
+				panic("Type miss match")
+			}
+			res = append(res, val)
+		}
+
+		//assert
+
+		assert.Equal(t, expect, res)
 	})
 }
