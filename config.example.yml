@@ -2,6 +2,7 @@ task: "backTest" #"backTest"|"realtimeTrade"
 dataOrigin:
   timeFrame:
     seconds: 1 #string, seconds 초 단위, example: "300s"
+  productId: "stock.aapl.us" #{type}.{symbol}.{locale}
   productType: "stock" #"option"|"stock"|"crypto"
   startTimestamp: 12345678 #long(int64),Unix timestamp(epoch time), realtime일 때는 미적용.
   endTimestamp: 12345678 #long(int64),Unix timestamp(epoch time), realtime일 때는 미적용.
