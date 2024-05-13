@@ -1,6 +1,6 @@
 package util
 
-type Fanoutter struct {
+type FanOutter struct {
 	in  chan any
 	out []chan any
 
