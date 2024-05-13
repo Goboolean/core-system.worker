@@ -1,23 +1,23 @@
 package util
 
-type FanOutter struct {
+type ChannelMux struct {
 	in  chan any
 	out []chan any
 
 	stop chan struct{}
 }
 
-func (fo *Fanoutter) SetInput(in chan any) {
+func (fo *ChannelMux) SetInput(in chan any) {
 	fo.in = in
 }
 
-func (fo *Fanoutter) Output() chan any {
+func (fo *ChannelMux) Output() chan any {
 	ch := make(chan any, 1)
 	fo.out = append(fo.out, ch)
 	return ch
 }
 
-func (fo *Fanoutter) Execute() {
+func (fo *ChannelMux) Execute() {
 	go func() {
 		defer func() {
 			for _, ch := range fo.out {
