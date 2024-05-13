@@ -74,7 +74,7 @@ func (m *Mock) Execute() {
 		defer m.wg.Done()
 		defer m.stop.NotifyStop()
 		defer close(m.out)
-		var acc = make([]float32, 0)
+		var accumulator = make([]float32, 0)
 
 		for {
 			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*60*time.Second))
@@ -99,8 +99,8 @@ func (m *Mock) Execute() {
 				//데이터를 1차원 텐서 타입으로 변환한다.
 				//데이터가 충분히 쌓일 때까지 다음 동작을 실행할 수 없도록 막는다.
 				var numOfInput = 4
-				acc = append(acc, data.High, data.Low, data.Open, data.Closed)
-				if len(acc)/numOfInput < int(m.batchSize) {
+				accumulator = append(accumulator, data.High, data.Low, data.Open, data.Closed)
+				if len(accumulator)/numOfInput < int(m.batchSize) {
 					continue
 				}
 
@@ -112,14 +112,14 @@ func (m *Mock) Execute() {
 				if err := backoff.Retry(func() error {
 					var err error
 					// Shape = [dto.StockAggregate에서 사용되는 데이터의 개수 = 7, batch size]
-					out, err = m.kServeClient.RequestInference(ctx, []int{numOfInput, int(m.batchSize)}, acc)
+					out, err = m.kServeClient.RequestInference(ctx, []int{numOfInput, int(m.batchSize)}, accumulator)
 					return err
 
 				}, b); err != nil {
 					panic(fmt.Errorf("model exec job: inference service returns error %w", err))
 				}
 
-				acc = acc[numOfInput:]
+				accumulator = accumulator[numOfInput:]
 
 				//반환 받은 텐서 타입에서 알맞은 타입으로 가공한다.
 				//지금은 모델이 candlestick를 리턴한다고 가정한다.
