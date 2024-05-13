@@ -25,7 +25,7 @@ const (
 
 var (
 	ErrNoCompatiblePipeline = errors.New("select pipeline: there are no compatible pipeline")
-	ErrNotImplemented = errors.New("select pipeline: selected pipeline is not implemented")
+	ErrNotImplemented       = errors.New("select pipeline: selected pipeline is not implemented")
 )
 
 func Build(config configuration.AppConfig) (*Pipeline, error) {
@@ -46,7 +46,7 @@ func Build(config configuration.AppConfig) (*Pipeline, error) {
 func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
 	if config.Model.Id == "" {
 		return PipelineWithoutModel, nil
-	} 
+	}
 	if config.Model.Id != "" {
 		return NormalPipeline, nil
 	}
@@ -55,24 +55,30 @@ func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
 	return 0, fmt.Errorf("%w %s", ErrNoCompatiblePipeline, configString)
 }
 
-func buildNormal(config configuration.AppConfig) (Pipeline, error) {
+func buildNormal(config configuration.AppConfig) (*Pipeline, error) {
 	p := extractUserParams(config)
 
 	//job객체를 factory로부터 생성
 	fetchJob, err := fetcher.Create(extractFetchSpec(config), &p)
-	if err != nil{
+	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	isAdapterRequred, adpatJob, err := adapter.Create(extractAdapterSpec(config), &p)
+	modelExecJob, err := fetcher.Create(extractFetchSpec(config), &p)
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
+	isAdapterRequred, adapterSpec := extractAdapterSpec(config)
+	adpatJob, err := adapter.Create(adapterSpec, &p)
+	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	analyzeJob, err := analyzer.Create(extractAnalyzerSpec(config), &p)
-	if err != nil{
+	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
-	transmitJob, err := transmitter.Dummy{}
+	transmitJob := transmitter.Dummy{}
 
 	if isAdapterRequred {
 		if err != nil {
@@ -93,7 +99,7 @@ func buildNormal(config configuration.AppConfig) (Pipeline, error) {
 			transmitJob,
 		)
 	}
-	
+
 }
 
 func extractFetchSpec(config configuration.AppConfig) fetcher.Spec {
