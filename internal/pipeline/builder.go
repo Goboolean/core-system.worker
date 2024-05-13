@@ -46,9 +46,11 @@ func Build(config configuration.AppConfig) (*Pipeline, error) {
 func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
 	if config.Model.Id == "" {
 		return PipelineWithoutModel, nil
-	} else if config.Model.Id != "" {
+	} 
+	if config.Model.Id != "" {
 		return NormalPipeline, nil
 	}
+
 	configString, _ := yaml.Marshal(config)
 	return 0, fmt.Errorf("%w %s", ErrNoCompatiblePipeline, configString)
 }
