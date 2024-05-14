@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/Goboolean/common/pkg/resolver"
-	"github.com/Goboolean/core-system.worker/internal/dto"
+	"github.com/Goboolean/core-system.worker/internal/model"
 )
 
 var defaultKSserveClient = &ClientImpl{
@@ -87,7 +87,7 @@ func (c *ClientImpl) SetModelName(name string) {
 // RequestInference sends an inference request to KServe and returns the output and any error that occurred.
 func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []float32) ([]float32, error) {
 	bodyJson, err := json.Marshal(
-		dto.InferenceReq{
+		model.InferenceReq{
 			Name:     "input",
 			Shape:    shape,
 			DataType: "FP32",
@@ -111,7 +111,7 @@ func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []
 	}
 
 	var b []byte
-	var out dto.InferenceRes
+	var out model.InferenceRes
 	if _, err := res.Body.Read(b); err != nil {
 		return nil, fmt.Errorf("inference: falid to read responce body %w", err)
 	}
