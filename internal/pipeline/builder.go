@@ -13,6 +13,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -50,9 +51,10 @@ func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
 	if config.Model.Id != "" {
 		return NormalPipeline, nil
 	}
+	configStringBytes, err := yaml.Marshal(config)
 
-	configString, _ := yaml.Marshal(config)
-	return 0, fmt.Errorf("%w %s", ErrNoCompatiblePipeline, configString)
+	log.Error(fmt.Errorf("marshaling config: %w", err))
+	return 0, fmt.Errorf("%w %s", ErrNoCompatiblePipeline, string(configStringBytes))
 }
 
 func buildNormal(config configuration.AppConfig) (*Pipeline, error) {
@@ -63,7 +65,7 @@ func buildNormal(config configuration.AppConfig) (*Pipeline, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	modelExecJob, err := fetcher.Create(extractFetchSpec(config), &p)
+	modelExecJob, err := executer.Create(extractModelExecSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
