@@ -33,6 +33,7 @@ type AppConfig struct {
 
 type DataOrigin struct {
 	TimeFrame      TimeFrame `yaml:"timeFrame"`
+	ProductId      string    `yaml:"productId"`
 	ProductType    string    `yaml:"productType"`
 	StartTimestamp int64     `yaml:"startTimestamp"`
 	EndTimestamp   int64     `yaml:"endTimestamp"`

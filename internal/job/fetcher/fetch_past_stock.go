@@ -45,9 +45,9 @@ func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, 
 		out:                 make(chan any),
 	}
 
-	if !parmas.IsKeyNullOrEmpty("stockId") {
+	if !parmas.IsKeyNullOrEmpty("productId") {
 
-		val, ok := (*parmas)["stockId"]
+		val, ok := (*parmas)["productId"]
 		if !ok {
 			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidStockId)
 		}
