@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/Goboolean/core-system.worker/internal/job/adapter"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
@@ -89,31 +90,33 @@ func newNormalWithoutAdapter(
 
 }
 
-func (p *Normal) Run() {
+func (n *Normal) Run() {
 
-	p.fetch.Execute()
-	p.modelExec.Execute()
-	p.adapt.Execute()
-	p.join.Execute()
-	p.resAnalyze.Execute()
-	p.transmit.Execute()
+	n.fetch.Execute()
+	n.modelExec.Execute()
+	if !reflect.ValueOf(n.adapt).IsNil() {
+		n.adapt.Execute()
+	}
+	n.join.Execute()
+	n.resAnalyze.Execute()
+	n.transmit.Execute()
 }
 
-func (p *Normal) Stop() error {
+func (n *Normal) Stop() error {
 
-	if err := p.fetch.Close(); err != nil {
+	if err := n.fetch.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown fetch job %w", err)
 	}
-	if err := p.modelExec.Close(); err != nil {
+	if err := n.modelExec.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown model execute job %w", err)
 	}
-	if err := p.adapt.Close(); err != nil {
+	if err := n.adapt.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown adapt job %w", err)
 	}
-	if err := p.resAnalyze.Close(); err != nil {
+	if err := n.resAnalyze.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown analyze job %w", err)
 	}
-	if err := p.transmit.Close(); err != nil {
+	if err := n.transmit.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown transmit job %w", err)
 	}
 
