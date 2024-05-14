@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -19,6 +20,7 @@ type RealtimeStock struct {
 	//미리 가져올 데이터의 개수
 	prefetchNum int
 	timeSlice   string
+	stockId     string
 
 	out  chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 	wg   sync.WaitGroup
@@ -30,6 +32,16 @@ func NewRealtimeStock(mongo mongo.StockClient, params *job.UserParams) (*Realtim
 	instance := &RealtimeStock{
 		out:  make(chan any),
 		stop: util.NewStopNotifier(),
+	}
+
+	if !params.IsKeyNullOrEmpty("productId") {
+
+		val, ok := (*params)["productId"]
+		if !ok {
+			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidStockId)
+		}
+
+		instance.stockId = val
 	}
 
 	return instance, nil
@@ -47,6 +59,8 @@ func (rt *RealtimeStock) Execute() {
 			<-rt.stop.Done()
 			cancel()
 		}()
+
+		rt.pastRepo.SetTarget(rt.stockId, rt.timeSlice)
 
 		//prefetch past stock data
 		count := rt.pastRepo.GetCount(ctx)
