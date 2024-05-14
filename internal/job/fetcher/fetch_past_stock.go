@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
@@ -109,7 +109,7 @@ func (ps *PastStock) Execute() {
 
 		duration, _ := time.ParseDuration(ps.timeSlice)
 		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc mongo.StockDocument) {
-			ps.out <- &dto.StockAggregate{
+			ps.out <- &model.StockAggregate{
 				OpenTime:   doc.Timestamp,
 				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
 				Open:       doc.Open,

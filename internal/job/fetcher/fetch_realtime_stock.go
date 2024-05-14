@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
@@ -68,7 +68,7 @@ func (rt *RealtimeStock) Execute() {
 
 		err := rt.pastRepo.ForEachDocument(ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc mongo.StockDocument) {
 
-			rt.out <- &dto.StockAggregate{
+			rt.out <- &model.StockAggregate{
 				OpenTime:   doc.Timestamp,
 				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
 				Open:       doc.Open,

@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/Goboolean/common/pkg/resolver"
-	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
+	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -65,9 +65,9 @@ func TestPastStock(t *testing.T) {
 		//Act
 		fetch.Execute()
 		out := fetch.Output()
-		res := []*dto.StockAggregate{}
+		res := []*model.StockAggregate{}
 		for data := range out {
-			val, ok := data.(*dto.StockAggregate)
+			val, ok := data.(*model.StockAggregate)
 			if !ok {
 				panic("Type miss match")
 			}
@@ -75,7 +75,7 @@ func TestPastStock(t *testing.T) {
 		}
 
 		//Assert
-		exp := []*dto.StockAggregate{
+		exp := []*model.StockAggregate{
 			{
 				OpenTime:   1711758929,
 				ClosedTime: 1711758989,

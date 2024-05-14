@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/kserve"
 	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/cenkalti/backoff"
 )
@@ -90,10 +90,10 @@ func (m *Mock) Execute() {
 					return
 				}
 
-				data, ok := input.(*dto.StockAggregate)
+				data, ok := input.(*model.StockAggregate)
 
 				if !ok {
-					panic(fmt.Errorf("model exec job: type mismatch. expected *dto.StockAggregate, got %s %w", reflect.TypeOf(input), job.ErrTypeMismatch))
+					panic(fmt.Errorf("model exec job: type mismatch. expected *model.StockAggregate, got %s %w", reflect.TypeOf(input), job.ErrTypeMismatch))
 				}
 
 				//데이터를 1차원 텐서 타입으로 변환한다.
@@ -111,7 +111,7 @@ func (m *Mock) Execute() {
 
 				if err := backoff.Retry(func() error {
 					var err error
-					// Shape = [dto.StockAggregate에서 사용되는 데이터의 개수 = 7, batch size]
+					// Shape = [model.StockAggregate에서 사용되는 데이터의 개수 = 7, batch size]
 					out, err = m.kServeClient.RequestInference(ctx, []int{numOfInput, int(m.batchSize)}, accumulator)
 					return err
 
@@ -124,7 +124,7 @@ func (m *Mock) Execute() {
 				//반환 받은 텐서 타입에서 알맞은 타입으로 가공한다.
 				//지금은 모델이 candlestick를 리턴한다고 가정한다.
 				//거래량 중요한 데이터가 아니므로 일단 0처리
-				m.out <- &dto.StockAggregate{
+				m.out <- &model.StockAggregate{
 					OpenTime:   data.ClosedTime,
 					ClosedTime: data.ClosedTime + (data.ClosedTime - data.OpenTime),
 					High:       out[0],

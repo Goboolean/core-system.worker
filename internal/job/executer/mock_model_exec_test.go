@@ -3,10 +3,10 @@ package executer_test
 import (
 	"testing"
 
-	"github.com/Goboolean/core-system.worker/internal/dto"
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/kserve"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
+	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -26,7 +26,7 @@ func TestMock(t *testing.T) {
 		m.EXPECT().RequestInference(gomock.Any(), gomock.Any(), []float32{2, 2, 2, 2, 3, 3, 3, 3}).Return(
 			[]float32{5, 6, 7, 8}, nil)
 
-		input := []*dto.StockAggregate{
+		input := []*model.StockAggregate{
 			{
 				OpenTime:   1715329020,
 				ClosedTime: 1715329030,
@@ -66,7 +66,7 @@ func TestMock(t *testing.T) {
 		execute.SetInput(inChan)
 
 		//batch seze가 2이기 때문에 [1,2] [2,3]으로 묶어서 실행이 된다.
-		expect := []*dto.StockAggregate{
+		expect := []*model.StockAggregate{
 			{
 				OpenTime:   1715329040, //미래 예측이므로 out.Opentime = 두 번째 input.ClosedTime
 				ClosedTime: 1715329050, //미래 예측이므로 out.CloseTime = 두 번째 input.ClosedTime + (input.ClosedTime - input.OpenTime)
@@ -89,9 +89,9 @@ func TestMock(t *testing.T) {
 		//act
 		execute.Execute()
 		out := execute.Output()
-		res := []*dto.StockAggregate{}
+		res := []*model.StockAggregate{}
 		for data := range out {
-			val, ok := data.(*dto.StockAggregate)
+			val, ok := data.(*model.StockAggregate)
 			if !ok {
 				panic("Type miss match")
 			}
