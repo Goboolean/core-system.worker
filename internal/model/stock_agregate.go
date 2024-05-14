@@ -1,4 +1,4 @@
-package dto
+package model
 
 // stockAggreate 우리
 type StockAggregate struct {
