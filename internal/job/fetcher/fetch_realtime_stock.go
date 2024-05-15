@@ -22,7 +22,7 @@ type RealtimeStock struct {
 	timeSlice   string
 	stockId     string
 
-	out  chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	out  job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
 }
@@ -30,7 +30,7 @@ type RealtimeStock struct {
 func NewRealtimeStock(mongo mongo.StockClient, params *job.UserParams) (*RealtimeStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &RealtimeStock{
-		out:  make(chan any),
+		out:  make(job.DataChan),
 		stop: util.NewStopNotifier(),
 	}
 
@@ -97,7 +97,7 @@ func (rt *RealtimeStock) Execute() {
 
 }
 
-func (rt *RealtimeStock) Output() chan any {
+func (rt *RealtimeStock) Output() job.DataChan {
 	return rt.out
 }
 

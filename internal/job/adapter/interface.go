@@ -7,8 +7,8 @@ import (
 type Adapter interface {
 	job.Common
 
-	SetInput(chan any)
-	Output() chan any
+	SetInput(job.DataChan)
+	Output() job.DataChan
 }
 
 // adapt.Common

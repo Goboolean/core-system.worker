@@ -53,7 +53,7 @@ func TestMock(t *testing.T) {
 				Volume:     3,
 			},
 		}
-		inChan := make(chan any, len(input))
+		inChan := make(job.DataChan, len(input))
 		for _, e := range input {
 			inChan <- e
 		}

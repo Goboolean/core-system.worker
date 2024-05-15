@@ -7,15 +7,15 @@ type Example struct {
 	//user param의 type은 float32
 	param1 float32
 
-	in  chan any `type:`
-	out chan any `type:` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	in  job.MessageChan `type:`
+	out job.MessageChan `type:` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 	wg  sync.WaitGroup
 }
 
 func NewExample(params UserParams) (*Job, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &Example{
-		out: make(chan any),
+		out: make(job.MessageChan),
 	}
 
 	//여기에서 user param 초기화
@@ -58,11 +58,11 @@ func (e *Example) Execute(ctx context.Context) {
 
 }
 
-func (j *Example) SetInputChan(input chan any) {
+func (j *Example) SetInputChan(input job.MessageChan) {
 	j.in = input
 }
 
-func (j *Example) OutputChan() chan any {
+func (j *Example) OutputChan() job.MessageChan {
 	return j.out
 }
 

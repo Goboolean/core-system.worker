@@ -28,7 +28,7 @@ type PastStock struct {
 	stockId             string
 	pastRepo            mongo.StockClient
 
-	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
@@ -42,7 +42,7 @@ func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, 
 		isFetchingFullRange: DefaultIsFetchingFullRange,
 		pastRepo:            mongo,
 		stop:                util.NewStopNotifier(),
-		out:                 make(chan any),
+		out:                 make(job.DataChan),
 	}
 
 	if !parmas.IsKeyNullOrEmpty("productId") {
@@ -126,7 +126,7 @@ func (ps *PastStock) Execute() {
 	}()
 }
 
-func (ps *PastStock) Output() chan any {
+func (ps *PastStock) Output() job.DataChan {
 	return ps.out
 }
 

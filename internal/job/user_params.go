@@ -9,3 +9,5 @@ func (p UserParams) IsKeyNullOrEmpty(key string) bool {
 		return false
 	}
 }
+
+type DataChan chan any
