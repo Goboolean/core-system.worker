@@ -12,6 +12,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
+	"github.com/Goboolean/core-system.worker/internal/job/joinner"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -29,7 +30,7 @@ var (
 	ErrNotImplemented       = errors.New("select pipeline: selected pipeline is not implemented")
 )
 
-func Build(config configuration.AppConfig) (*Pipeline, error) {
+func Build(config configuration.AppConfig) (Pipeline, error) {
 	//step1: select pipeline
 	t, err := selectPipeline(config)
 	if err != nil {
@@ -39,6 +40,8 @@ func Build(config configuration.AppConfig) (*Pipeline, error) {
 	switch t {
 	case NormalPipeline:
 		return buildNormal(config)
+	case PipelineWithoutModel:
+		return buildWithoutModel(config)
 	default:
 		return nil, ErrNotImplemented
 	}
@@ -48,6 +51,7 @@ func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
 	if config.Model.Id == "" {
 		return PipelineWithoutModel, nil
 	}
+
 	if config.Model.Id != "" {
 		return NormalPipeline, nil
 	}
@@ -57,7 +61,7 @@ func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
 	return 0, fmt.Errorf("%w %s", ErrNoCompatiblePipeline, string(configStringBytes))
 }
 
-func buildNormal(config configuration.AppConfig) (*Pipeline, error) {
+func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	p := extractUserParams(config)
 
 	//job객체를 factory로부터 생성
@@ -66,6 +70,52 @@ func buildNormal(config configuration.AppConfig) (*Pipeline, error) {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	modelExecJob, err := executer.Create(extractModelExecSpec(config), &p)
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
+	isAdapterRequred, adapterSpec := extractAdapterSpec(config)
+	adpatJob, err := adapter.Create(adapterSpec, &p)
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
+	joinJob := joinner.Dummy{}
+	analyzeJob, err := analyzer.Create(extractAnalyzerSpec(config), &p)
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
+	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
+	// 현재 생성자 미구현으로 dummy 객체로 대체
+	transmitJob := transmitter.Dummy{}
+
+	if isAdapterRequred {
+		if err != nil {
+			return nil, fmt.Errorf("build normal pipeline: %w", err)
+		}
+		return newNormalWithAdapter(
+			fetchJob,
+			modelExecJob,
+			adpatJob,
+			joinJob,
+			analyzeJob,
+			transmitJob,
+		)
+	} else {
+		return newNormalWithoutAdapter(
+			fetchJob,
+			modelExecJob,
+			joinJob,
+			analyzeJob,
+			transmitJob,
+		)
+	}
+
+}
+
+func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
+	p := extractUserParams(config)
+
+	//job객체를 factory로부터 생성
+	fetchJob, err := fetcher.Create(extractFetchSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
@@ -86,17 +136,15 @@ func buildNormal(config configuration.AppConfig) (*Pipeline, error) {
 		if err != nil {
 			return nil, fmt.Errorf("build normal pipeline: %w", err)
 		}
-		return newNormalWithAdapter(
+		return newWithoutModelWithAdapter(
 			fetchJob,
-			modelExecJob,
 			adpatJob,
 			analyzeJob,
 			transmitJob,
 		)
 	} else {
-		return newNormalWithoutAdapter(
+		return newWithoutModelWithoutAdapter(
 			fetchJob,
-			modelExecJob,
 			analyzeJob,
 			transmitJob,
 		)
