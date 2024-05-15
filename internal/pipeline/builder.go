@@ -88,9 +88,6 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	transmitJob := transmitter.Dummy{}
 
 	if isAdapterRequred {
-		if err != nil {
-			return nil, fmt.Errorf("build normal pipeline: %w", err)
-		}
 		return newNormalWithAdapter(
 			fetchJob,
 			modelExecJob,
@@ -115,38 +112,35 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 	p := extractUserParams(config)
 
 	//job객체를 factory로부터 생성
-	fetchJob, err := fetcher.Create(extractFetchSpec(config), &p)
+	fetcher, err := fetcher.Create(extractFetchSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	isAdapterRequred, adapterSpec := extractAdapterSpec(config)
-	adpatJob, err := adapter.Create(adapterSpec, &p)
+	adpater, err := adapter.Create(adapterSpec, &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	analyzeJob, err := analyzer.Create(extractAnalyzerSpec(config), &p)
+	analyzer, err := analyzer.Create(extractAnalyzerSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
-	transmitJob := transmitter.Dummy{}
+	transmitter := transmitter.Dummy{}
 
 	if isAdapterRequred {
-		if err != nil {
-			return nil, fmt.Errorf("build normal pipeline: %w", err)
-		}
 		return newWithoutModelWithAdapter(
-			fetchJob,
-			adpatJob,
-			analyzeJob,
-			transmitJob,
+			fetcher,
+			adpater,
+			analyzer,
+			transmitter,
 		)
 	} else {
 		return newWithoutModelWithoutAdapter(
-			fetchJob,
-			analyzeJob,
-			transmitJob,
+			fetcher,
+			analyzer,
+			transmitter,
 		)
 	}
 
@@ -157,7 +151,7 @@ func extractFetchSpec(config configuration.AppConfig) fetcher.Spec {
 	var spec fetcher.Spec
 
 	spec.ProductType = config.DataOrigin.ProductType
-	spec.Task = spec.Task
+	spec.Task = config.Task
 	return spec
 }
 
