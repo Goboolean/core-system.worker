@@ -4,6 +4,13 @@ import (
 	"sync"
 )
 
+// closedchan is a reusable closed channel.
+var closedchan = make(chan struct{})
+
+func init() {
+	close(closedchan)
+}
+
 type StopNotifier struct {
 	mu sync.Mutex
 	ch chan struct{}
@@ -19,9 +26,7 @@ func (sn *StopNotifier) NotifyStop() {
 	sn.mu.Lock()
 	defer sn.mu.Unlock()
 
-	if _, ok := <-sn.ch; ok {
-		close(sn.ch)
-	}
+	sn.ch = closedchan
 }
 
 func (sn *StopNotifier) Done() chan struct{} {
