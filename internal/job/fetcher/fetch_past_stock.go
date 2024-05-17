@@ -28,7 +28,7 @@ type PastStock struct {
 	stockId             string
 	pastRepo            mongo.StockClient
 
-	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	out chan model.Packet `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
@@ -42,7 +42,7 @@ func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, 
 		isFetchingFullRange: DefaultIsFetchingFullRange,
 		pastRepo:            mongo,
 		stop:                util.NewStopNotifier(),
-		out:                 make(chan any),
+		out:                 make(chan model.Packet),
 	}
 
 	if !parmas.IsKeyNullOrEmpty("productId") {
@@ -106,18 +106,24 @@ func (ps *PastStock) Execute() {
 
 			quantity = count - index
 		}
+		var sequnce int64 = 0
 
 		duration, _ := time.ParseDuration(ps.timeSlice)
 		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc mongo.StockDocument) {
-			ps.out <- &model.StockAggregate{
-				OpenTime:   doc.Timestamp,
-				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
-				Open:       doc.Open,
-				Closed:     doc.Close,
-				High:       doc.High,
-				Low:        doc.Low,
-				Volume:     float32(doc.Volume),
+			ps.out <- model.Packet{
+				Sequnce: sequnce,
+				Data: &model.StockAggregate{
+					OpenTime:   doc.Timestamp,
+					ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
+					Open:       doc.Open,
+					Closed:     doc.Close,
+					High:       doc.High,
+					Low:        doc.Low,
+					Volume:     float32(doc.Volume),
+				},
 			}
+
+			sequnce++
 		})
 		if err != nil {
 			panic(err)
@@ -126,7 +132,7 @@ func (ps *PastStock) Execute() {
 	}()
 }
 
-func (ps *PastStock) Output() chan any {
+func (ps *PastStock) Output() chan model.Packet {
 	return ps.out
 }
 

@@ -26,8 +26,8 @@ type Mock struct {
 
 	kServeClient kserve.Client
 
-	in  chan any `type:""`
-	out chan any `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	in  chan model.Packet `type:""`
+	out chan model.Packet `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	wg sync.WaitGroup
 
@@ -39,7 +39,7 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 	instance := &Mock{
 		kServeClient: kServeClient,
 		maxRetry:     DefaultMaxRetry,
-		out:          make(chan any),
+		out:          make(chan model.Packet),
 		stop:         util.NewStopNotifier(),
 	}
 
@@ -90,7 +90,7 @@ func (m *Mock) Execute() {
 					return
 				}
 
-				data, ok := input.(*model.StockAggregate)
+				data, ok := input.Data.(*model.StockAggregate)
 
 				if !ok {
 					panic(fmt.Errorf("model exec job: type mismatch. expected *model.StockAggregate, got %s %w", reflect.TypeOf(input), job.ErrTypeMismatch))
@@ -124,14 +124,17 @@ func (m *Mock) Execute() {
 				//반환 받은 텐서 타입에서 알맞은 타입으로 가공한다.
 				//지금은 모델이 candlestick를 리턴한다고 가정한다.
 				//거래량 중요한 데이터가 아니므로 일단 0처리
-				m.out <- &model.StockAggregate{
-					OpenTime:   data.ClosedTime,
-					ClosedTime: data.ClosedTime + (data.ClosedTime - data.OpenTime),
-					High:       out[0],
-					Low:        out[1],
-					Open:       out[2],
-					Closed:     out[3],
-					Volume:     0.0,
+				m.out <- model.Packet{
+					Sequnce: input.Sequnce,
+					Data: &model.StockAggregate{
+						OpenTime:   data.ClosedTime,
+						ClosedTime: data.ClosedTime + (data.ClosedTime - data.OpenTime),
+						High:       out[0],
+						Low:        out[1],
+						Open:       out[2],
+						Closed:     out[3],
+						Volume:     0.0,
+					},
 				}
 			}
 		}
@@ -139,11 +142,11 @@ func (m *Mock) Execute() {
 
 }
 
-func (m *Mock) SetInput(input chan any) {
+func (m *Mock) SetInput(input chan model.Packet) {
 	m.in = input
 }
 
-func (m *Mock) Output() chan any {
+func (m *Mock) Output() chan model.Packet {
 	return m.out
 }
 

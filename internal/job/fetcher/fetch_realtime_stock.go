@@ -22,7 +22,7 @@ type RealtimeStock struct {
 	timeSlice   string
 	stockId     string
 
-	out  chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	out  chan model.Packet `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
 }
@@ -30,7 +30,7 @@ type RealtimeStock struct {
 func NewRealtimeStock(mongo mongo.StockClient, params *job.UserParams) (*RealtimeStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &RealtimeStock{
-		out:  make(chan any),
+		out:  make(chan model.Packet),
 		stop: util.NewStopNotifier(),
 	}
 
@@ -66,17 +66,23 @@ func (rt *RealtimeStock) Execute() {
 		count := rt.pastRepo.GetCount(ctx)
 		duration, _ := time.ParseDuration(rt.timeSlice)
 
+		var sequnce int64 = 0
+
 		err := rt.pastRepo.ForEachDocument(ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc mongo.StockDocument) {
 
-			rt.out <- &model.StockAggregate{
-				OpenTime:   doc.Timestamp,
-				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
-				Open:       doc.Open,
-				Closed:     doc.Close,
-				High:       doc.High,
-				Low:        doc.Low,
-				Volume:     float32(doc.Volume),
+			rt.out <- model.Packet{
+				Sequnce: sequnce,
+				Data: &model.StockAggregate{
+					OpenTime:   doc.Timestamp,
+					ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
+					Open:       doc.Open,
+					Closed:     doc.Close,
+					High:       doc.High,
+					Low:        doc.Low,
+					Volume:     float32(doc.Volume),
+				},
 			}
+			sequnce++
 		})
 
 		if err != nil {
@@ -97,7 +103,7 @@ func (rt *RealtimeStock) Execute() {
 
 }
 
-func (rt *RealtimeStock) Output() chan any {
+func (rt *RealtimeStock) Output() chan model.Packet {
 	return rt.out
 }
 

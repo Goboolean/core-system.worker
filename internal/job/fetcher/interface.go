@@ -1,9 +1,12 @@
 package fetcher
 
-import "github.com/Goboolean/core-system.worker/internal/job"
+import (
+	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/model"
+)
 
 type Fetcher interface {
 	job.Common
 
-	Output() chan any
+	Output() chan model.Packet
 }

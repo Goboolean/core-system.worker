@@ -1,10 +1,13 @@
 package executer
 
-import "github.com/Goboolean/core-system.worker/internal/job"
+import (
+	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/model"
+)
 
 type ModelExecutor interface {
 	job.Common
 
-	SetInput(chan any)
-	Output() chan any
+	SetInput(chan model.Packet)
+	Output() chan model.Packet
 }
