@@ -37,7 +37,7 @@ func newWithoutModelWithAdapter(
 	return &instance, nil
 }
 
-func ewWithoutModelWithoutAdapter(
+func newWithoutModelWithoutAdapter(
 	fetch fetcher.Fetcher,
 	analyze analyzer.Analyzer,
 	transmit transmitter.Transmitter) (*WithoutModel, error) {
