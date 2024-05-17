@@ -20,12 +20,12 @@ var ErrTypeNotMatch = errors.New("pipeline: cannot build a pipeline because the 
 // 아키텍처 설계 상 이 구조는 변경되면 안 된다.
 type Normal struct {
 	//jobs
-	fetch      fetcher.Fetcher
-	modelExec  executer.ModelExecutor
-	adapt      adapter.Adapter
-	join       joinner.Joinner
-	resAnalyze analyzer.Analyzer
-	transmit   transmitter.Transmitter
+	fetcher       fetcher.Fetcher
+	joinner       joinner.Joinner
+	modelExecuter executer.ModelExecutor
+	adapter       adapter.Adapter
+	resAnalyzer   analyzer.Analyzer
+	transmitter   transmitter.Transmitter
 
 	//utils
 	mux util.ChannelMux
@@ -35,56 +35,56 @@ type Normal struct {
 }
 
 func newNormalWithAdapter(
-	fetch fetcher.Fetcher,
-	modelExec executer.ModelExecutor,
-	adapt adapter.Adapter,
-	join joinner.Joinner,
-	resAnalyze analyzer.Analyzer,
-	transmit transmitter.Transmitter) (*Normal, error) {
+	fetcher fetcher.Fetcher,
+	joinner joinner.Joinner,
+	modelExecuter executer.ModelExecutor,
+	adapter adapter.Adapter,
+	resAnalyzer analyzer.Analyzer,
+	transmitter transmitter.Transmitter) (*Normal, error) {
 
 	instance := Normal{
-		fetch:      fetch,
-		modelExec:  modelExec,
-		adapt:      adapt,
-		join:       join,
-		resAnalyze: resAnalyze,
-		transmit:   transmit,
+		fetcher:       fetcher,
+		joinner:       joinner,
+		modelExecuter: modelExecuter,
+		adapter:       adapter,
+		resAnalyzer:   resAnalyzer,
+		transmitter:   transmitter,
 
 		mux: util.ChannelMux{},
 	}
 
-	instance.mux.SetInput(instance.fetch.Output())
-	instance.modelExec.SetInput(instance.mux.Output())
-	adapt.SetInput(instance.modelExec.Output())
-	instance.join.SetModelInput(instance.adapt.Output())
-	instance.join.SetRefInput(instance.mux.Output())
-	instance.resAnalyze.SetInput(instance.join.Output())
-	instance.transmit.SetInput(instance.resAnalyze.Output())
+	instance.mux.SetInput(instance.fetcher.Output())
+	instance.modelExecuter.SetInput(instance.mux.Output())
+	instance.adapter.SetInput(instance.modelExecuter.Output())
+	instance.joinner.SetModelInput(instance.adapter.Output())
+	instance.joinner.SetRefInput(instance.mux.Output())
+	instance.resAnalyzer.SetInput(instance.joinner.Output())
+	instance.transmitter.SetInput(instance.resAnalyzer.Output())
 
 	return &instance, nil
 }
 
 func newNormalWithoutAdapter(
 	fetch fetcher.Fetcher,
-	modelExec executer.ModelExecutor,
 	join joinner.Joinner,
+	modelExec executer.ModelExecutor,
 	resAnalyze analyzer.Analyzer,
 	transmit transmitter.Transmitter) (*Normal, error) {
 
 	instance := Normal{
-		fetch:      fetch,
-		modelExec:  modelExec,
-		join:       join,
-		resAnalyze: resAnalyze,
-		transmit:   transmit,
+		fetcher:       fetch,
+		modelExecuter: modelExec,
+		joinner:       join,
+		resAnalyzer:   resAnalyze,
+		transmitter:   transmit,
 	}
 
-	instance.mux.SetInput(instance.fetch.Output())
-	instance.modelExec.SetInput(instance.mux.Output())
-	instance.join.SetModelInput(instance.modelExec.Output())
-	instance.join.SetRefInput(instance.mux.Output())
-	instance.resAnalyze.SetInput(instance.join.Output())
-	instance.transmit.SetInput(instance.resAnalyze.Output())
+	instance.mux.SetInput(instance.fetcher.Output())
+	instance.modelExecuter.SetInput(instance.mux.Output())
+	instance.joinner.SetModelInput(instance.modelExecuter.Output())
+	instance.joinner.SetRefInput(instance.mux.Output())
+	instance.resAnalyzer.SetInput(instance.joinner.Output())
+	instance.transmitter.SetInput(instance.resAnalyzer.Output())
 
 	return &instance, nil
 
@@ -92,31 +92,31 @@ func newNormalWithoutAdapter(
 
 func (n *Normal) Run() {
 
-	n.fetch.Execute()
-	n.modelExec.Execute()
-	if !reflect.ValueOf(n.adapt).IsNil() {
-		n.adapt.Execute()
+	n.fetcher.Execute()
+	n.modelExecuter.Execute()
+	if !reflect.ValueOf(n.adapter).IsNil() {
+		n.adapter.Execute()
 	}
-	n.join.Execute()
-	n.resAnalyze.Execute()
-	n.transmit.Execute()
+	n.joinner.Execute()
+	n.resAnalyzer.Execute()
+	n.transmitter.Execute()
 }
 
 func (n *Normal) Stop() error {
 
-	if err := n.fetch.Close(); err != nil {
+	if err := n.fetcher.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown fetch job %w", err)
 	}
-	if err := n.modelExec.Close(); err != nil {
+	if err := n.modelExecuter.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown model execute job %w", err)
 	}
-	if err := n.adapt.Close(); err != nil {
+	if err := n.adapter.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown adapt job %w", err)
 	}
-	if err := n.resAnalyze.Close(); err != nil {
+	if err := n.resAnalyzer.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown analyze job %w", err)
 	}
-	if err := n.transmit.Close(); err != nil {
+	if err := n.transmitter.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown transmit job %w", err)
 	}
 

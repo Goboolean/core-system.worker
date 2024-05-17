@@ -65,44 +65,44 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	p := extractUserParams(config)
 
 	//job객체를 factory로부터 생성
-	fetchJob, err := fetcher.Create(extractFetchSpec(config), &p)
+	fetcher, err := fetcher.Create(extractFetcherSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	modelExecJob, err := executer.Create(extractModelExecSpec(config), &p)
+	modelExecuter, err := executer.Create(extractModelExecterSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	isAdapterRequred, adapterSpec := extractAdapterSpec(config)
-	adpatJob, err := adapter.Create(adapterSpec, &p)
+	adpater, err := adapter.Create(adapterSpec, &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	joinJob := joinner.Dummy{}
-	analyzeJob, err := analyzer.Create(extractAnalyzerSpec(config), &p)
+	joinner := joinner.Dummy{}
+	analyzer, err := analyzer.Create(extractAnalyzerSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
-	transmitJob := transmitter.Dummy{}
+	transmitter := transmitter.Dummy{}
 
 	if isAdapterRequred {
 		return newNormalWithAdapter(
-			fetchJob,
-			modelExecJob,
-			adpatJob,
-			joinJob,
-			analyzeJob,
-			transmitJob,
+			fetcher,
+			joinner,
+			modelExecuter,
+			adpater,
+			analyzer,
+			transmitter,
 		)
 	} else {
 		return newNormalWithoutAdapter(
-			fetchJob,
-			modelExecJob,
-			joinJob,
-			analyzeJob,
-			transmitJob,
+			fetcher,
+			joinner,
+			modelExecuter,
+			analyzer,
+			transmitter,
 		)
 	}
 
@@ -112,7 +112,7 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 	p := extractUserParams(config)
 
 	//job객체를 factory로부터 생성
-	fetcher, err := fetcher.Create(extractFetchSpec(config), &p)
+	fetcher, err := fetcher.Create(extractFetcherSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
@@ -146,7 +146,7 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 
 }
 
-func extractFetchSpec(config configuration.AppConfig) fetcher.Spec {
+func extractFetcherSpec(config configuration.AppConfig) fetcher.Spec {
 
 	var spec fetcher.Spec
 
@@ -155,7 +155,7 @@ func extractFetchSpec(config configuration.AppConfig) fetcher.Spec {
 	return spec
 }
 
-func extractModelExecSpec(config configuration.AppConfig) executer.Spec {
+func extractModelExecterSpec(config configuration.AppConfig) executer.Spec {
 
 	var spec executer.Spec
 
