@@ -40,6 +40,8 @@ func Build(config configuration.AppConfig) (Pipeline, error) {
 	switch t {
 	case NormalPipeline:
 		return buildNormal(config)
+	case PipelineWithoutModel:
+		return buildWithoutModel(config)
 	default:
 		return nil, ErrNotImplemented
 	}
@@ -49,6 +51,7 @@ func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
 	if config.Model.Id == "" {
 		return PipelineWithoutModel, nil
 	}
+
 	if config.Model.Id != "" {
 		return NormalPipeline, nil
 	}
@@ -98,6 +101,44 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 			fetcher,
 			joinner,
 			modelExecuter,
+			analyzer,
+			transmitter,
+		)
+	}
+
+}
+
+func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
+	p := extractUserParams(config)
+
+	//job객체를 factory로부터 생성
+	fetcher, err := fetcher.Create(extractFetcherSpec(config), &p)
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
+	isAdapterRequred, adapterSpec := extractAdapterSpec(config)
+	adpater, err := adapter.Create(adapterSpec, &p)
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
+	analyzer, err := analyzer.Create(extractAnalyzerSpec(config), &p)
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
+	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
+	// 현재 생성자 미구현으로 dummy 객체로 대체
+	transmitter := transmitter.Dummy{}
+
+	if isAdapterRequred {
+		return newWithoutModelWithAdapter(
+			fetcher,
+			adpater,
+			analyzer,
+			transmitter,
+		)
+	} else {
+		return newWithoutModelWithoutAdapter(
+			fetcher,
 			analyzer,
 			transmitter,
 		)
