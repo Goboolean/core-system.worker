@@ -33,12 +33,11 @@ func NewBysequnce(params *job.UserParams) (*BySequnceNum, error) {
 }
 
 func (b *BySequnceNum) Execute() {
+	b.wg.Add(1)
 	go func() {
 		defer b.wg.Done()
 		defer close(b.out)
 		defer b.stop.NotifyStop()
-
-		b.wg.Add(1)
 
 		refanceInputBuf := make([]model.Packet, 0, 100)
 		modelInputList := list.New()
