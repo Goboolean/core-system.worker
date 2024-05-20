@@ -25,10 +25,11 @@ func ImportAppConfigFromFile(path string) (*AppConfig, error) {
 }
 
 type AppConfig struct {
-	Task       string         `yaml:"task"`
-	DataOrigin DataOrigin     `yaml:"dataOrigin"`
-	Model      ModelConfig    `yaml:"model"`
-	Strategy   StrategyConfig `yaml:"strategy"`
+	Task           string         `yaml:"task"`
+	InitialCapital int            `yaml:"initialCapital"`
+	DataOrigin     DataOrigin     `yaml:"dataOrigin"`
+	Model          ModelConfig    `yaml:"model"`
+	Strategy       StrategyConfig `yaml:"strategy"`
 }
 
 type DataOrigin struct {
