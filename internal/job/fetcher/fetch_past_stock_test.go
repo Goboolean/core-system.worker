@@ -66,8 +66,8 @@ func TestPastStock(t *testing.T) {
 		fetch.Execute()
 		out := fetch.Output()
 		res := []*model.StockAggregate{}
-		for data := range out {
-			val, ok := data.(*model.StockAggregate)
+		for packet := range out {
+			val, ok := packet.Data.(*model.StockAggregate)
 			if !ok {
 				panic("Type miss match")
 			}
