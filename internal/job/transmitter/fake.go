@@ -18,7 +18,11 @@ type Fake struct {
 	sn *util.StopNotifier
 }
 
-func NewFake() {
+func NewFake() (*Fake, error) {
+	return &Fake{
+		wg: &sync.WaitGroup{},
+		sn: util.NewStopNotifier(),
+	}, nil
 
 }
 
@@ -46,7 +50,9 @@ func (f *Fake) Execute() {
 }
 
 func (f *Fake) Close() error {
-	panic("not implemented") // TODO: Implement
+	f.sn.NotifyStop()
+	f.wg.Wait()
+	return nil
 }
 
 func (f *Fake) SetInput(in chan any) {
