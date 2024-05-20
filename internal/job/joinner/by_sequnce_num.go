@@ -98,10 +98,10 @@ func (b *BySequnceNum) Execute() {
 // findLargestPacketIndexBySequence returns the index of the packet with the largest sequence number
 // that is less than or equal to the target sequence number.
 func findLargestPacketIndexBySequence(data []model.Packet, target int64) int {
-	len := len(data)
+	size := len(data)
 
-	var i int = 0
-	for i < len && data[i].Sequnce < target {
+	i := 0
+	for i < size && data[i].Sequnce < target {
 		i++
 	}
 
