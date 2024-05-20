@@ -17,7 +17,7 @@ type OrderEvent struct {
 	//무엇을 언제 얼마나 사거나 팔 것인가?
 	ProductID string
 	//목표 비중(퍼센테이지)
-	Transaction TransactionDetails
+	Trade TradeDetails
 	// -1이면 즉시 거래?
 	// 아니면 현재 unix epoch time?
 	// command server는 Timestamp가
@@ -26,7 +26,7 @@ type OrderEvent struct {
 }
 
 // Order represents an order in the system.
-type TransactionDetails struct {
+type TradeDetails struct {
 	ProportionPercent int    // Proportion percentage of the order
 	Action            Action // Action to be performed for the order
 }

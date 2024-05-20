@@ -41,7 +41,7 @@ func (s *Stub) Execute() {
 				return
 			case <-s.in:
 				{
-					s.out <- model.TransactionDetails{
+					s.out <- model.TradeDetails{
 						Action:            model.Sell,
 						ProportionPercent: 100,
 					}
