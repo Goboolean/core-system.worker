@@ -18,14 +18,14 @@ type Stub struct {
 	wg *sync.WaitGroup
 }
 
-func NewStub(parmas *job.UserParams) *Stub {
+func NewStub(parmas *job.UserParams) (*Stub, error) {
 	instance := &Stub{
 		out: make(chan any),
 		sn:  util.NewStopNotifier(),
 		wg:  &sync.WaitGroup{},
 	}
 
-	return instance
+	return instance, nil
 }
 
 func (s *Stub) Execute() {

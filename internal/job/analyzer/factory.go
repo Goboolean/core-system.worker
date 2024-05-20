@@ -6,13 +6,13 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
-type jobProvider func(p *job.UserParams) (Analyzer, error)
-
 var providerRepo = map[Spec]jobProvider{
-	{Id: "abc", InputType: "candlestick"}: func(p *job.UserParams) (Analyzer, error) {
-		return Dummy{}, nil
+	{Id: "stub", InputType: "candlestick"}: func(p *job.UserParams) (Analyzer, error) {
+		return NewStub(p)
 	},
 }
+
+type jobProvider func(p *job.UserParams) (Analyzer, error)
 
 func Create(spec Spec, p *job.UserParams) (Analyzer, error) {
 
