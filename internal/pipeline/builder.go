@@ -48,11 +48,11 @@ func Build(config configuration.AppConfig) (Pipeline, error) {
 }
 
 func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
-	if config.Model.Id == "" {
+	if config.Model.ID == "" {
 		return PipelineWithoutModel, nil
 	}
 
-	if config.Model.Id != "" {
+	if config.Model.ID != "" {
 		return NormalPipeline, nil
 	}
 	configStringBytes, err := yaml.Marshal(config)
@@ -178,7 +178,7 @@ func extractAdapterSpec(config configuration.AppConfig) (bool, adapter.Spec) {
 func extractAnalyzerSpec(config configuration.AppConfig) analyzer.Spec {
 
 	spec := analyzer.Spec{
-		Id:        config.Strategy.Id,
+		ID:        config.Strategy.ID,
 		InputType: config.Strategy.InputType,
 	}
 
@@ -191,7 +191,7 @@ func extractUserParams(config configuration.AppConfig) job.UserParams {
 		"startDate": string(config.DataOrigin.StartTimestamp),
 		"endDate":   string(config.DataOrigin.EndTimestamp),
 		"batchSize": string(config.Model.BatchSize),
-		"productId": config.DataOrigin.ProductId,
+		"productID": config.DataOrigin.ProductID,
 	}
 
 	for k, v := range config.Model.Params {
