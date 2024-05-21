@@ -7,7 +7,7 @@ import (
 )
 
 var providerRepo = map[Spec]jobProvider{
-	{Id: "stub", InputType: "candlestick"}: func(p *job.UserParams) (Analyzer, error) {
+	{ID: "stub", InputType: "candlestick"}: func(p *job.UserParams) (Analyzer, error) {
 		return NewStub(p)
 	},
 }

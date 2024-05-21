@@ -34,7 +34,7 @@ type AppConfig struct {
 
 type DataOrigin struct {
 	TimeFrame      TimeFrame `yaml:"timeFrame"`
-	ProductId      string    `yaml:"productId"`
+	ProductID      string    `yaml:"productID"`
 	ProductType    string    `yaml:"productType"`
 	StartTimestamp int64     `yaml:"startTimestamp"`
 	EndTimestamp   int64     `yaml:"endTimestamp"`
@@ -45,14 +45,14 @@ type TimeFrame struct {
 }
 
 type ModelConfig struct {
-	Id         string             `yaml:"id"`
+	ID         string             `yaml:"ID"`
 	BatchSize  int                `yaml:"batchSize"`
 	OutputType string             `yaml:"outputType"`
 	Params     map[string]float32 `yaml:"params"`
 }
 
 type StrategyConfig struct {
-	Id        string             `yaml:"id"`
+	ID        string             `yaml:"ID"`
 	InputType string             `yaml:"inputType"`
 	Params    map[string]float32 `yaml:"params"`
 }

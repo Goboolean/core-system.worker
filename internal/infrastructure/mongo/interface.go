@@ -3,7 +3,7 @@ package mongo
 import "context"
 
 type StockClient interface {
-	SetTarget(stockId string, timeslice string)
+	SetTarget(stockID string, timeslice string)
 	// GetCount gets count of targeted document
 	GetCount(ctx context.Context) int
 	// FindLatestIndexBy finds the index of the most recent document created before or on the given date.
