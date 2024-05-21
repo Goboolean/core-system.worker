@@ -41,9 +41,10 @@ func (s *Stub) Execute() {
 				return
 			case <-s.in:
 				{
+					//아무런 동작이 일어나지 않는 값
 					s.out <- model.TradeDetails{
 						Action:            model.Sell,
-						ProportionPercent: 100,
+						ProportionPercent: 0,
 					}
 				}
 			}
