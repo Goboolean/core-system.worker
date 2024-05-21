@@ -7,7 +7,7 @@ import (
 )
 
 type StockClientImpl struct {
-	stockId   string
+	stockID   string
 	timeSlice string
 }
 
