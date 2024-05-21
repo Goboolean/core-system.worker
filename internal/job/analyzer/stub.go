@@ -11,8 +11,8 @@ import (
 type Stub struct {
 	Analyzer
 
-	in  chan any
-	out chan any
+	in  job.DataChan
+	out job.DataChan
 
 	sn *util.StopNotifier
 	wg *sync.WaitGroup
@@ -20,7 +20,7 @@ type Stub struct {
 
 func NewStub(parmas *job.UserParams) (*Stub, error) {
 	instance := &Stub{
-		out: make(chan any),
+		out: make(job.DataChan),
 		sn:  util.NewStopNotifier(),
 		wg:  &sync.WaitGroup{},
 	}
@@ -35,19 +35,26 @@ func (s *Stub) Execute() {
 		defer s.sn.NotifyStop()
 		defer close(s.out)
 
+		i := 0
 		for {
+
 			select {
 			case <-s.sn.Done():
 				return
 			case <-s.in:
-				{
-					//아무런 동작이 일어나지 않는 값
-					s.out <- model.TradeDetails{
+
+				//아무런 동작이 일어나지 않는 값
+				s.out <- model.Packet{
+					Sequnce: int64(i),
+					Data: &model.TradeDetails{
 						Action:            model.Sell,
 						ProportionPercent: 0,
-					}
+					},
 				}
+
+				i++
 			}
+
 		}
 	}()
 }
