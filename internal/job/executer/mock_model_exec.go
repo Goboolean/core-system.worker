@@ -26,8 +26,8 @@ type Mock struct {
 
 	kServeClient kserve.Client
 
-	in  chan model.Packet `type:""`
-	out chan model.Packet `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	in  job.DataChan `type:""`
+	out job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	wg sync.WaitGroup
 
@@ -39,7 +39,7 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 	instance := &Mock{
 		kServeClient: kServeClient,
 		maxRetry:     DefaultMaxRetry,
-		out:          make(chan model.Packet),
+		out:          make(job.DataChan),
 		stop:         util.NewStopNotifier(),
 	}
 
@@ -142,11 +142,11 @@ func (m *Mock) Execute() {
 
 }
 
-func (m *Mock) SetInput(input chan model.Packet) {
+func (m *Mock) SetInput(input job.DataChan) {
 	m.in = input
 }
 
-func (m *Mock) Output() chan model.Packet {
+func (m *Mock) Output() job.DataChan {
 	return m.out
 }
 
