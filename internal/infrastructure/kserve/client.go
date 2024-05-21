@@ -95,7 +95,7 @@ func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []
 		})
 
 	if err != nil {
-		return nil, fmt.Errorf("inference: falID to create request body  %w", err)
+		return nil, fmt.Errorf("inference: falid to create request body  %w", err)
 	}
 
 	req := &http.Request{
@@ -113,11 +113,11 @@ func (c *ClientImpl) RequestInference(ctx context.Context, shape []int, input []
 	var b []byte
 	var out model.InferenceRes
 	if _, err := res.Body.Read(b); err != nil {
-		return nil, fmt.Errorf("inference: falID to read responce body %w", err)
+		return nil, fmt.Errorf("inference: falid to read responce body %w", err)
 	}
 
 	if err := json.Unmarshal(b, &out); err != nil {
-		return nil, fmt.Errorf("inference: falID to unmarshal responce %w", err)
+		return nil, fmt.Errorf("inference: falid to unmarshal responce %w", err)
 
 	}
 
