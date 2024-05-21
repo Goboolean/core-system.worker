@@ -1,4 +1,4 @@
-package joinner
+package joiner
 
 import "github.com/Goboolean/core-system.worker/internal/model"
 
