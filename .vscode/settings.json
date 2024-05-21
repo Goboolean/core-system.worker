@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
         "Goboolean"
-    ]
+    ],
+    "go.buildTags": "develop"
 }
