@@ -53,7 +53,7 @@ func TestMock(t *testing.T) {
 				Volume:     3,
 			},
 		}
-		inChan := make(chan model.Packet, len(input))
+		inChan := make(job.DataChan, len(input))
 		for i, e := range input {
 			inChan <- model.Packet{
 				Sequnce: int64(i),
