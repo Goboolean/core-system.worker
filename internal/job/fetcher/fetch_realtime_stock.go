@@ -66,17 +66,23 @@ func (rt *RealtimeStock) Execute() {
 		count := rt.pastRepo.GetCount(ctx)
 		duration, _ := time.ParseDuration(rt.timeSlice)
 
+		var sequnce int64 = 0
+
 		err := rt.pastRepo.ForEachDocument(ctx, (count-1)-(rt.prefetchNum), rt.prefetchNum, func(doc mongo.StockDocument) {
 
-			rt.out <- &model.StockAggregate{
-				OpenTime:   doc.Timestamp,
-				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
-				Open:       doc.Open,
-				Closed:     doc.Close,
-				High:       doc.High,
-				Low:        doc.Low,
-				Volume:     float32(doc.Volume),
+			rt.out <- model.Packet{
+				Sequnce: sequnce,
+				Data: &model.StockAggregate{
+					OpenTime:   doc.Timestamp,
+					ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
+					Open:       doc.Open,
+					Closed:     doc.Close,
+					High:       doc.High,
+					Low:        doc.Low,
+					Volume:     float32(doc.Volume),
+				},
 			}
+			sequnce++
 		})
 
 		if err != nil {

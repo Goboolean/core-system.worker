@@ -54,8 +54,11 @@ func TestMock(t *testing.T) {
 			},
 		}
 		inChan := make(job.DataChan, len(input))
-		for _, e := range input {
-			inChan <- e
+		for i, e := range input {
+			inChan <- model.Packet{
+				Sequnce: int64(i),
+				Data:    e,
+			}
 		}
 		close(inChan)
 
@@ -90,8 +93,8 @@ func TestMock(t *testing.T) {
 		execute.Execute()
 		out := execute.Output()
 		res := []*model.StockAggregate{}
-		for data := range out {
-			val, ok := data.(*model.StockAggregate)
+		for packet := range out {
+			val, ok := packet.Data.(*model.StockAggregate)
 			if !ok {
 				panic("Type miss match")
 			}

@@ -106,18 +106,24 @@ func (ps *PastStock) Execute() {
 
 			quantity = count - index
 		}
+		var sequnce int64 = 0
 
 		duration, _ := time.ParseDuration(ps.timeSlice)
 		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc mongo.StockDocument) {
-			ps.out <- &model.StockAggregate{
-				OpenTime:   doc.Timestamp,
-				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
-				Open:       doc.Open,
-				Closed:     doc.Close,
-				High:       doc.High,
-				Low:        doc.Low,
-				Volume:     float32(doc.Volume),
+			ps.out <- model.Packet{
+				Sequnce: sequnce,
+				Data: &model.StockAggregate{
+					OpenTime:   doc.Timestamp,
+					ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
+					Open:       doc.Open,
+					Closed:     doc.Close,
+					High:       doc.High,
+					Low:        doc.Low,
+					Volume:     float32(doc.Volume),
+				},
 			}
+
+			sequnce++
 		})
 		if err != nil {
 			panic(err)

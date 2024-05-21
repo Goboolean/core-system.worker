@@ -1,20 +1,18 @@
-package util
-
-import "github.com/Goboolean/core-system.worker/internal/job"
+package job
 
 type ChannelMux struct {
-	in  job.DataChan
-	out []job.DataChan
+	in  DataChan
+	out []DataChan
 
 	stop chan struct{}
 }
 
-func (fo *ChannelMux) SetInput(in job.DataChan) {
+func (fo *ChannelMux) SetInput(in DataChan) {
 	fo.in = in
 }
 
-func (fo *ChannelMux) Output() job.DataChan {
-	ch := make(job.DataChan, 1)
+func (fo *ChannelMux) Output() DataChan {
+	ch := make(DataChan, 1)
 	fo.out = append(fo.out, ch)
 	return ch
 }

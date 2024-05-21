@@ -1,5 +1,7 @@
 package job
 
+import "github.com/Goboolean/core-system.worker/internal/model"
+
 type UserParams map[string]string
 
 func (p UserParams) IsKeyNullOrEmpty(key string) bool {
@@ -10,4 +12,4 @@ func (p UserParams) IsKeyNullOrEmpty(key string) bool {
 	}
 }
 
-type DataChan chan any
+type DataChan chan model.Packet

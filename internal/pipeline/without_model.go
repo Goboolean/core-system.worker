@@ -11,28 +11,28 @@ import (
 )
 
 type WithoutModel struct {
-	fetch    fetcher.Fetcher
-	adapt    adapter.Adapter
-	analyze  analyzer.Analyzer
-	transmit transmitter.Transmitter
+	fetcher     fetcher.Fetcher
+	adapter     adapter.Adapter
+	analyzer    analyzer.Analyzer
+	transmitter transmitter.Transmitter
 }
 
 func newWithoutModelWithAdapter(
-	fetch fetcher.Fetcher,
-	adapt adapter.Adapter,
-	analyze analyzer.Analyzer,
-	transmit transmitter.Transmitter) (*WithoutModel, error) {
+	fetcher fetcher.Fetcher,
+	adapter adapter.Adapter,
+	analyzer analyzer.Analyzer,
+	transmitter transmitter.Transmitter) (*WithoutModel, error) {
 
 	instance := WithoutModel{
-		fetch:    fetch,
-		adapt:    adapt,
-		analyze:  analyze,
-		transmit: transmit,
+		fetcher:     fetcher,
+		adapter:     adapter,
+		analyzer:    analyzer,
+		transmitter: transmitter,
 	}
 
-	instance.adapt.SetInput(instance.fetch.Output())
-	instance.analyze.SetInput(instance.adapt.Output())
-	instance.transmit.SetInput(instance.analyze.Output())
+	instance.adapter.SetInput(instance.fetcher.Output())
+	instance.analyzer.SetInput(instance.adapter.Output())
+	instance.transmitter.SetInput(instance.analyzer.Output())
 
 	return &instance, nil
 }
@@ -43,40 +43,40 @@ func newWithoutModelWithoutAdapter(
 	transmit transmitter.Transmitter) (*WithoutModel, error) {
 
 	instance := WithoutModel{
-		fetch:    fetch,
-		analyze:  analyze,
-		transmit: transmit,
+		fetcher:     fetch,
+		analyzer:    analyze,
+		transmitter: transmit,
 	}
 
-	instance.analyze.SetInput(instance.fetch.Output())
-	instance.transmit.SetInput(instance.analyze.Output())
+	instance.analyzer.SetInput(instance.fetcher.Output())
+	instance.transmitter.SetInput(instance.analyzer.Output())
 
 	return &instance, nil
 }
 
 func (wom *WithoutModel) Run() {
 
-	wom.fetch.Execute()
-	if !reflect.ValueOf(wom.adapt).IsNil() {
-		wom.adapt.Execute()
+	wom.fetcher.Execute()
+	if !reflect.ValueOf(wom.adapter).IsNil() {
+		wom.adapter.Execute()
 	}
-	wom.analyze.Execute()
-	wom.transmit.Execute()
+	wom.analyzer.Execute()
+	wom.transmitter.Execute()
 
 }
 
 func (wom *WithoutModel) Stop() error {
 
-	if err := wom.fetch.Close(); err != nil {
+	if err := wom.fetcher.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown fetch job %w", err)
 	}
-	if err := wom.adapt.Close(); err != nil {
+	if err := wom.adapter.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown adapt job %w", err)
 	}
-	if err := wom.analyze.Close(); err != nil {
+	if err := wom.analyzer.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown analyze job %w", err)
 	}
-	if err := wom.transmit.Close(); err != nil {
+	if err := wom.transmitter.Close(); err != nil {
 		return fmt.Errorf("pipeline: failed to shutdown transmit job %w", err)
 	}
 
