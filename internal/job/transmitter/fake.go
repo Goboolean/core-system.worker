@@ -1,11 +1,11 @@
 package transmitter
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
+	log "github.com/sirupsen/logrus"
 )
 
 // Execute executes the job with the given context.
@@ -40,11 +40,11 @@ func (f *Fake) Execute() {
 
 			orderEvent := in.(*model.OrderEvent)
 
-			fmt.Println("ProductID:        ", orderEvent.ProductID)
-			fmt.Println("ProportionPercent:", orderEvent.Transaction.ProportionPercent)
-			fmt.Println("Action:           ", orderEvent.Transaction.Action.String())
-			fmt.Println("Timestamp:        ", orderEvent.Timestamp)
-			fmt.Println("task:             ", orderEvent.Task.String())
+			log.Print("ProductID:        ", orderEvent.ProductID)
+			log.Print("ProportionPercent:", orderEvent.Transaction.ProportionPercent)
+			log.Print("Action:           ", orderEvent.Transaction.Action.String())
+			log.Print("Timestamp:        ", orderEvent.Timestamp)
+			log.Print("Task:             ", orderEvent.Task.String())
 		}
 	}()
 }
