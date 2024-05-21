@@ -1,10 +1,10 @@
-package joinner_test
+package joiner_test
 
 import (
 	"testing"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
-	"github.com/Goboolean/core-system.worker/internal/job/joinner"
+	"github.com/Goboolean/core-system.worker/internal/job/joiner"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -77,7 +77,7 @@ func TestJoinBySequnceNum(t *testing.T) {
 			}
 		}()
 
-		joinner, err := joinner.NewBysequnce(&job.UserParams{})
+		joinner, err := joiner.NewBysequnce(&job.UserParams{})
 		if err != nil {
 			t.Error(err)
 			return

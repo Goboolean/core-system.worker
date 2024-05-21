@@ -1,4 +1,4 @@
-package joinner
+package joiner
 
 import (
 	"container/list"
