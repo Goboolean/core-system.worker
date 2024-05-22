@@ -40,11 +40,11 @@ func (f *Fake) Execute() {
 
 			orderEvent := in.(*model.OrderEvent)
 
-			log.Print("ProductID:        ", orderEvent.ProductID)
-			log.Print("ProportionPercent:", orderEvent.Transaction.ProportionPercent)
-			log.Print("Action:           ", orderEvent.Transaction.Action.String())
-			log.Print("Timestamp:        ", orderEvent.Timestamp)
-			log.Print("Task:             ", orderEvent.Task.String())
+			log.Debug("ProductID:        ", orderEvent.ProductID)
+			log.Debug("ProportionPercent:", orderEvent.Transaction.ProportionPercent)
+			log.Debug("Action:           ", orderEvent.Transaction.Action.String())
+			log.Debug("Timestamp:        ", orderEvent.Timestamp)
+			log.Debug("Task:             ", orderEvent.Task.String())
 		}
 	}()
 }
