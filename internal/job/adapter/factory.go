@@ -8,12 +8,6 @@ import (
 
 type jobProvider func(p *job.UserParams) (Adapter, error)
 
-var providerRepo = map[Spec]jobProvider{
-	{InputType: "candlestick", OutputType: "candlestick"}: func(p *job.UserParams) (Adapter, error) {
-		return Dummy{}, nil
-	},
-}
-
 func Create(spec Spec, p *job.UserParams) (Adapter, error) {
 
 	var provider, ok = providerRepo[spec]
