@@ -65,10 +65,10 @@ func (s *Stub) Close() error {
 	return nil
 }
 
-func (s *Stub) SetInput(in chan any) {
+func (s *Stub) SetInput(in job.DataChan) {
 	s.in = in
 }
 
-func (s *Stub) Output() chan any {
+func (s *Stub) Output() job.DataChan {
 	return s.out
 }
