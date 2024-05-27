@@ -29,8 +29,11 @@ func TestStub(t *testing.T) {
 				},
 			}
 		}
+		close(inchan)
 		stub, err := executer.NewStub(&job.UserParams{})
+		stub.SetInput(inchan)
 		//act
+		stub.Execute()
 		out := make([]model.Packet, 0, num)
 		outchan := stub.Output()
 		for e := range outchan {
@@ -39,6 +42,6 @@ func TestStub(t *testing.T) {
 
 		//assert
 		assert.NoError(t, err)
-		assert.Equal(t, num, len(out))
+		assert.Len(t, out, num)
 	})
 }
