@@ -116,7 +116,7 @@ func (ps *PastStock) Execute() {
 					OpenTime:   doc.Timestamp,
 					ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
 					Open:       doc.Open,
-					Closed:     doc.Close,
+					Close:      doc.Close,
 					High:       doc.High,
 					Low:        doc.Low,
 					Volume:     float32(doc.Volume),
