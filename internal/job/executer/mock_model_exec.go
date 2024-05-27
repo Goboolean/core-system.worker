@@ -99,7 +99,7 @@ func (m *Mock) Execute() {
 				//데이터를 1차원 텐서 타입으로 변환한다.
 				//데이터가 충분히 쌓일 때까지 다음 동작을 실행할 수 없도록 막는다.
 				var numOfInput = 4
-				accumulator = append(accumulator, data.High, data.Low, data.Open, data.Closed)
+				accumulator = append(accumulator, data.High, data.Low, data.Open, data.Close)
 				if len(accumulator)/numOfInput < int(m.batchSize) {
 					continue
 				}
@@ -132,7 +132,7 @@ func (m *Mock) Execute() {
 						High:       out[0],
 						Low:        out[1],
 						Open:       out[2],
-						Closed:     out[3],
+						Close:      out[3],
 						Volume:     0.0,
 					},
 				}

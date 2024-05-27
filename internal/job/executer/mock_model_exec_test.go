@@ -33,7 +33,7 @@ func TestMock(t *testing.T) {
 				High:       1,
 				Low:        1,
 				Open:       1,
-				Closed:     1,
+				Close:      1,
 				Volume:     1,
 			}, {
 				OpenTime:   1715329030,
@@ -41,7 +41,7 @@ func TestMock(t *testing.T) {
 				High:       2,
 				Low:        2,
 				Open:       2,
-				Closed:     2,
+				Close:      2,
 				Volume:     2,
 			}, {
 				OpenTime:   1715329040,
@@ -49,7 +49,7 @@ func TestMock(t *testing.T) {
 				High:       3,
 				Low:        3,
 				Open:       3,
-				Closed:     3,
+				Close:      3,
 				Volume:     3,
 			},
 		}
@@ -76,7 +76,7 @@ func TestMock(t *testing.T) {
 				High:       1,
 				Low:        2,
 				Open:       3,
-				Closed:     4,
+				Close:      4,
 				Volume:     0,
 			}, {
 				OpenTime:   1715329050, //미래 예측이므로 out.Opentime = 세 번째 input.ClosedTime
@@ -84,7 +84,7 @@ func TestMock(t *testing.T) {
 				High:       5,
 				Low:        6,
 				Open:       7,
-				Closed:     8,
+				Close:      8,
 				Volume:     0,
 			},
 		}
