@@ -1,6 +1,6 @@
 package analyzer
 
 type Spec struct {
-	Id        string
+	ID        string
 	InputType string
 }

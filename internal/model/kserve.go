@@ -13,7 +13,7 @@ type InferenceReq struct {
 type InferenceRes struct {
 	ModelName    string           `json:"model_name"`
 	ModelVersion string           `json:"model_version,omitempty"`
-	Id           string           `json:"id"`
+	ID           string           `json:"ID"`
 	Parameters   string           `json:"parameters,omitempty"`
 	Outputs      []ResponseOutput `json:"outputs"`
 }

@@ -60,8 +60,8 @@ func TestJoinBySequnceNum(t *testing.T) {
 			},
 		}
 
-		refrenceInputChan := make(chan model.Packet)
-		modelInputChan := make(chan model.Packet)
+		refrenceInputChan := make(job.DataChan)
+		modelInputChan := make(job.DataChan)
 
 		go func() {
 			defer close(refrenceInputChan)

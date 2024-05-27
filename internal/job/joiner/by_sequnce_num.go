@@ -13,9 +13,9 @@ import (
 type BySequnceNum struct {
 	Joinner
 
-	refIn   chan model.Packet
-	modelIn chan model.Packet
-	out     chan model.Packet
+	refIn   job.DataChan
+	modelIn job.DataChan
+	out     job.DataChan
 
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
@@ -24,7 +24,7 @@ type BySequnceNum struct {
 func NewBysequnce(params *job.UserParams) (*BySequnceNum, error) {
 
 	instance := &BySequnceNum{
-		out:  make(chan model.Packet),
+		out:  make(job.DataChan),
 		wg:   sync.WaitGroup{},
 		stop: util.NewStopNotifier(),
 	}
@@ -113,14 +113,14 @@ func (b *BySequnceNum) Stop() error {
 	return nil
 }
 
-func (b *BySequnceNum) SetRefInput(in chan model.Packet) {
+func (b *BySequnceNum) SetRefInput(in job.DataChan) {
 	b.refIn = in
 }
 
-func (b *BySequnceNum) SetModelInput(in chan model.Packet) {
+func (b *BySequnceNum) SetModelInput(in job.DataChan) {
 	b.modelIn = in
 }
 
-func (b *BySequnceNum) Output() chan model.Packet {
+func (b *BySequnceNum) Output() job.DataChan {
 	return b.out
 }

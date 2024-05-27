@@ -7,7 +7,7 @@ import (
 )
 
 type Mock__StockClient struct {
-	stockId   string
+	stockID   string
 	timeSlice string
 
 	data []*StockDocument
@@ -21,7 +21,7 @@ func Mock__NewStockClient(c *resolver.ConfigMap, data []*StockDocument) (*Mock__
 
 // SetTarget sets the target for a specific stock and timeslice.
 func (c *Mock__StockClient) SetTarget(stockID string, timeslice string) {
-	c.stockId = stockID
+	c.stockID = stockID
 	c.timeSlice = timeslice
 }
 

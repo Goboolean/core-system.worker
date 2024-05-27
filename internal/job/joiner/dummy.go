@@ -1,11 +1,13 @@
 package joiner
 
-import "github.com/Goboolean/core-system.worker/internal/model"
+import (
+	"github.com/Goboolean/core-system.worker/internal/job"
+)
 
 type Dummy struct {
 	Joinner
 
-	refIn   chan model.Packet
-	modelIn chan model.Packet
-	out     chan model.Packet
+	refIn   job.DataChan
+	modelIn job.DataChan
+	out     job.DataChan
 }
