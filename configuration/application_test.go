@@ -20,13 +20,13 @@ func TestUnmarshal(t *testing.T) {
 	assert.Equal(t, "backTest", AppConfig.Task)
 	assert.Equal(t, configuration.DataOrigin{
 		TimeFrame:      configuration.TimeFrame{Seconds: 1},
-		ProductId:      "stock.aapl.us",
+		ProductID:      "stock.aapl.us",
 		ProductType:    "stock",
 		StartTimestamp: 12345678,
 		EndTimestamp:   12345678,
 	}, AppConfig.DataOrigin)
 	assert.Equal(t, configuration.ModelConfig{
-		Id:         "goooo",
+		ID:         "goooo",
 		BatchSize:  100,
 		OutputType: "candlestick",
 		Params: map[string]float32{
@@ -34,7 +34,7 @@ func TestUnmarshal(t *testing.T) {
 		},
 	}, AppConfig.Model)
 	assert.Equal(t, configuration.StrategyConfig{
-		Id:        "boolean",
+		ID:        "boolean",
 		InputType: "candlestick",
 		Params: map[string]float32{
 			"param1": 3.14,

@@ -38,7 +38,7 @@ func (f *Fake) Execute() {
 				return
 			}
 
-			orderEvent := in.(*model.OrderEvent)
+			orderEvent := in.(model.Packet).Data.(*model.OrderEvent)
 
 			log.WithFields(log.Fields{
 				"ProductID:        ": orderEvent.ProductID,

@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	ErrInvalidStockId       = errors.New("fetch: can't parse stockId")
+	ErrInvalidStockID       = errors.New("fetch: can't parse stockID")
 	ErrDocumentTypeMismatch = errors.New("fetch: mongo: document type mismatch")
 )
 
@@ -25,10 +25,10 @@ type PastStock struct {
 	timeSlice           string
 	isFetchingFullRange bool
 	startTimestamp      int64 // Unix timestamp of start time
-	stockId             string
+	stockID             string
 	pastRepo            mongo.StockClient
 
-	out chan any `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
@@ -42,17 +42,17 @@ func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, 
 		isFetchingFullRange: DefaultIsFetchingFullRange,
 		pastRepo:            mongo,
 		stop:                util.NewStopNotifier(),
-		out:                 make(chan any),
+		out:                 make(job.DataChan),
 	}
 
-	if !parmas.IsKeyNullOrEmpty("productId") {
+	if !parmas.IsKeyNullOrEmpty("productID") {
 
-		val, ok := (*parmas)["productId"]
+		val, ok := (*parmas)["productID"]
 		if !ok {
-			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidStockId)
+			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidStockID)
 		}
 
-		instance.stockId = val
+		instance.stockID = val
 	}
 
 	if !parmas.IsKeyNullOrEmpty("startDate") {
@@ -86,7 +86,7 @@ func (ps *PastStock) Execute() {
 			cancel()
 		}()
 
-		ps.pastRepo.SetTarget(ps.stockId, ps.timeSlice)
+		ps.pastRepo.SetTarget(ps.stockID, ps.timeSlice)
 		//가져올 데이터의 개수
 		var quantity int
 		//처음 가져올 데이터의 Index
@@ -106,18 +106,24 @@ func (ps *PastStock) Execute() {
 
 			quantity = count - index
 		}
+		var sequnce int64 = 0
 
 		duration, _ := time.ParseDuration(ps.timeSlice)
 		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc mongo.StockDocument) {
-			ps.out <- &model.StockAggregate{
-				OpenTime:   doc.Timestamp,
-				ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
-				Open:       doc.Open,
-				Closed:     doc.Close,
-				High:       doc.High,
-				Low:        doc.Low,
-				Volume:     float32(doc.Volume),
+			ps.out <- model.Packet{
+				Sequnce: sequnce,
+				Data: &model.StockAggregate{
+					OpenTime:   doc.Timestamp,
+					ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
+					Open:       doc.Open,
+					Closed:     doc.Close,
+					High:       doc.High,
+					Low:        doc.Low,
+					Volume:     float32(doc.Volume),
+				},
 			}
+
+			sequnce++
 		})
 		if err != nil {
 			panic(err)
@@ -126,7 +132,7 @@ func (ps *PastStock) Execute() {
 	}()
 }
 
-func (ps *PastStock) Output() chan any {
+func (ps *PastStock) Output() job.DataChan {
 	return ps.out
 }
 

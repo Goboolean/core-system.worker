@@ -35,7 +35,7 @@ type Client interface {
 
 // ClientImpl is a struct that represents the implementation of the KServeClient interface.
 type ClientImpl struct {
-	modelId           string
+	modelID           string
 	host              string
 	inferenceEndpoint *url.URL
 
@@ -72,7 +72,7 @@ func NewClient(c *resolver.ConfigMap) (*ClientImpl, error) {
 	}
 
 	instance.host = host
-	instance.modelId = id
+	instance.modelID = id
 	instance.param1 = float32(param1)
 	instance.param2 = float32(param2)
 

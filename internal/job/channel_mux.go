@@ -1,18 +1,18 @@
-package util
+package job
 
 type ChannelMux struct {
-	in  chan any
-	out []chan any
+	in  DataChan
+	out []DataChan
 
 	stop chan struct{}
 }
 
-func (fo *ChannelMux) SetInput(in chan any) {
+func (fo *ChannelMux) SetInput(in DataChan) {
 	fo.in = in
 }
 
-func (fo *ChannelMux) Output() chan any {
-	ch := make(chan any, 1)
+func (fo *ChannelMux) Output() DataChan {
+	ch := make(DataChan, 1)
 	fo.out = append(fo.out, ch)
 	return ch
 }

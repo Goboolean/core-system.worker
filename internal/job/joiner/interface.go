@@ -1,11 +1,13 @@
-package fetcher
+package joiner
 
 import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
-type Fetcher interface {
+type Joinner interface {
 	job.Common
 
+	SetRefInput(job.DataChan)
+	SetModelInput(job.DataChan)
 	Output() job.DataChan
 }
