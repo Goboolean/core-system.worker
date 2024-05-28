@@ -3,6 +3,7 @@ package transmitter
 import (
 	"sync"
 
+	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
 	log "github.com/sirupsen/logrus"
@@ -12,7 +13,8 @@ import (
 type Fake struct {
 	Transmitter
 
-	in chan any
+	orderIn      job.DataChan
+	annotationIn job.DataChan
 
 	wg *sync.WaitGroup
 	sn *util.StopNotifier
@@ -33,12 +35,12 @@ func (f *Fake) Execute() {
 		defer f.wg.Done()
 		select {
 		case <-f.sn.Done():
-		case in, ok := <-f.in:
+		case in, ok := <-f.orderIn:
 			if !ok {
 				return
 			}
 
-			orderEvent := in.(model.Packet).Data.(*model.OrderEvent)
+			orderEvent := in.Data.(*model.OrderEvent)
 
 			log.WithFields(log.Fields{
 				"ProductID:        ": orderEvent.ProductID,
@@ -46,6 +48,15 @@ func (f *Fake) Execute() {
 				"Action:           ": orderEvent.Transaction.Action.String(),
 				"Timestamp:        ": orderEvent.Timestamp,
 				"Task:             ": orderEvent.Task.String,
+			}).Debug("fake event was dispatched")
+
+		case in, ok := <-f.annotationIn:
+			if !ok {
+				return
+			}
+
+			log.WithFields(log.Fields{
+				"annotation": in.Data,
 			}).Debug("fake event was dispatched")
 		}
 	}()
@@ -57,6 +68,10 @@ func (f *Fake) Close() error {
 	return nil
 }
 
-func (f *Fake) SetInput(in chan any) {
-	f.in = in
+func (f *Fake) SetOrderInput(in job.DataChan) {
+	f.orderIn = in
+}
+
+func (f *Fake) SetAnotationInput(in job.DataChan) {
+	f.annotationIn = in
 }

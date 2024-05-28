@@ -11,8 +11,9 @@ import (
 type Stub struct {
 	Analyzer
 
-	in  job.DataChan
-	out job.DataChan
+	in            job.DataChan
+	annotationOut job.DataChan
+	orderOut      job.DataChan
 
 	sn *util.StopNotifier
 	wg *sync.WaitGroup
@@ -20,9 +21,10 @@ type Stub struct {
 
 func NewStub(parmas *job.UserParams) (*Stub, error) {
 	instance := &Stub{
-		out: make(job.DataChan),
-		sn:  util.NewStopNotifier(),
-		wg:  &sync.WaitGroup{},
+		orderOut:      make(job.DataChan),
+		annotationOut: make(job.DataChan),
+		sn:            util.NewStopNotifier(),
+		wg:            &sync.WaitGroup{},
 	}
 
 	return instance, nil
@@ -33,7 +35,7 @@ func (s *Stub) Execute() {
 	go func() {
 		defer s.wg.Done()
 		defer s.sn.NotifyStop()
-		defer close(s.out)
+		defer close(s.orderOut)
 
 		i := 0
 		for {
@@ -44,12 +46,17 @@ func (s *Stub) Execute() {
 			case <-s.in:
 
 				//아무런 동작이 일어나지 않는 값
-				s.out <- model.Packet{
+				s.orderOut <- model.Packet{
 					Sequnce: int64(i),
 					Data: &model.TradeDetails{
 						Action:            model.Sell,
 						ProportionPercent: 0,
 					},
+				}
+
+				s.annotationOut <- model.Packet{
+					Sequnce: int64(i),
+					Data:    "annotation sample",
 				}
 
 				i++
@@ -70,5 +77,5 @@ func (s *Stub) SetInput(in job.DataChan) {
 }
 
 func (s *Stub) Output() job.DataChan {
-	return s.out
+	return s.orderOut
 }

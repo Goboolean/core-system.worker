@@ -59,7 +59,8 @@ func newNormalWithAdapter(
 	instance.joinner.SetModelInput(instance.adapter.Output())
 	instance.joinner.SetRefInput(instance.mux.Output())
 	instance.resAnalyzer.SetInput(instance.joinner.Output())
-	instance.transmitter.SetInput(instance.resAnalyzer.Output())
+	instance.transmitter.SetAnnotaionInput(instance.resAnalyzer.AnnotationOutput())
+	instance.transmitter.SetOrderInput(instance.resAnalyzer.OerderOutput())
 
 	return &instance, nil
 }
@@ -69,14 +70,14 @@ func newNormalWithoutAdapter(
 	join joiner.Joinner,
 	modelExec executer.ModelExecutor,
 	resAnalyze analyzer.Analyzer,
-	transmit transmitter.Transmitter) (*Normal, error) {
+	transmitter transmitter.Transmitter) (*Normal, error) {
 
 	instance := Normal{
 		fetcher:       fetch,
 		modelExecuter: modelExec,
 		joinner:       join,
 		resAnalyzer:   resAnalyze,
-		transmitter:   transmit,
+		transmitter:   transmitter,
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
@@ -84,10 +85,10 @@ func newNormalWithoutAdapter(
 	instance.joinner.SetModelInput(instance.modelExecuter.Output())
 	instance.joinner.SetRefInput(instance.mux.Output())
 	instance.resAnalyzer.SetInput(instance.joinner.Output())
-	instance.transmitter.SetInput(instance.resAnalyzer.Output())
+	instance.transmitter.SetAnnotaionInput(instance.resAnalyzer.AnnotationOutput())
+	instance.transmitter.SetOrderInput(instance.resAnalyzer.OerderOutput())
 
 	return &instance, nil
-
 }
 
 func (n *Normal) Run() {

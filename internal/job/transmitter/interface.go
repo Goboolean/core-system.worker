@@ -7,5 +7,6 @@ import (
 type Transmitter interface {
 	job.Common
 
-	SetInput(job.DataChan)
+	SetOrderInput(job.DataChan)
+	SetAnnotaionInput(job.DataChan)
 }

@@ -8,5 +8,6 @@ type Analyzer interface {
 	job.Common
 
 	SetInput(job.DataChan)
-	Output() job.DataChan
+	OerderOutput() job.DataChan
+	AnnotationOutput() job.DataChan
 }

@@ -32,8 +32,8 @@ func newWithoutModelWithAdapter(
 
 	instance.adapter.SetInput(instance.fetcher.Output())
 	instance.analyzer.SetInput(instance.adapter.Output())
-	instance.transmitter.SetInput(instance.analyzer.Output())
-
+	instance.transmitter.SetAnnotaionInput(instance.analyzer.AnnotationOutput())
+	instance.transmitter.SetOrderInput(instance.analyzer.OerderOutput())
 	return &instance, nil
 }
 
@@ -49,8 +49,8 @@ func newWithoutModelWithoutAdapter(
 	}
 
 	instance.analyzer.SetInput(instance.fetcher.Output())
-	instance.transmitter.SetInput(instance.analyzer.Output())
-
+	instance.transmitter.SetAnnotaionInput(instance.analyzer.AnnotationOutput())
+	instance.transmitter.SetOrderInput(instance.analyzer.OerderOutput())
 	return &instance, nil
 }
 
