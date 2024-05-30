@@ -1,9 +1,8 @@
 package main
 
 import (
-	"log"
-
 	"github.com/Goboolean/core-system.worker/cmd/compose"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

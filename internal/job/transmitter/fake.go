@@ -1,11 +1,11 @@
 package transmitter
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
+	log "github.com/sirupsen/logrus"
 )
 
 // Execute executes the job with the given context.
@@ -38,13 +38,15 @@ func (f *Fake) Execute() {
 				return
 			}
 
-			orderEvent := in.(*model.OrderEvent)
+			orderEvent := in.(model.Packet).Data.(*model.OrderEvent)
 
-			fmt.Println("ProductID:        ", orderEvent.ProductID)
-			fmt.Println("ProportionPercent:", orderEvent.Trade.ProportionPercent)
-			fmt.Println("Action:           ", orderEvent.Trade.Action.String())
-			fmt.Println("Timestamp:        ", orderEvent.Timestamp)
-			fmt.Println("task:             ", orderEvent.Task.String())
+			log.WithFields(log.Fields{
+				"ProductID:        ": orderEvent.ProductID,
+				"ProportionPercent:": orderEvent.Transaction.ProportionPercent,
+				"Action:           ": orderEvent.Transaction.Action.String(),
+				"Timestamp:        ": orderEvent.Timestamp,
+				"Task:             ": orderEvent.Task.String,
+			}).Debug("fake event was dispatched")
 		}
 	}()
 }

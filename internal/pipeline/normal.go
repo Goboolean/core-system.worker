@@ -11,7 +11,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
-	"github.com/Goboolean/core-system.worker/internal/job/joinner"
+	"github.com/Goboolean/core-system.worker/internal/job/joiner"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
 )
 
@@ -21,7 +21,7 @@ var ErrTypeNotMatch = errors.New("pipeline: cannot build a pipeline because the 
 type Normal struct {
 	//jobs
 	fetcher       fetcher.Fetcher
-	joinner       joinner.Joinner
+	joinner       joiner.Joinner
 	modelExecuter executer.ModelExecutor
 	adapter       adapter.Adapter
 	resAnalyzer   analyzer.Analyzer
@@ -36,7 +36,7 @@ type Normal struct {
 
 func newNormalWithAdapter(
 	fetcher fetcher.Fetcher,
-	joinner joinner.Joinner,
+	joinner joiner.Joinner,
 	modelExecuter executer.ModelExecutor,
 	adapter adapter.Adapter,
 	resAnalyzer analyzer.Analyzer,
@@ -66,7 +66,7 @@ func newNormalWithAdapter(
 
 func newNormalWithoutAdapter(
 	fetch fetcher.Fetcher,
-	join joinner.Joinner,
+	join joiner.Joinner,
 	modelExec executer.ModelExecutor,
 	resAnalyze analyzer.Analyzer,
 	transmit transmitter.Transmitter) (*Normal, error) {
