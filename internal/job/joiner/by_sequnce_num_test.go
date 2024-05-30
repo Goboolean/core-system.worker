@@ -14,8 +14,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestJoinBySequnceNum(t *testing.T) {
-	for i := 0; i < 10; i++ {
-		t.Run("Sequnce가 같은 두 데이터가 주어졌을 때, 이 두 데이터를 join해서 출력해야 한다.", func(t *testing.T) {
+	t.Run("Sequnce가 같은 두 데이터가 주어졌을 때, 이 두 데이터를 join해서 출력해야 한다.", func(t *testing.T) {
+
+		for i := 0; i < 100; i++ {
 			//arrange
 			refrenceInput := []model.Packet{
 				{
@@ -96,6 +97,7 @@ func TestJoinBySequnceNum(t *testing.T) {
 			}
 			//assert
 			assert.Equal(t, exp, output)
-		})
-	}
+		}
+	})
+
 }
