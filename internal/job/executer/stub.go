@@ -57,7 +57,7 @@ func (m *Stub) Execute() {
 						High:       data.High,
 						Low:        data.Low,
 						Open:       data.Open,
-						Closed:     data.Closed,
+						Close:      data.Close,
 						Volume:     0.0,
 					},
 				}
