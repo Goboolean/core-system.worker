@@ -22,7 +22,7 @@ func TestStub(t *testing.T) {
 					OpenTime:   1716775499,
 					ClosedTime: 1716775499,
 					Open:       1.0,
-					Closed:     2.0,
+					Close:      2.0,
 					High:       3.0,
 					Low:        4.0,
 					Volume:     5.0,
