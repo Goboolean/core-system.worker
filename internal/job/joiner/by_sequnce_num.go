@@ -68,14 +68,19 @@ func (b *BySequnceNum) Execute() {
 				}
 
 				modelInputList.PushBack(modelDataPacket)
+
 			}
 
 			for e := modelInputList.Front(); e != nil; e = e.Next() {
 
+				if len(refanceInputBuf) == 0 {
+					break
+				}
+
 				location := findLargestPacketIndexBySequence(refanceInputBuf, e.Value.(model.Packet).Sequnce)
 
 				if refanceInputBuf[location].Sequnce != e.Value.(model.Packet).Sequnce {
-					break
+					continue
 				}
 
 				b.out <- model.Packet{
@@ -96,15 +101,34 @@ func (b *BySequnceNum) Execute() {
 
 // findLargestPacketIndexBySequence returns the index of the packet with the largest sequence number
 // that is less than or equal to the target sequence number.
+// -1 means all element has sequnce that is grater than target
+// WARINING: TO BE USED ONLY WITH ARRAYS SORTED IN ASCENDING ORDER
 func findLargestPacketIndexBySequence(data []model.Packet, target int64) int {
-	size := len(data)
-
-	i := 0
-	for i < size && data[i].Sequnce < target {
-		i++
+	// data는 순서가 보장돼 있고 대부분 앞 부분에 찾고자 하는 값이 있을 것이라
+	// 예상할 수 있으므로 순차탐색
+	sz := len(data)
+	if sz == 0 {
+		return -1
 	}
 
-	return i
+	first := data[0].Sequnce
+	last := data[sz-1].Sequnce
+
+	if first > target {
+		return -1
+	}
+
+	if last <= target {
+		return sz - 1
+	}
+
+	for i := 0; i < sz-1; i++ {
+		if data[i+1].Sequnce > target {
+			return i
+		}
+	}
+
+	return -2
 }
 
 func (b *BySequnceNum) Stop() error {
