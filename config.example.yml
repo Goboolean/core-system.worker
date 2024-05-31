@@ -1,4 +1,5 @@
 task: "backTest" #"backTest"|"realtimeTrade"
+taskID: "2024-05-31-19127374895"
 dataOrigin:
   timeFrame:
     seconds: 1 #string, seconds 초 단위, example: "300s"
