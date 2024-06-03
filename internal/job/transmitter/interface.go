@@ -4,26 +4,37 @@ import (
 	"context"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
+	"github.com/Goboolean/core-system.worker/internal/model"
 )
 
+// Transmitter is an interface that represents a job transmitter.
 type Transmitter interface {
 	job.Common
 
+	// SetInput sets the input data channel for the transmitter.
 	SetInput(job.DataChan)
 }
 
-// Sender is an interface for sending data to InfluxDB.
-type Sender interface {
+// OrderEventDispatcher is an interface that represents an order event dispatcher.
+type OrderEventDispatcher interface {
+	// Dispatch dispatches the given order event.
+	Dispatch(event model.OrderEvent)
 
-	// CreateCollection creates a new collection in InfluxDB with the given name.
-	CreateCollection(name string)
-
-	// AsyncWrite asynchronously writes the given event to InfluxDB.
-	AsyncWrite(data any)
-
-	// Flush flushes any pending writes to InfluxDB.
+	// Flush flushes any pending events in the dispatcher.
 	Flush(ctx context.Context)
 
-	// Close closes the connection to InfluxDB.
+	// Close closes the dispatcher.
+	Close() error
+}
+
+// AnnotationDispatcher is an interface that represents an annotation dispatcher.
+type AnnotationDispatcher interface {
+	// Dispatch dispatches the given data.
+	Dispatch(data any)
+
+	// Flush flushes any pending data in the dispatcher.
+	Flush(ctx context.Context)
+
+	// Close closes the dispatcher.
 	Close() error
 }
