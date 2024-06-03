@@ -1,6 +1,8 @@
 package fetcher
 
 import (
+	"time"
+
 	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
@@ -33,7 +35,7 @@ type TradeReposity interface {
 	SelectProduct(ID string, timeFrame string, productType string)
 
 	// SetRangeByTime sets the time range for fetching data.
-	SetRangeByTime(fromTimestamp int64, toTimestamp int64)
+	SetRangeByTime(from time.Time, to time.Time)
 
 	// Session returns a fetching session.
 	Session() FetchingSessin
