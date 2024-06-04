@@ -21,7 +21,7 @@ var ErrTypeNotMatch = errors.New("pipeline: cannot build a pipeline because the 
 type Normal struct {
 	//jobs
 	fetcher       fetcher.Fetcher
-	joinner       joiner.Joinner
+	joinner       joiner.Joiner
 	modelExecuter executer.ModelExecutor
 	adapter       adapter.Adapter
 	resAnalyzer   analyzer.Analyzer
@@ -36,7 +36,7 @@ type Normal struct {
 
 func newNormalWithAdapter(
 	fetcher fetcher.Fetcher,
-	joinner joiner.Joinner,
+	joinner joiner.Joiner,
 	modelExecuter executer.ModelExecutor,
 	adapter adapter.Adapter,
 	resAnalyzer analyzer.Analyzer,
@@ -66,7 +66,7 @@ func newNormalWithAdapter(
 
 func newNormalWithoutAdapter(
 	fetch fetcher.Fetcher,
-	join joiner.Joinner,
+	join joiner.Joiner,
 	modelExec executer.ModelExecutor,
 	resAnalyze analyzer.Analyzer,
 	transmit transmitter.Transmitter) (*Normal, error) {

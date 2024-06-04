@@ -16,8 +16,8 @@ func TestStub(t *testing.T) {
 		//arrange
 		num := 100
 		stub, err := fetcher.NewStockStub(&job.UserParams{
-			"numOfGeneration":           strconv.FormatInt(int64(num), 10),
-			"maxRandomDelayMiliseconds": strconv.FormatInt(100, 10)})
+			"numOfGeneration":            strconv.FormatInt(int64(num), 10),
+			"maxRandomDelayMilliseconds": strconv.FormatInt(100, 10)})
 
 		//act
 		out := make([]model.Packet, 0, num)

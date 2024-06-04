@@ -42,7 +42,7 @@ func TestStopNotifier(t *testing.T) {
 		select {
 		case <-sn.Done():
 		default:
-			t.Errorf("<-sn.Done() blocked, but it shuldn't block")
+			t.Errorf("<-sn.Done() blocked, but it shouldn't block")
 		}
 
 	})
@@ -61,7 +61,7 @@ func TestStopNotifier(t *testing.T) {
 		select {
 		case <-sn.Done():
 		default:
-			t.Errorf("<-sn.Done() blocked, but it shuldn't block")
+			t.Errorf("<-sn.Done() blocked, but it shouldn't block")
 		}
 
 	})

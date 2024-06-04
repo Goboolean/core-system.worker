@@ -50,7 +50,7 @@ func (m *Stub) Execute() {
 				data := input.Data.(*model.StockAggregate)
 
 				m.out <- model.Packet{
-					Sequnce: input.Sequnce,
+					Sequence: input.Sequence,
 					Data: &model.StockAggregate{
 						OpenTime:   data.ClosedTime,
 						ClosedTime: data.ClosedTime + (data.ClosedTime - data.OpenTime),

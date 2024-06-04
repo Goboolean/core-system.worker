@@ -56,8 +56,8 @@ func TestMock(t *testing.T) {
 		inChan := make(job.DataChan, len(input))
 		for i, e := range input {
 			inChan <- model.Packet{
-				Sequnce: int64(i),
-				Data:    e,
+				Sequence: int64(i),
+				Data:     e,
 			}
 		}
 		close(inChan)
@@ -71,7 +71,7 @@ func TestMock(t *testing.T) {
 		//batch seze가 2이기 때문에 [1,2] [2,3]으로 묶어서 실행이 된다.
 		expect := []*model.StockAggregate{
 			{
-				OpenTime:   1715329040, //미래 예측이므로 out.Opentime = 두 번째 input.ClosedTime
+				OpenTime:   1715329040, //미래 예측이므로 out.OpenTime = 두 번째 input.CloseTime
 				ClosedTime: 1715329050, //미래 예측이므로 out.CloseTime = 두 번째 input.ClosedTime + (input.ClosedTime - input.OpenTime)
 				High:       1,
 				Low:        2,
@@ -79,7 +79,7 @@ func TestMock(t *testing.T) {
 				Close:      4,
 				Volume:     0,
 			}, {
-				OpenTime:   1715329050, //미래 예측이므로 out.Opentime = 세 번째 input.ClosedTime
+				OpenTime:   1715329050, //미래 예측이므로 out.OpenTime = 세 번째 input.CloseTime
 				ClosedTime: 1715329060, //미래 예측이므로 out.CloseTime = 세 번째 input.ClosedTime + (input.ClosedTime - input.OpenTime)
 				High:       5,
 				Low:        6,

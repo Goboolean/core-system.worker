@@ -1,7 +1,7 @@
 package model
 
 type Packet struct {
-	Sequnce int64
+	Sequence int64
 	//type ?
 	Data any
 }

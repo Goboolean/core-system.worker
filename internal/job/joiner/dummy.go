@@ -5,7 +5,7 @@ import (
 )
 
 type Dummy struct {
-	Joinner
+	Joiner
 
 	refIn   job.DataChan
 	modelIn job.DataChan
