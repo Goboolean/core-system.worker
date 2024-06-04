@@ -4,7 +4,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
-type Joinner interface {
+type Joiner interface {
 	job.Common
 
 	SetRefInput(job.DataChan)

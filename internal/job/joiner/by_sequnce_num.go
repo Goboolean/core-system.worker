@@ -9,9 +9,9 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
-// BySequnceNum는 model.Packet에 있는 sequnce값이 같은 두 데이터를 Pair에 담아 출력합니다.
-type BySequnceNum struct {
-	Joinner
+// BySequenceNum는 model.Packet에 있는 sequnce값이 같은 두 데이터를 Pair에 담아 출력합니다.
+type BySequenceNum struct {
+	Joiner
 
 	refIn   job.DataChan
 	modelIn job.DataChan
@@ -21,9 +21,9 @@ type BySequnceNum struct {
 	stop *util.StopNotifier
 }
 
-func NewBysequnce(params *job.UserParams) (*BySequnceNum, error) {
+func NewBySequence(params *job.UserParams) (*BySequenceNum, error) {
 
-	instance := &BySequnceNum{
+	instance := &BySequenceNum{
 		out:  make(job.DataChan),
 		wg:   sync.WaitGroup{},
 		stop: util.NewStopNotifier(),
@@ -32,14 +32,14 @@ func NewBysequnce(params *job.UserParams) (*BySequnceNum, error) {
 	return instance, nil
 }
 
-func (b *BySequnceNum) Execute() {
+func (b *BySequenceNum) Execute() {
 	b.wg.Add(1)
 	go func() {
 		defer b.wg.Done()
 		defer close(b.out)
 		defer b.stop.NotifyStop()
 
-		refanceInputBuf := make([]model.Packet, 0, 100)
+		referenceInputBuf := make([]model.Packet, 0, 100)
 		modelInputList := list.New()
 
 		refInChanFail := false
@@ -54,13 +54,13 @@ func (b *BySequnceNum) Execute() {
 
 			case <-b.stop.Done():
 				return
-			case refrenceDataPacket, ok := <-b.refIn:
+			case referenceDataPacket, ok := <-b.refIn:
 				if !ok {
 					refInChanFail = true
 					continue
 				}
 
-				refanceInputBuf = append(refanceInputBuf, refrenceDataPacket)
+				referenceInputBuf = append(referenceInputBuf, referenceDataPacket)
 			case modelDataPacket, ok := <-b.modelIn:
 				if !ok {
 					modelInChanFail = true
@@ -68,25 +68,28 @@ func (b *BySequnceNum) Execute() {
 				}
 
 				modelInputList.PushBack(modelDataPacket)
+
 			}
 
 			for e := modelInputList.Front(); e != nil; e = e.Next() {
-
-				location := findLargestPacketIndexBySequence(refanceInputBuf, e.Value.(model.Packet).Sequence)
-
-				if refanceInputBuf[location].Sequence != e.Value.(model.Packet).Sequence {
+				if len(referenceInputBuf) == 0 {
 					break
+				}
+				location := findLargestPacketIndexBySequence(referenceInputBuf, e.Value.(model.Packet).Sequence)
+
+				if referenceInputBuf[location].Sequence != e.Value.(model.Packet).Sequence {
+					continue
 				}
 
 				b.out <- model.Packet{
 					Sequence: e.Value.(model.Packet).Sequence,
 					Data: &model.Pair{
-						RefData:   refanceInputBuf[location].Data,
+						RefData:   referenceInputBuf[location].Data,
 						ModelData: e.Value.(model.Packet).Data,
 					},
 				}
 
-				refanceInputBuf = refanceInputBuf[min(len(refanceInputBuf), location+1):]
+				referenceInputBuf = referenceInputBuf[min(len(referenceInputBuf), location+1):]
 				modelInputList.Remove(e)
 			}
 
@@ -96,31 +99,50 @@ func (b *BySequnceNum) Execute() {
 
 // findLargestPacketIndexBySequence returns the index of the packet with the largest sequence number
 // that is less than or equal to the target sequence number.
+// -1 means all element has sequnce that is grater than target
+// WARINING: TO BE USED ONLY WITH ARRAYS SORTED IN ASCENDING ORDER
 func findLargestPacketIndexBySequence(data []model.Packet, target int64) int {
-	size := len(data)
-
-	i := 0
-	for i < size && data[i].Sequence < target {
-		i++
+	// data는 순서가 보장돼 있고 대부분 앞 부분에 찾고자 하는 값이 있을 것이라
+	// 예상할 수 있으므로 순차탐색
+	sz := len(data)
+	if sz == 0 {
+		return -1
 	}
 
-	return i
+	first := data[0].Sequence
+	last := data[sz-1].Sequence
+
+	if first > target {
+		return -1
+	}
+
+	if last <= target {
+		return sz - 1
+	}
+
+	for i := 0; i < sz-1; i++ {
+		if data[i+1].Sequence > target {
+			return i
+		}
+	}
+
+	return -2
 }
 
-func (b *BySequnceNum) Stop() error {
+func (b *BySequenceNum) Stop() error {
 	b.stop.NotifyStop()
 	b.wg.Wait()
 	return nil
 }
 
-func (b *BySequnceNum) SetRefInput(in job.DataChan) {
+func (b *BySequenceNum) SetRefInput(in job.DataChan) {
 	b.refIn = in
 }
 
-func (b *BySequnceNum) SetModelInput(in job.DataChan) {
+func (b *BySequenceNum) SetModelInput(in job.DataChan) {
 	b.modelIn = in
 }
 
-func (b *BySequnceNum) Output() job.DataChan {
+func (b *BySequenceNum) Output() job.DataChan {
 	return b.out
 }

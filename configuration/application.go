@@ -26,6 +26,7 @@ func ImportAppConfigFromFile(path string) (*AppConfig, error) {
 
 type AppConfig struct {
 	Task           string         `yaml:"task"`
+	TaskID         string         `yaml:"taskID"`
 	InitialCapital int            `yaml:"initialCapital"`
 	DataOrigin     DataOrigin     `yaml:"dataOrigin"`
 	Model          ModelConfig    `yaml:"model"`
