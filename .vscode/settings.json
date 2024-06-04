@@ -1,6 +1,15 @@
 {
     "cSpell.words": [
-        "Goboolean"
+        "Goboolean",
+        "gomock",
+        "karfka",
+        "kserve",
+        "outchan",
+        "parmas",
+        "seze",
+        "stretchr",
+        "wireinject",
+        "wrie"
     ],
     "go.buildTags": "develop"
 }

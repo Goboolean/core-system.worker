@@ -18,41 +18,41 @@ func TestJoinBySequnceNum(t *testing.T) {
 		//arrange
 		refrenceInput := []model.Packet{
 			{
-				Sequnce: 1,
-				Data:    1,
+				Sequence: 1,
+				Data:     1,
 			},
 			{
-				Sequnce: 2,
-				Data:    1,
+				Sequence: 2,
+				Data:     1,
 			},
 			{
-				Sequnce: 3,
-				Data:    1,
+				Sequence: 3,
+				Data:     1,
 			},
 		}
 
 		modelInput := []model.Packet{
 
 			{
-				Sequnce: 2,
-				Data:    2,
+				Sequence: 2,
+				Data:     2,
 			},
 			{
-				Sequnce: 3,
-				Data:    2,
+				Sequence: 3,
+				Data:     2,
 			},
 		}
 
 		exp := []model.Packet{
 			{
-				Sequnce: 2,
+				Sequence: 2,
 				Data: &model.Pair{
 					RefData:   1,
 					ModelData: 2,
 				},
 			},
 			{
-				Sequnce: 3,
+				Sequence: 3,
 				Data: &model.Pair{
 					RefData:   1,
 					ModelData: 2,

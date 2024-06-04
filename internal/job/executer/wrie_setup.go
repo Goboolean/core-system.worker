@@ -21,7 +21,7 @@ func provideKServe(c kServeConfig) (*kserve.ClientImpl, error) {
 	return kserve.NewClient(&in)
 }
 
-func initalizeMock(p *job.UserParams) (ModelExecutor, error) {
+func initializeMock(p *job.UserParams) (ModelExecutor, error) {
 	wire.Build(
 		provideKServeConfig,
 		provideKServe,

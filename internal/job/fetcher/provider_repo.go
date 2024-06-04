@@ -3,6 +3,6 @@
 package fetcher
 
 var providerRepo = map[Spec]jobProvider{
-	{Task: "backtest", ProductType: "stock"}:      initalizePastStock,
-	{Task: "realtimeTrade", ProductType: "stock"}: initalizeRealtimeStock,
+	{Task: "backtest", ProductType: "stock"}:      initializePastStock,
+	{Task: "realtimeTrade", ProductType: "stock"}: initializeRealtimeStock,
 }

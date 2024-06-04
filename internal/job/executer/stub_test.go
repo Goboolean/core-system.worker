@@ -13,11 +13,11 @@ func TestStub(t *testing.T) {
 	t.Run("stub에 N개의 데이터가 입력됐을 때 N개의 데이터를 출력해야 한다.", func(t *testing.T) {
 		//arrange
 		num := 100
-		inchan := make(job.DataChan, num)
+		inChan := make(job.DataChan, num)
 
 		for i := 0; i < num; i++ {
-			inchan <- model.Packet{
-				Sequnce: int64(i),
+			inChan <- model.Packet{
+				Sequence: int64(i),
 				Data: &model.StockAggregate{
 					OpenTime:   1716775499,
 					ClosedTime: 1716775499,
@@ -29,9 +29,9 @@ func TestStub(t *testing.T) {
 				},
 			}
 		}
-		close(inchan)
+		close(inChan)
 		stub, err := executer.NewStub(&job.UserParams{})
-		stub.SetInput(inchan)
+		stub.SetInput(inChan)
 		//act
 		stub.Execute()
 		out := make([]model.Packet, 0, num)

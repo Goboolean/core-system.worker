@@ -14,13 +14,13 @@ type Fetcher interface {
 	Output() job.DataChan
 }
 
-// FetchingSessin is an interface that represents a fetching session.
-type FetchingSessin interface {
+// FetchingSession is an interface that represents a fetching session.
+type FetchingSession interface {
 	// TryNext returns true if there is another session to try.
 	TryNext() bool
 
 	// Next returns the next fetching session and an error, if any.
-	Next() (FetchingSessin, error)
+	Next() (FetchingSession, error)
 
 	// DecodedValue decodes the value into the provided variable.
 	DecodedValue(v any) error
@@ -29,8 +29,8 @@ type FetchingSessin interface {
 	Close() error
 }
 
-// TradeReposity is an interface that represents a trade repository.
-type TradeReposity interface {
+// TradeRepository is an interface that represents a trade repository.
+type TradeRepository interface {
 	// SelectProduct selects a product by ID, time frame, and product type.
 	SelectProduct(ID string, timeFrame string, productType string)
 
@@ -38,7 +38,7 @@ type TradeReposity interface {
 	SetRangeByTime(from time.Time, to time.Time)
 
 	// Session returns a fetching session.
-	Session() FetchingSessin
+	Session() FetchingSession
 }
 
 // TradeStream is an interface that represents a trade stream.
@@ -47,5 +47,5 @@ type TradeStream interface {
 	SelectProduct(ID string, timeFrame string, productType string)
 
 	// Session returns a fetching session.
-	Session() FetchingSessin
+	Session() FetchingSession
 }

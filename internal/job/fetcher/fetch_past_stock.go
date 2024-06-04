@@ -106,12 +106,12 @@ func (ps *PastStock) Execute() {
 
 			quantity = count - index
 		}
-		var sequnce int64 = 0
+		var sequence int64 = 0
 
 		duration, _ := time.ParseDuration(ps.timeSlice)
 		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc mongo.StockDocument) {
 			ps.out <- model.Packet{
-				Sequnce: sequnce,
+				Sequence: sequence,
 				Data: &model.StockAggregate{
 					OpenTime:   doc.Timestamp,
 					ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
@@ -123,7 +123,7 @@ func (ps *PastStock) Execute() {
 				},
 			}
 
-			sequnce++
+			sequence++
 		})
 		if err != nil {
 			panic(err)

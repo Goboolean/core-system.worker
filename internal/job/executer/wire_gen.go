@@ -14,7 +14,7 @@ import (
 
 // Injectors from wrie_setup.go:
 
-func initalizeMock(p *job.UserParams) (ModelExecutor, error) {
+func initializeMock(p *job.UserParams) (ModelExecutor, error) {
 	executerKServeConfig := provideKServeConfig()
 	clientImpl, err := provideKServe(executerKServeConfig)
 	if err != nil {

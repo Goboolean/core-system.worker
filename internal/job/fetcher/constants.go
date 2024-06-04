@@ -6,5 +6,5 @@ const (
 )
 
 const (
-	DefaultMaxRandomDelayMiliseconds = 10
+	DefaultMaxRandomDelayMilliseconds = 10
 )

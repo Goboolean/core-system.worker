@@ -14,7 +14,7 @@ import (
 
 // Injectors from wrie_setup.go:
 
-func initalizeRealtimeStock(p *job.UserParams) (Fetcher, error) {
+func initializeRealtimeStock(p *job.UserParams) (Fetcher, error) {
 	fetcherMongoConfig := provideMongoConfig()
 	stockClientImpl, err := provideMongo(fetcherMongoConfig)
 	if err != nil {
@@ -27,7 +27,7 @@ func initalizeRealtimeStock(p *job.UserParams) (Fetcher, error) {
 	return realtimeStock, nil
 }
 
-func initalizePastStock(p *job.UserParams) (Fetcher, error) {
+func initializePastStock(p *job.UserParams) (Fetcher, error) {
 	fetcherMongoConfig := provideMongoConfig()
 	stockClientImpl, err := provideMongo(fetcherMongoConfig)
 	if err != nil {

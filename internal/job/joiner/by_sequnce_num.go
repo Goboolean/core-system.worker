@@ -72,14 +72,14 @@ func (b *BySequnceNum) Execute() {
 
 			for e := modelInputList.Front(); e != nil; e = e.Next() {
 
-				location := findLargestPacketIndexBySequence(refanceInputBuf, e.Value.(model.Packet).Sequnce)
+				location := findLargestPacketIndexBySequence(refanceInputBuf, e.Value.(model.Packet).Sequence)
 
-				if refanceInputBuf[location].Sequnce != e.Value.(model.Packet).Sequnce {
+				if refanceInputBuf[location].Sequence != e.Value.(model.Packet).Sequence {
 					break
 				}
 
 				b.out <- model.Packet{
-					Sequnce: e.Value.(model.Packet).Sequnce,
+					Sequence: e.Value.(model.Packet).Sequence,
 					Data: &model.Pair{
 						RefData:   refanceInputBuf[location].Data,
 						ModelData: e.Value.(model.Packet).Data,
@@ -100,7 +100,7 @@ func findLargestPacketIndexBySequence(data []model.Packet, target int64) int {
 	size := len(data)
 
 	i := 0
-	for i < size && data[i].Sequnce < target {
+	for i < size && data[i].Sequence < target {
 		i++
 	}
 
