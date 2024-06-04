@@ -15,8 +15,8 @@ import (
 type StockStub struct {
 	Fetcher
 
-	numOfGeneration          int
-	maxRandomDelayMilisecond int
+	numOfGeneration            int
+	maxRandomDelayMilliseconds int
 
 	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
@@ -28,9 +28,9 @@ func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 
 	instance := &StockStub{
-		maxRandomDelayMilisecond: DefaultMaxRandomDelayMiliseconds,
-		stop:                     util.NewStopNotifier(),
-		out:                      make(job.DataChan),
+		maxRandomDelayMilliseconds: DefaultMaxRandomDelayMilliseconds,
+		stop:                       util.NewStopNotifier(),
+		out:                        make(job.DataChan),
 	}
 
 	if !parmas.IsKeyNullOrEmpty("numOfGeneration") {
@@ -44,14 +44,14 @@ func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
 
 	}
 
-	if !parmas.IsKeyNullOrEmpty("maxRandomDelayMiliseconds") {
+	if !parmas.IsKeyNullOrEmpty("maxRandomDelayMilliseconds") {
 
-		val, err := strconv.ParseInt((*parmas)["maxRandomDelayMiliseconds"], 10, 32)
+		val, err := strconv.ParseInt((*parmas)["maxRandomDelayMilliseconds"], 10, 32)
 		if err != nil {
 			return nil, fmt.Errorf("create past stock fetch job: %w", err)
 		}
 
-		instance.maxRandomDelayMilisecond = int(val)
+		instance.maxRandomDelayMilliseconds = int(val)
 
 	}
 
@@ -72,7 +72,7 @@ func (ps *StockStub) Execute() {
 				return
 			default:
 				ps.out <- model.Packet{
-					Sequnce: int64(i),
+					Sequence: int64(i),
 					Data: &model.StockAggregate{
 						OpenTime:   1716775499,
 						ClosedTime: 1716775499,
@@ -85,8 +85,8 @@ func (ps *StockStub) Execute() {
 				}
 			}
 
-			if ps.maxRandomDelayMilisecond > 0 {
-				time.Sleep(time.Duration(rand.Intn(ps.maxRandomDelayMilisecond)) * time.Millisecond)
+			if ps.maxRandomDelayMilliseconds > 0 {
+				time.Sleep(time.Duration(rand.Intn(ps.maxRandomDelayMilliseconds)) * time.Millisecond)
 			}
 		}
 

@@ -22,7 +22,7 @@ func provideMongo(c mongoConfig) (*mongo.StockClientImpl, error) {
 	return mongo.NewStockClientImpl(&in)
 }
 
-func initalizeRealtimeStock(p *job.UserParams) (Fetcher, error) {
+func initializeRealtimeStock(p *job.UserParams) (Fetcher, error) {
 	wire.Build(
 		provideMongoConfig,
 		provideMongo,
@@ -34,7 +34,7 @@ func initalizeRealtimeStock(p *job.UserParams) (Fetcher, error) {
 	return nil, nil
 }
 
-func initalizePastStock(p *job.UserParams) (Fetcher, error) {
+func initializePastStock(p *job.UserParams) (Fetcher, error) {
 	wire.Build(
 		provideMongoConfig,
 		provideMongo,
