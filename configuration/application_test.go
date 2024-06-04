@@ -17,6 +17,7 @@ func TestUnmarshal(t *testing.T) {
 
 	//assert
 	assert.NoError(t, err)
+	assert.Equal(t, "2024-05-31-19127374895", AppConfig.TaskID)
 	assert.Equal(t, "backTest", AppConfig.Task)
 	assert.Equal(t, configuration.DataOrigin{
 		TimeFrame:      configuration.TimeFrame{Seconds: 1},
