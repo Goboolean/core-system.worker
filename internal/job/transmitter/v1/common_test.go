@@ -29,6 +29,7 @@ func TestCommon(t *testing.T) {
 		fmt.Println("hello")
 		i := numOrder
 		j := numAnnotation
+		//주문 이벤트와 어노테이션을 무작위로 선택해 inChan에 전송한다.
 		for i > 0 || j > 0 {
 			switch rand.Intn(2) {
 			case 0:
