@@ -1,7 +1,10 @@
 package v1
 
 import (
+	"errors"
+	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
@@ -15,20 +18,56 @@ type Common struct {
 	annotationDispatcher transmitter.AnnotationDispatcher
 	orderDispatcher      transmitter.OrderEventDispatcher
 
+	task      model.Task
+	productId string
+
 	in job.DataChan
 	sn *util.StopNotifier
 	wg *sync.WaitGroup
 }
 
+var ErrInvalidProductId = errors.New("transmit: can't parse productID")
+var ErrInvalidTaskString = errors.New("transmit: can't parse task")
+
 func NewCommon(
 	annotationDispatcher transmitter.AnnotationDispatcher,
-	orderDispatcher transmitter.OrderEventDispatcher) (*Common, error) {
-	return &Common{
+	orderDispatcher transmitter.OrderEventDispatcher,
+	params *job.UserParams) (*Common, error) {
+	instance := &Common{
 		annotationDispatcher: annotationDispatcher,
 		orderDispatcher:      orderDispatcher,
 		sn:                   util.NewStopNotifier(),
 		wg:                   &sync.WaitGroup{},
-	}, nil
+	}
+
+	if !params.IsKeyNullOrEmpty("productID") {
+
+		val, ok := (*params)["productID"]
+		if !ok {
+			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidProductId)
+		}
+
+		instance.productId = val
+	}
+
+	if !params.IsKeyNullOrEmpty("task") {
+
+		val, ok := (*params)["task"]
+		if !ok {
+			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidTaskString)
+		}
+
+		t, err := model.ParseTask(val)
+		if err != nil {
+			return nil, fmt.Errorf("create past stock fetch job: %w", err)
+		}
+
+		instance.task = t
+
+	}
+
+	return instance, nil
+
 }
 
 func (b *Common) Execute() {
@@ -44,8 +83,14 @@ func (b *Common) Execute() {
 					return
 				}
 				switch v := inPacket.Data.(type) {
-				case *model.OrderEvent:
-					b.orderDispatcher.Dispatch(v)
+				case *model.TradeDetails:
+					b.orderDispatcher.Dispatch(
+						&model.OrderEvent{
+							ProductID:   b.productId,
+							Transaction: *v,
+							Timestamp:   time.Now().Unix(),
+							Task:        b.task,
+						})
 				default:
 					b.annotationDispatcher.Dispatch(v)
 				}

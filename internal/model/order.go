@@ -1,5 +1,7 @@
 package model
 
+import "errors"
+
 type Action int8
 
 const (
@@ -28,11 +30,24 @@ const (
 func (a Task) String() string {
 	switch a {
 	case BackTest:
-		return "backtest"
+		return "backTest"
 	case RealtimeTrade:
-		return "realtimetrade"
+		return "realtimeTrade"
 	default:
 		return ""
+	}
+}
+
+var ErrInvalidTaskString = errors.New("ParseTask: can't parse taskString")
+
+func ParseTask(taskString string) (Task, error) {
+	switch taskString {
+	case BackTest.String():
+		return BackTest, nil
+	case RealtimeTrade.String():
+		return RealtimeTrade, nil
+	default:
+		return 0, ErrInvalidTaskString
 	}
 }
 
