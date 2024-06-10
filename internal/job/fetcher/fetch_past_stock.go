@@ -45,7 +45,7 @@ func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, 
 		out:                 make(job.DataChan),
 	}
 
-	if !parmas.IsKeyNullOrEmpty("productID") {
+	if !parmas.IsKeyNilOrEmpty("productID") {
 
 		val, ok := (*parmas)["productID"]
 		if !ok {
@@ -55,7 +55,7 @@ func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, 
 		instance.stockID = val
 	}
 
-	if !parmas.IsKeyNullOrEmpty("startDate") {
+	if !parmas.IsKeyNilOrEmpty("startDate") {
 		instance.isFetchingFullRange = false
 
 		val, err := strconv.ParseInt((*parmas)["startDate"], 10, 64)
