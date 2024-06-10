@@ -1,7 +1,6 @@
 package pipeline_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/Goboolean/core-system.worker/configuration"
@@ -19,23 +18,19 @@ func TestBuilder(t *testing.T) {
 
 		p, err := pipeline.Build(*cfg)
 		assert.NoError(t, err)
-		assert.Equal(t, "Normal", reflect.TypeOf(p).Name())
+		_, ok := p.(*pipeline.Normal)
+		assert.True(t, ok)
 	})
 	t.Run("yml에 가상의 without normal pipeline 시나리오가 주어졌을 때, 파이프라인을 적절히 빌드해야 한다.", func(t *testing.T) {
 		//arrange
-		cfg, err := configuration.ImportAppConfigFromFile("without_model.test.yml")
+		cfg, err := configuration.ImportAppConfigFromFile("./testdata/without_model.test.yml")
 		if err != nil {
 			t.Error(err)
 		}
 
 		p, err := pipeline.Build(*cfg)
-		if err != nil {
-			t.Error(err)
-		}
-
-		//act
-		p.Run()
-		//assert
-		//??
+		assert.NoError(t, err)
+		_, ok := p.(*pipeline.WithoutModel)
+		assert.True(t, ok)
 	})
 }
