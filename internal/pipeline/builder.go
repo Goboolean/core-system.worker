@@ -83,7 +83,10 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
-	transmitter := transmitter.Dummy{}
+	transmitter, err := transmitter.NewFake()
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
 
 	isAdapterRequired := config.Model.OutputType != config.Strategy.InputType
 	if isAdapterRequired {
@@ -133,6 +136,11 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
+	transmitter, err := transmitter.NewFake()
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
+
 	isAdapterRequired := config.DataOrigin.ProductType != config.Strategy.InputType
 	if isAdapterRequired {
 		adapter, err := adapter.Create(adapter.Spec{
