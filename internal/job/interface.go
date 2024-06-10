@@ -1,8 +1,10 @@
 package job
 
-// Common represents a job that can be executed.
+// Common is an interface that defines common methods for a job.
 type Common interface {
-	// Execute executes the job with the given context.
+	// Execute executes the job.
 	Execute()
+
+	// Close stops job and cleans infra of job and returns an error if any.
 	Close() error
 }
