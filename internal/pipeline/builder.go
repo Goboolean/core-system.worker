@@ -73,12 +73,10 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	isAdapterRequred, adapterSpec := extractAdapterSpec(config)
-	adpater, err := adapter.Create(adapterSpec, &p)
+	joiner, err := joiner.NewBySequence(&p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	joinner := joiner.Dummy{}
 	analyzer, err := analyzer.Create(extractAnalyzerSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
@@ -87,19 +85,27 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	// 현재 생성자 미구현으로 dummy 객체로 대체
 	transmitter := transmitter.Dummy{}
 
-	if isAdapterRequred {
+	isAdapterRequired := config.Model.OutputType != config.Strategy.InputType
+	if isAdapterRequired {
+		adapter, err := adapter.Create(adapter.Spec{
+			InputType:  config.Model.OutputType,
+			OutputType: config.Strategy.InputType,
+		}, &p)
+		if err != nil {
+			return nil, fmt.Errorf("build normal pipeline: %w", err)
+		}
 		return newNormalWithAdapter(
 			fetcher,
-			joinner,
+			joiner,
 			modelExecuter,
-			adpater,
+			adapter,
 			analyzer,
 			transmitter,
 		)
 	} else {
 		return newNormalWithoutAdapter(
 			fetcher,
-			joinner,
+			joiner,
 			modelExecuter,
 			analyzer,
 			transmitter,
@@ -127,9 +133,15 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
-	transmitter := transmitter.Dummy{}
-
-	if isAdapterRequred {
+	isAdapterRequired := config.DataOrigin.ProductType != config.Strategy.InputType
+	if isAdapterRequired {
+		adapter, err := adapter.Create(adapter.Spec{
+			InputType:  config.DataOrigin.ProductType,
+			OutputType: config.Strategy.InputType,
+		}, &p)
+		if err != nil {
+			return nil, fmt.Errorf("build normal pipeline: %w", err)
+		}
 		return newWithoutModelWithAdapter(
 			fetcher,
 			adpater,
@@ -161,18 +173,6 @@ func extractModelExecterSpec(config configuration.AppConfig) executer.Spec {
 
 	spec.OutputType = config.Model.OutputType
 	return spec
-}
-
-func extractAdapterSpec(config configuration.AppConfig) (bool, adapter.Spec) {
-
-	isRequred := config.Model.OutputType == config.Strategy.InputType
-	sepc := adapter.Spec{
-		InputType:  config.Model.OutputType,
-		OutputType: config.Strategy.InputType,
-	}
-
-	return isRequred, sepc
-
 }
 
 func extractAnalyzerSpec(config configuration.AppConfig) analyzer.Spec {
