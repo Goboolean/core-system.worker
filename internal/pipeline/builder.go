@@ -188,9 +188,9 @@ func extractAnalyzerSpec(config configuration.AppConfig) analyzer.Spec {
 func extractUserParams(config configuration.AppConfig) job.UserParams {
 
 	var p = job.UserParams{
-		"startDate": string(config.DataOrigin.StartTimestamp),
-		"endDate":   string(config.DataOrigin.EndTimestamp),
-		"batchSize": string(config.Model.BatchSize),
+		"startDate": fmt.Sprint(config.DataOrigin.StartTimestamp),
+		"endDate":   fmt.Sprint(config.DataOrigin.EndTimestamp),
+		"batchSize": fmt.Sprint(config.Model.BatchSize),
 		"productID": config.DataOrigin.ProductID,
 	}
 
