@@ -88,7 +88,7 @@ func (b *Common) Execute() {
 						&model.OrderEvent{
 							ProductID:   b.productId,
 							Transaction: *v,
-							Timestamp:   time.Now().Unix(),
+							Timestamp:   time.Now(),
 							Task:        b.task,
 						})
 				default:

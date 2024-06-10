@@ -1,6 +1,9 @@
 package model
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type Action int8
 
@@ -62,7 +65,7 @@ type OrderEvent struct {
 	// 아니면 현재 unix epoch time?
 	// command server는 Timestamp가
 	// 그런데 이런 식이면?
-	Timestamp int64
+	Timestamp time.Time
 	Task      Task
 }
 
