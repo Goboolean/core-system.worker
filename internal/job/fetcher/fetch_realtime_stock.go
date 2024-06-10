@@ -34,7 +34,7 @@ func NewRealtimeStock(mongo mongo.StockClient, params *job.UserParams) (*Realtim
 		stop: util.NewStopNotifier(),
 	}
 
-	if !params.IsKeyNullOrEmpty("productID") {
+	if !params.IsKeyNilOrEmpty("productID") {
 
 		val, ok := (*params)["productID"]
 		if !ok {

@@ -46,7 +46,7 @@ func (s *Stub) Execute() {
 				//아무런 동작이 일어나지 않는 값
 				s.out <- model.Packet{
 					Sequence: int64(i),
-					Data: &model.TradeDetails{
+					Data: &model.TradeCommand{
 						Action:            model.Sell,
 						ProportionPercent: 0,
 					},

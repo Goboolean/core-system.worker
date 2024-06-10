@@ -33,7 +33,7 @@ func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
 		out:                        make(job.DataChan),
 	}
 
-	if !parmas.IsKeyNullOrEmpty("numOfGeneration") {
+	if !parmas.IsKeyNilOrEmpty("numOfGeneration") {
 
 		val, err := strconv.ParseInt((*parmas)["numOfGeneration"], 10, 32)
 		if err != nil {
@@ -44,7 +44,7 @@ func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
 
 	}
 
-	if !parmas.IsKeyNullOrEmpty("maxRandomDelayMilliseconds") {
+	if !parmas.IsKeyNilOrEmpty("maxRandomDelayMilliseconds") {
 
 		val, err := strconv.ParseInt((*parmas)["maxRandomDelayMilliseconds"], 10, 32)
 		if err != nil {
