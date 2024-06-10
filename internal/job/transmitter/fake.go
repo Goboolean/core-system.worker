@@ -3,6 +3,7 @@ package transmitter
 import (
 	"sync"
 
+	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
 	log "github.com/sirupsen/logrus"
@@ -12,7 +13,7 @@ import (
 type Fake struct {
 	Transmitter
 
-	in chan any
+	in job.DataChan
 
 	wg *sync.WaitGroup
 	sn *util.StopNotifier
@@ -38,7 +39,7 @@ func (f *Fake) Execute() {
 				return
 			}
 
-			orderEvent := in.(model.Packet).Data.(*model.OrderEvent)
+			orderEvent := in.Data.(*model.OrderEvent)
 
 			log.WithFields(log.Fields{
 				"ProductID:        ": orderEvent.ProductID,
@@ -57,6 +58,6 @@ func (f *Fake) Close() error {
 	return nil
 }
 
-func (f *Fake) SetInput(in chan any) {
+func (f *Fake) SetInput(in job.DataChan) {
 	f.in = in
 }
