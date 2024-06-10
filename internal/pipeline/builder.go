@@ -125,11 +125,6 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	isAdapterRequred, adapterSpec := extractAdapterSpec(config)
-	adpater, err := adapter.Create(adapterSpec, &p)
-	if err != nil {
-		return nil, fmt.Errorf("build normal pipeline: %w", err)
-	}
 	analyzer, err := analyzer.Create(extractAnalyzerSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
@@ -152,7 +147,7 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 		}
 		return newWithoutModelWithAdapter(
 			fetcher,
-			adpater,
+			adapter,
 			analyzer,
 			transmitter,
 		)
@@ -207,7 +202,7 @@ func extractUserParams(config configuration.AppConfig) job.UserParams {
 	}
 
 	for k, v := range config.Strategy.Params {
-		p[strings.Join([]string{"stretage", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
+		p[strings.Join([]string{"strategy", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
 	}
 
 	return p
