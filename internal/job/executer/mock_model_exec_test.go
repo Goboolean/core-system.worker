@@ -62,7 +62,7 @@ func TestMock(t *testing.T) {
 		}
 		close(inChan)
 
-		execute, err := executer.NewMock(m, &job.UserParams{"batchSize": "2"})
+		execute, err := executer.NewMock(m, &job.UserParams{job.BatchSize: "2"})
 		if err != nil {
 			t.Error(err)
 		}

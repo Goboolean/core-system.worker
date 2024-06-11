@@ -12,5 +12,16 @@ func (p UserParams) IsKeyNilOrEmpty(key string) bool {
 	}
 }
 
+// User Param Keys
+const (
+	StartDate = "startDate"
+	EndDate   = "endDate"
+	ProductID = "productID"
+	BatchSize = "batchSize"
+
+	NumOfGeneration            = "numOfGeneration"
+	MaxRandomDelayMilliseconds = "maxRandomDelayMilliseconds"
+)
+
 // DataChan is a channel that is used to send and receive model.Packet objects.
 type DataChan chan model.Packet

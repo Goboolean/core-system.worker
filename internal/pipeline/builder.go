@@ -188,10 +188,10 @@ func extractAnalyzerSpec(config configuration.AppConfig) analyzer.Spec {
 func extractUserParams(config configuration.AppConfig) job.UserParams {
 
 	var p = job.UserParams{
-		"startDate": string(config.DataOrigin.StartTimestamp),
-		"endDate":   string(config.DataOrigin.EndTimestamp),
-		"batchSize": string(config.Model.BatchSize),
-		"productID": config.DataOrigin.ProductID,
+		job.StartDate: string(config.DataOrigin.StartTimestamp),
+		job.EndDate:   string(config.DataOrigin.EndTimestamp),
+		job.BatchSize: string(config.Model.BatchSize),
+		job.ProductID: config.DataOrigin.ProductID,
 	}
 
 	for k, v := range config.Model.Params {
@@ -199,7 +199,7 @@ func extractUserParams(config configuration.AppConfig) job.UserParams {
 	}
 
 	for k, v := range config.Strategy.Params {
-		p[strings.Join([]string{"stretage", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
+		p[strings.Join([]string{"stretagey", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
 	}
 
 	return p
