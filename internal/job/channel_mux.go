@@ -23,13 +23,15 @@ func (fo *ChannelMux) Execute() {
 			}
 		}()
 
-		data, ok := <-fo.in
-		if !ok {
-			return
-		}
+		for {
+			data, ok := <-fo.in
+			if !ok {
+				return
+			}
 
-		for _, ch := range fo.out {
-			ch <- data
+			for _, ch := range fo.out {
+				ch <- data
+			}
 		}
 
 	}()
