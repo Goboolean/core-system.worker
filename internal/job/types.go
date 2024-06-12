@@ -18,6 +18,7 @@ const (
 	EndDate   = "endDate"
 	ProductID = "productID"
 	BatchSize = "batchSize"
+	Task      = "task"
 
 	NumOfGeneration            = "numOfGeneration"
 	MaxRandomDelayMilliseconds = "maxRandomDelayMilliseconds"

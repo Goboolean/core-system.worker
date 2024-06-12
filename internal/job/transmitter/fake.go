@@ -45,7 +45,7 @@ func (f *Fake) Execute() {
 				"ProductID:        ": orderEvent.ProductID,
 				"ProportionPercent:": orderEvent.Command.ProportionPercent,
 				"Action:           ": orderEvent.Command.Action.String(),
-				"Timestamp:        ": orderEvent.CreatedAtTimestamp,
+				"Timestamp:        ": orderEvent.CreatedAt,
 				"Task:             ": orderEvent.Task.String,
 			}).Debug("fake event was dispatched")
 		}

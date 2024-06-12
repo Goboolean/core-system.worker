@@ -39,7 +39,10 @@ func TestCommon(t *testing.T) {
 
 				inChan <- model.Packet{
 					Sequence: 0,
-					Data:     &model.OrderEvent{},
+					Data: &model.TradeCommand{
+						ProportionPercent: 0,
+						Action:            model.Buy,
+					},
 				}
 				i--
 				fmt.Printf("order event is queued, i:%d\n", i)
@@ -65,7 +68,11 @@ func TestCommon(t *testing.T) {
 		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any()).Times(numOrder)
 		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any()).Times(numAnnotation)
 
-		transmit, err := v1.NewCommon(mockAnnotationDispatcher, mockOrderEventDispatcher)
+		transmit, err := v1.NewCommon(mockAnnotationDispatcher, mockOrderEventDispatcher, &job.UserParams{
+			"productID": "test.product",
+			"task":      "realtimeTrade",
+		})
+
 		if err != nil {
 			t.Error(err)
 		}
