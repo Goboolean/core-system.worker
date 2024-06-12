@@ -40,9 +40,9 @@ func NewCommon(
 		wg:                   &sync.WaitGroup{},
 	}
 
-	if !params.IsKeyNullOrEmpty("productID") {
+	if !params.IsKeyNilOrEmpty(job.ProductID) {
 
-		val, ok := (*params)["productID"]
+		val, ok := (*params)[job.ProductID]
 		if !ok {
 			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidProductId)
 		}
@@ -50,9 +50,9 @@ func NewCommon(
 		instance.productId = val
 	}
 
-	if !params.IsKeyNullOrEmpty("task") {
+	if !params.IsKeyNilOrEmpty(job.Task) {
 
-		val, ok := (*params)["task"]
+		val, ok := (*params)[job.Task]
 		if !ok {
 			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidTaskString)
 		}
@@ -83,13 +83,13 @@ func (b *Common) Execute() {
 					return
 				}
 				switch v := inPacket.Data.(type) {
-				case *model.TradeDetails:
+				case *model.TradeCommand:
 					b.orderDispatcher.Dispatch(
 						&model.OrderEvent{
-							ProductID:   b.productId,
-							Transaction: *v,
-							Timestamp:   time.Now(),
-							Task:        b.task,
+							ProductID: b.productId,
+							Command:   *v,
+							CreatedAt: time.Now(),
+							Task:      b.task,
 						})
 				default:
 					b.annotationDispatcher.Dispatch(v)

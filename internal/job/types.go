@@ -4,7 +4,7 @@ import "github.com/Goboolean/core-system.worker/internal/model"
 
 type UserParams map[string]string
 
-func (p UserParams) IsKeyNullOrEmpty(key string) bool {
+func (p UserParams) IsKeyNilOrEmpty(key string) bool {
 	if val, ok := p[key]; !ok || val == "" {
 		return true
 	} else {
@@ -12,4 +12,17 @@ func (p UserParams) IsKeyNullOrEmpty(key string) bool {
 	}
 }
 
+// User Param Keys
+const (
+	StartDate = "startDate"
+	EndDate   = "endDate"
+	ProductID = "productID"
+	BatchSize = "batchSize"
+	Task      = "task"
+
+	NumOfGeneration            = "numOfGeneration"
+	MaxRandomDelayMilliseconds = "maxRandomDelayMilliseconds"
+)
+
+// DataChan is a channel that is used to send and receive model.Packet objects.
 type DataChan chan model.Packet

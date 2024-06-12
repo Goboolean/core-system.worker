@@ -39,7 +39,7 @@ func TestCommon(t *testing.T) {
 
 				inChan <- model.Packet{
 					Sequence: 0,
-					Data: &model.TradeDetails{
+					Data: &model.TradeCommand{
 						ProportionPercent: 0,
 						Action:            model.Buy,
 					},

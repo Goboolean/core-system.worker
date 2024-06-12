@@ -1,6 +1,6 @@
 package model
 
-// InferenceReq는 kserve에 요청을 보내기 위한 구조체입니다.
+// InferenceReq is a struct for sending requests to kserve.
 type InferenceReq struct {
 	Name       string      `json:"string"`
 	Shape      []int       `json:"shape"`
@@ -9,7 +9,7 @@ type InferenceReq struct {
 	Data       interface{} `json:"data"`
 }
 
-// InferenceRes는 kserve로부터 받은 응답을 담기 위한 구조체입니다.
+// InferenceRes is a struct for storing responses received from kserve.
 type InferenceRes struct {
 	ModelName    string           `json:"model_name"`
 	ModelVersion string           `json:"model_version,omitempty"`
@@ -18,7 +18,7 @@ type InferenceRes struct {
 	Outputs      []ResponseOutput `json:"outputs"`
 }
 
-// ResponseOutput는 kserve로부터 받은 응답의 출력을 담기 위한 구조체입니다.
+// ResponseOutput is a struct for storing the output of responses received from kserve.
 type ResponseOutput struct {
 	Name       string      `json:"name"`
 	Shape      []int       `json:"shape"`

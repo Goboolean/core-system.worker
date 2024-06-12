@@ -73,33 +73,42 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	isAdapterRequred, adapterSpec := extractAdapterSpec(config)
-	adpater, err := adapter.Create(adapterSpec, &p)
+	joiner, err := joiner.NewBySequence(&p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	joinner := joiner.Dummy{}
 	analyzer, err := analyzer.Create(extractAnalyzerSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
-	transmitter := transmitter.Dummy{}
+	transmitter, err := transmitter.NewFake()
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
 
-	if isAdapterRequred {
+	isAdapterRequired := config.Model.OutputType != config.Strategy.InputType
+	if isAdapterRequired {
+		adapter, err := adapter.Create(adapter.Spec{
+			InputType:  config.Model.OutputType,
+			OutputType: config.Strategy.InputType,
+		}, &p)
+		if err != nil {
+			return nil, fmt.Errorf("build normal pipeline: %w", err)
+		}
 		return newNormalWithAdapter(
 			fetcher,
-			joinner,
+			joiner,
 			modelExecuter,
-			adpater,
+			adapter,
 			analyzer,
 			transmitter,
 		)
 	} else {
 		return newNormalWithoutAdapter(
 			fetcher,
-			joinner,
+			joiner,
 			modelExecuter,
 			analyzer,
 			transmitter,
@@ -116,23 +125,29 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	isAdapterRequred, adapterSpec := extractAdapterSpec(config)
-	adpater, err := adapter.Create(adapterSpec, &p)
-	if err != nil {
-		return nil, fmt.Errorf("build normal pipeline: %w", err)
-	}
 	analyzer, err := analyzer.Create(extractAnalyzerSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
-	transmitter := transmitter.Dummy{}
+	transmitter, err := transmitter.NewFake()
+	if err != nil {
+		return nil, fmt.Errorf("build normal pipeline: %w", err)
+	}
 
-	if isAdapterRequred {
+	isAdapterRequired := config.DataOrigin.ProductType != config.Strategy.InputType
+	if isAdapterRequired {
+		adapter, err := adapter.Create(adapter.Spec{
+			InputType:  config.DataOrigin.ProductType,
+			OutputType: config.Strategy.InputType,
+		}, &p)
+		if err != nil {
+			return nil, fmt.Errorf("build normal pipeline: %w", err)
+		}
 		return newWithoutModelWithAdapter(
 			fetcher,
-			adpater,
+			adapter,
 			analyzer,
 			transmitter,
 		)
@@ -163,18 +178,6 @@ func extractModelExecterSpec(config configuration.AppConfig) executer.Spec {
 	return spec
 }
 
-func extractAdapterSpec(config configuration.AppConfig) (bool, adapter.Spec) {
-
-	isRequred := config.Model.OutputType == config.Strategy.InputType
-	sepc := adapter.Spec{
-		InputType:  config.Model.OutputType,
-		OutputType: config.Strategy.InputType,
-	}
-
-	return isRequred, sepc
-
-}
-
 func extractAnalyzerSpec(config configuration.AppConfig) analyzer.Spec {
 
 	spec := analyzer.Spec{
@@ -188,10 +191,10 @@ func extractAnalyzerSpec(config configuration.AppConfig) analyzer.Spec {
 func extractUserParams(config configuration.AppConfig) job.UserParams {
 
 	var p = job.UserParams{
-		"startDate": string(config.DataOrigin.StartTimestamp),
-		"endDate":   string(config.DataOrigin.EndTimestamp),
-		"batchSize": string(config.Model.BatchSize),
-		"productID": config.DataOrigin.ProductID,
+		job.StartDate: fmt.Sprint(config.DataOrigin.StartTimestamp),
+		job.EndDate:   fmt.Sprint(config.DataOrigin.EndTimestamp),
+		job.BatchSize: fmt.Sprint(config.Model.BatchSize),
+		job.ProductID: config.DataOrigin.ProductID,
 	}
 
 	for k, v := range config.Model.Params {
@@ -199,7 +202,7 @@ func extractUserParams(config configuration.AppConfig) job.UserParams {
 	}
 
 	for k, v := range config.Strategy.Params {
-		p[strings.Join([]string{"stretage", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
+		p[strings.Join([]string{"strategy", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
 	}
 
 	return p

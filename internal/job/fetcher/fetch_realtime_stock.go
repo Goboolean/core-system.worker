@@ -34,9 +34,9 @@ func NewRealtimeStock(mongo mongo.StockClient, params *job.UserParams) (*Realtim
 		stop: util.NewStopNotifier(),
 	}
 
-	if !params.IsKeyNullOrEmpty("productID") {
+	if !params.IsKeyNilOrEmpty(job.EndDate) {
 
-		val, ok := (*params)["productID"]
+		val, ok := (*params)[job.EndDate]
 		if !ok {
 			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidStockID)
 		}

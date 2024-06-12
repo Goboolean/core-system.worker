@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -21,7 +20,7 @@ var ErrTypeNotMatch = errors.New("pipeline: cannot build a pipeline because the 
 type Normal struct {
 	//jobs
 	fetcher       fetcher.Fetcher
-	joinner       joiner.Joiner
+	joiner        joiner.Joiner
 	modelExecuter executer.ModelExecutor
 	adapter       adapter.Adapter
 	resAnalyzer   analyzer.Analyzer
@@ -29,14 +28,11 @@ type Normal struct {
 
 	//utils
 	mux job.ChannelMux
-
-	ctx    context.Context
-	cancel context.CancelFunc
 }
 
 func newNormalWithAdapter(
 	fetcher fetcher.Fetcher,
-	joinner joiner.Joiner,
+	joiner joiner.Joiner,
 	modelExecuter executer.ModelExecutor,
 	adapter adapter.Adapter,
 	resAnalyzer analyzer.Analyzer,
@@ -44,7 +40,7 @@ func newNormalWithAdapter(
 
 	instance := Normal{
 		fetcher:       fetcher,
-		joinner:       joinner,
+		joiner:        joiner,
 		modelExecuter: modelExecuter,
 		adapter:       adapter,
 		resAnalyzer:   resAnalyzer,
@@ -56,9 +52,9 @@ func newNormalWithAdapter(
 	instance.mux.SetInput(instance.fetcher.Output())
 	instance.modelExecuter.SetInput(instance.mux.Output())
 	instance.adapter.SetInput(instance.modelExecuter.Output())
-	instance.joinner.SetModelInput(instance.adapter.Output())
-	instance.joinner.SetRefInput(instance.mux.Output())
-	instance.resAnalyzer.SetInput(instance.joinner.Output())
+	instance.joiner.SetModelInput(instance.adapter.Output())
+	instance.joiner.SetRefInput(instance.mux.Output())
+	instance.resAnalyzer.SetInput(instance.joiner.Output())
 	instance.transmitter.SetInput(instance.resAnalyzer.Output())
 
 	return &instance, nil
@@ -74,16 +70,16 @@ func newNormalWithoutAdapter(
 	instance := Normal{
 		fetcher:       fetch,
 		modelExecuter: modelExec,
-		joinner:       join,
+		joiner:        join,
 		resAnalyzer:   resAnalyze,
 		transmitter:   transmit,
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
 	instance.modelExecuter.SetInput(instance.mux.Output())
-	instance.joinner.SetModelInput(instance.modelExecuter.Output())
-	instance.joinner.SetRefInput(instance.mux.Output())
-	instance.resAnalyzer.SetInput(instance.joinner.Output())
+	instance.joiner.SetModelInput(instance.modelExecuter.Output())
+	instance.joiner.SetRefInput(instance.mux.Output())
+	instance.resAnalyzer.SetInput(instance.joiner.Output())
 	instance.transmitter.SetInput(instance.resAnalyzer.Output())
 
 	return &instance, nil
@@ -97,7 +93,7 @@ func (n *Normal) Run() {
 	if !reflect.ValueOf(n.adapter).IsNil() {
 		n.adapter.Execute()
 	}
-	n.joinner.Execute()
+	n.joiner.Execute()
 	n.resAnalyzer.Execute()
 	n.transmitter.Execute()
 }
