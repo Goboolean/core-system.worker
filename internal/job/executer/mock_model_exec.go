@@ -54,7 +54,7 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 		instance.modelParam1 = float32(val)
 	}
 
-	if param1, ok := (*params)["batchSize"]; ok {
+	if param1, ok := (*params)[job.BatchSize]; ok {
 		val, err := strconv.ParseInt(param1, 10, 32)
 
 		if err != nil {
