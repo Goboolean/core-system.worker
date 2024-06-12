@@ -12,12 +12,12 @@ func Create(spec Spec, p *job.UserParams) (Adapter, error) {
 
 	var provider, ok = providerRepo[spec]
 	if !ok {
-		return nil, fmt.Errorf("create analyze job: %w", job.ErrNotFoundJob)
+		return nil, fmt.Errorf("create adapt job: %w", job.ErrNotFoundJob)
 	}
 
 	f, err := provider(p)
 	if err != nil {
-		return nil, fmt.Errorf("create analyze job: %w", err)
+		return nil, fmt.Errorf("create adapt job: %w", err)
 	}
 
 	return f, nil
