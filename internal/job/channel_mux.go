@@ -3,8 +3,6 @@ package job
 type ChannelMux struct {
 	in  DataChan
 	out []DataChan
-
-	stop chan struct{}
 }
 
 func (fo *ChannelMux) SetInput(in DataChan) {
@@ -25,12 +23,9 @@ func (fo *ChannelMux) Execute() {
 			}
 		}()
 
-		select {
-		case <-fo.stop:
-			return
-		case data, ok := <-fo.in:
+		for {
+			data, ok := <-fo.in
 			if !ok {
-				close(fo.stop)
 				return
 			}
 

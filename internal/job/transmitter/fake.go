@@ -43,9 +43,9 @@ func (f *Fake) Execute() {
 
 			log.WithFields(log.Fields{
 				"ProductID:        ": orderEvent.ProductID,
-				"ProportionPercent:": orderEvent.Transaction.ProportionPercent,
-				"Action:           ": orderEvent.Transaction.Action.String(),
-				"Timestamp:        ": orderEvent.Timestamp,
+				"ProportionPercent:": orderEvent.Command.ProportionPercent,
+				"Action:           ": orderEvent.Command.Action.String(),
+				"Timestamp:        ": orderEvent.CreatedAtTimestamp,
 				"Task:             ": orderEvent.Task.String,
 			}).Debug("fake event was dispatched")
 		}
