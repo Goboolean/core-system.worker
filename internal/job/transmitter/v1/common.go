@@ -32,7 +32,11 @@ var ErrInvalidTaskString = errors.New("transmit: can't parse task")
 func NewCommon(
 	annotationDispatcher transmitter.AnnotationDispatcher,
 	orderDispatcher transmitter.OrderEventDispatcher,
-	params *job.UserParams) (*Common, error) {
+func NewCommon(
+	annotationDispatcher transmitter.AnnotationDispatcher,
+	orderDispatcher transmitter.OrderEventDispatcher,
+	params *job.UserParams)
+	(*Common, error) {
 	instance := &Common{
 		annotationDispatcher: annotationDispatcher,
 		orderDispatcher:      orderDispatcher,
