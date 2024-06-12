@@ -1,13 +1,8 @@
 package job
 
-// ChannelMux copies the data received from a single input channel to multiple output channels.
-// It does not accept new inputs until all output channels have received the data.
-// Before using ChannelMux, you MUST execute the Execute() function.
 type ChannelMux struct {
 	in  DataChan
 	out []DataChan
-
-	stop chan struct{}
 }
 
 func (fo *ChannelMux) SetInput(in DataChan) {
@@ -28,12 +23,9 @@ func (fo *ChannelMux) Execute() {
 			}
 		}()
 
-		select {
-		case <-fo.stop:
-			return
-		case data, ok := <-fo.in:
+		for {
+			data, ok := <-fo.in
 			if !ok {
-				close(fo.stop)
 				return
 			}
 
