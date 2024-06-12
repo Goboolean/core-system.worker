@@ -1,0 +1,14 @@
+task: "backTest" #"backTest"|"realtimeTrade"
+taskID: "2024-05-31-19127374895"
+dataOrigin:
+  timeFrame:
+    seconds: 1 #string, seconds 초 단위, example: "300s"
+  productID: "stock.aapl.us" #{type}.{symbol}.{locale}
+  productType: "stockStub" #"option"|"stock"|"crypto"
+  startTimestamp: 12345678 #long(int64),Unix timestamp(epoch time), realtime일 때는 미적용.
+  endTimestamp: 12345678 #long(int64),Unix timestamp(epoch time), realtime일 때는 미적용.
+strategy:
+  ID: "stub" #string
+  inputType: "stockStub" #"candlestick"|"valueList"|"probeDist"
+  params: #map[string]float32
+    param1: 3.14
