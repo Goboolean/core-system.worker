@@ -1,5 +1,10 @@
 package model
 
+import (
+	"errors"
+	"time"
+)
+
 type Action int8
 
 const (
@@ -28,19 +33,33 @@ const (
 func (a Task) String() string {
 	switch a {
 	case BackTest:
-		return "backtest"
+		return "backTest"
 	case RealtimeTrade:
-		return "realtimetrade"
+		return "realtimeTrade"
 	default:
 		return ""
 	}
 }
 
+var ErrInvalidTaskString = errors.New("ParseTask: can't parse taskString")
+
+func ParseTask(taskString string) (Task, error) {
+	switch taskString {
+	case BackTest.String():
+		return BackTest, nil
+	case RealtimeTrade.String():
+		return RealtimeTrade, nil
+	default:
+		return 0, ErrInvalidTaskString
+	}
+}
+
+// TODO: 기술적 요구에 맞게 수정
 type OrderEvent struct {
 	ProductID string
 	Command   TradeCommand
 	//CreatedAtTimestamp is the timestamp when the order event was created.
-	CreatedAtTimestamp int64
+	CreatedAt time.Time
 	// Task refers to the operation currently being performed by this application.
 	// There are BackTest and RealtimeTrade.
 	// External systems can look at this value and

@@ -4,9 +4,11 @@
         "gomock",
         "karfka",
         "kserve",
+        "logrus",
         "outchan",
         "parmas",
         "seze",
+        "sirupsen",
         "stretchr",
         "wireinject",
         "wrie"
