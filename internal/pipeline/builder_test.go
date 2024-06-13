@@ -26,7 +26,7 @@ func TestBuilder(t *testing.T) {
 	})
 	t.Run("yml에 가상의 without normal pipeline 시나리오가 주어졌을 때, 파이프라인을 적절히 빌드해야 한다.", func(t *testing.T) {
 		//arrange
-		cfg, err := configuration.ImportAppConfigFromFile("../../testdata/without_model.test.yml")
+		cfg, err := configuration.ImportAppConfigFromFile("../../test/pipeline_builder_testdata/without_model.test.yml")
 		if err != nil {
 			t.Error(err)
 		}
