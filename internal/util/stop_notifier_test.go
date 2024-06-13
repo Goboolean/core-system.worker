@@ -66,4 +66,23 @@ func TestStopNotifier(t *testing.T) {
 
 	})
 
+	t.Run("NotifyStop을 호출했을 때 NotifyStop을 호출하기 전 Done에서 반환한 채널도 흐름을 block하지 않아야 한다.", func(t *testing.T) {
+
+		//arrange
+		sn := util.NewStopNotifier()
+		done := sn.Done()
+		//act
+		sn.NotifyStop()
+		sn.NotifyStop()
+		//assert
+		assert.NotNil(t, sn)
+		assert.NotNil(t, sn.Done())
+
+		select {
+		case <-done:
+		default:
+			t.Errorf("<-sn.Done() blocked, but it shouldn't block")
+		}
+
+	})
 }
