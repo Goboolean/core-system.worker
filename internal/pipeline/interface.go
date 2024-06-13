@@ -2,5 +2,7 @@ package pipeline
 
 type Pipeline interface {
 	Run()
-	Stop() error
+	Stop()
+
+	Done() chan struct{}
 }
