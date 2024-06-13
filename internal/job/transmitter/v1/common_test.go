@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
@@ -66,7 +65,10 @@ func TestCommon(t *testing.T) {
 		mockAnnotationDispatcher := transmitter.NewMockAnnotationDispatcher(ctrl)
 
 		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any()).Times(numOrder)
+		mockOrderEventDispatcher.EXPECT().Close().AnyTimes()
+
 		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any()).Times(numAnnotation)
+		mockAnnotationDispatcher.EXPECT().Close().AnyTimes()
 
 		transmit, err := v1.NewCommon(mockAnnotationDispatcher, mockOrderEventDispatcher, &job.UserParams{
 			"productID": "test.product",
@@ -80,9 +82,8 @@ func TestCommon(t *testing.T) {
 
 		//act
 		transmit.Execute()
-		for len(inChan) > 0 {
-			time.Sleep(250 * time.Millisecond)
-		}
+		<-transmit.Done()
+
 		assert.NoError(t, err)
 	})
 }

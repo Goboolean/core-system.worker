@@ -9,8 +9,6 @@ import (
 )
 
 type Stub struct {
-	ModelExecutor
-
 	in  job.DataChan `type:""`
 	out job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
@@ -75,8 +73,6 @@ func (m *Stub) Output() job.DataChan {
 	return m.out
 }
 
-func (m *Stub) Close() error {
+func (m *Stub) Cancel() {
 	m.stop.NotifyStop()
-	m.wg.Wait()
-	return nil
 }
