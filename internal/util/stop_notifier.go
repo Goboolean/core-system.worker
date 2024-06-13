@@ -4,19 +4,14 @@ import (
 	"sync"
 )
 
-// closedChan is a reusable closed channel.
-var closedChan = make(chan struct{})
-
-func init() {
-	close(closedChan)
-}
-
 // StopNotifier is a structure that manages stop.
 // It can be used to notify stop to goroutine.
 //
 // It MUST be instantiated using NewStopNotifier().
 type StopNotifier struct {
 	mu sync.Mutex
+	//once는 NotifyStop이 2번 이상 호출돼도 ch를 오직 한 번만 close하도록 합니다.
+	once sync.Once
 
 	// The reason for using a channel in this structure is due to the unique properties of channels.
 	// When a channel is open, the receiver's code flow is blocked until data is sent to the channel.
@@ -39,11 +34,10 @@ func (sn *StopNotifier) NotifyStop() {
 	sn.mu.Lock()
 	defer sn.mu.Unlock()
 
-	// The current channel is changed to closedChan because a closed channel does not block the flow.
-	// The reason for assigning closedChan instead of calling the close function is to consider the possibility of multiple calls.
-	// Closing an already closed channel causes a panic, so we need to check if the channel is already closed.
-	// Since no one is sending data to the channel at this time, this would result in indefinite blocking.
-	sn.ch = closedChan
+	closeChan := func() {
+		close(sn.ch)
+	}
+	sn.once.Do(closeChan)
 }
 
 // Done returns the channel that will be closed when a stop signal is received.
