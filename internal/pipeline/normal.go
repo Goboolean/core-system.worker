@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
@@ -96,25 +95,14 @@ func (n *Normal) Run() {
 	n.joiner.Execute()
 	n.resAnalyzer.Execute()
 	n.transmitter.Execute()
+
 }
 
-func (n *Normal) Stop() error {
+func (n *Normal) Stop() {
+	n.fetcher.Stop()
+	n.modelExecuter.Cancel()
+}
 
-	if err := n.fetcher.Close(); err != nil {
-		return fmt.Errorf("pipeline: failed to shutdown fetch job %w", err)
-	}
-	if err := n.modelExecuter.Close(); err != nil {
-		return fmt.Errorf("pipeline: failed to shutdown model execute job %w", err)
-	}
-	if err := n.adapter.Close(); err != nil {
-		return fmt.Errorf("pipeline: failed to shutdown adapt job %w", err)
-	}
-	if err := n.resAnalyzer.Close(); err != nil {
-		return fmt.Errorf("pipeline: failed to shutdown analyze job %w", err)
-	}
-	if err := n.transmitter.Close(); err != nil {
-		return fmt.Errorf("pipeline: failed to shutdown transmit job %w", err)
-	}
-
-	return nil
+func (n *Normal) Done() chan struct{} {
+	return n.transmitter.Done()
 }
