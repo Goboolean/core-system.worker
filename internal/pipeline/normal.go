@@ -12,6 +12,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/job/joiner"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
+	"github.com/Goboolean/core-system.worker/internal/model"
 )
 
 var ErrTypeNotMatch = errors.New("pipeline: cannot build a pipeline because the types are not compatible between the jobs")
@@ -27,7 +28,7 @@ type Normal struct {
 	transmitter   transmitter.Transmitter
 
 	//utils
-	mux job.ChannelMux
+	mux job.ChannelMux[model.Packet]
 }
 
 func newNormalWithAdapter(
@@ -46,7 +47,7 @@ func newNormalWithAdapter(
 		resAnalyzer:   resAnalyzer,
 		transmitter:   transmitter,
 
-		mux: job.ChannelMux{},
+		mux: job.ChannelMux[model.Packet]{},
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
