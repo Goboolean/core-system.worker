@@ -1,4 +1,4 @@
-package job
+package util
 
 type ChannelMux[T any] struct {
 	in  chan T
