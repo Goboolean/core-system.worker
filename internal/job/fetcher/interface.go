@@ -20,12 +20,14 @@ type Fetcher interface {
 	Output() job.DataChan
 }
 
-// FetchingSession is an interface that represents a fetching session.
+// FetchingSession represents a session to fetch trade data in order
+// FetchingSession is used to iterate over
+// selected range of trade repository or trade stream
 type FetchingSession interface {
 	// Next advances the session to the next item.
 	// It returns true if there is a next item, false otherwise.
 	//
-	// Next must be called initially to retrieve the first item.
+	// Next MUST be called initially to retrieve the first item.
 	Next() bool
 
 	// Value returns the current item in the fetching session.
@@ -33,27 +35,34 @@ type FetchingSession interface {
 	Value(ctx context.Context) (any, error)
 }
 
-// TradeRepository is an interface that represents a trade repository.
 type TradeRepository interface {
 	// SelectProduct selects a product by ID, time frame, and product type.
 	SelectProduct(ID string, timeFrame string, productType string)
 
-	// SetRangeByTime sets the time range for fetching data.
+	// SetRangeByTime sets the time range for trade data.
 	SetRangeByTime(from time.Time, to time.Time)
 
+	// SetRangeAll sets the range to retrieve all available data entries without any specific limit.
+	SetRangeAll()
+
+	// SetRangeByNumberAndEndTime sets the range to retrieve a specified number of trade data
+	// that were created just before the given end time,
+	SetRangeByNumberAndEndTime(num int, end time.Time)
+
 	// Session returns a fetching session.
+	// Before you call session, you must select product and set range
 	Session() (FetchingSession, error)
 
 	// Close closes the connection
 	Close() error
 }
 
-// TradeStream is an interface that represents a trade stream.
 type TradeStream interface {
 	// SelectProduct selects a product by ID, time frame, and product type.
 	SelectProduct(ID string, timeFrame string, productType string)
 
 	// Session returns a fetching session.
+	// Before you call session, you must select product.
 	Session() (FetchingSession, error)
 
 	// Close closes the connection.
