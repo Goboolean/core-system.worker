@@ -5,6 +5,12 @@ type ChannelMux[T any] struct {
 	out []chan T
 }
 
+func NewChannelMux[T any]() *ChannelMux[T] {
+	return &ChannelMux[T]{
+		out: make([]chan T, 0),
+	}
+}
+
 func (fo *ChannelMux[T]) SetInput(in chan T) {
 	fo.in = in
 }
