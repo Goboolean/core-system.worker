@@ -1,21 +1,21 @@
-package job
+package util
 
-type ChannelMux struct {
-	in  DataChan
-	out []DataChan
+type ChannelMux[T any] struct {
+	in  chan T
+	out []chan T
 }
 
-func (fo *ChannelMux) SetInput(in DataChan) {
+func (fo *ChannelMux[T]) SetInput(in chan T) {
 	fo.in = in
 }
 
-func (fo *ChannelMux) Output() DataChan {
-	ch := make(DataChan, 1)
+func (fo *ChannelMux[T]) Output() chan T {
+	ch := make(chan T, 1)
 	fo.out = append(fo.out, ch)
 	return ch
 }
 
-func (fo *ChannelMux) Execute() {
+func (fo *ChannelMux[T]) Execute() {
 	go func() {
 		defer func() {
 			for _, ch := range fo.out {
