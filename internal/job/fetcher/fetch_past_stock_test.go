@@ -1,115 +1,73 @@
 package fetcher_test
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
-	"github.com/Goboolean/common/pkg/resolver"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
+
+func makeStockAggregateExample() *model.StockAggregate {
+	return &model.StockAggregate{
+		OpenTime:   0,
+		ClosedTime: 0,
+		Open:       12,
+		Close:      150,
+		High:       150,
+		Low:        23,
+		Volume:     12,
+	}
+}
 
 // TestPastStock is a unit test function that tests the functionality of fetching past stock data.
 // It verifies that the fetched stock data matches the expected results.
 func TestPastStock(t *testing.T) {
 	t.Run("Past stock fetch 테스트", func(t *testing.T) {
+		num := 100
+		productID := "stock.aapl.usa"
+		timeFrame := "1m"
+		productType := "stock"
+		startTime := time.Now().AddDate(-1, 0, 0).Truncate(time.Second)
+		endTime := time.Now().Truncate(time.Second)
 
-		//Arrange
-		mongo, _ := mongo.Mock__NewStockClient(&resolver.ConfigMap{}, []*mongo.StockDocument{
-			{
-				Symbol:    "AAPL",
-				Open:      12,
-				Close:     150,
-				High:      150,
-				Low:       23,
-				Average:   0,
-				Volume:    12,
-				Timestamp: 1711758929,
-			}, {
-				Symbol:    "AAPL",
-				Open:      12,
-				Close:     150,
-				High:      150,
-				Low:       23,
-				Average:   0,
-				Volume:    12,
-				Timestamp: 1711759229,
-			}, {
-				Symbol:    "AAPL",
-				Open:      12,
-				Close:     150,
-				High:      150,
-				Low:       23,
-				Average:   0,
-				Volume:    12,
-				Timestamp: 1711759529,
-			}, {
-				Symbol:    "AAPL",
-				Open:      12,
-				Close:     150,
-				High:      150,
-				Low:       23,
-				Average:   0,
-				Volume:    12,
-				Timestamp: 1711759829,
-			},
+		ctl := gomock.NewController(t)
+
+		mockSession := fetcher.NewMockFetchingSession(ctl)
+
+		mockSession.EXPECT().Next().Return(false).Times(1).
+			After(mockSession.EXPECT().Next().Return(true).Times(num))
+		mockSession.EXPECT().Value(gomock.Any()).
+			Return(makeStockAggregateExample(), nil).Times(num)
+
+		mockRepo := fetcher.NewMockTradeRepository(ctl)
+		mockRepo.EXPECT().SelectProduct(productID, timeFrame, productType)
+		mockRepo.EXPECT().SetRangeByTime(startTime, endTime)
+		mockRepo.EXPECT().Session().Return(mockSession, nil)
+		mockRepo.EXPECT().Close()
+
+		fetchJob, err := fetcher.NewPastStock(mockRepo, &job.UserParams{
+			job.ProductID: productID,
+			job.StartDate: fmt.Sprint(startTime.Unix()),
+			job.EndDate:   fmt.Sprint(endTime.Unix()),
 		})
 
-		fetch, err := fetcher.NewPastStock(mongo, &job.UserParams{"timeslice": "1m"})
-		if err != nil {
-			t.Error(err)
+		outCh := fetchJob.Output()
+
+		fetchJob.Execute()
+		outData := make([]model.Packet, 0, num)
+		for v := range outCh {
+			outData = append(outData, v)
 		}
 
-		//Act
-		fetch.Execute()
-		out := fetch.Output()
-		res := []*model.StockAggregate{}
-		for packet := range out {
-			val, ok := packet.Data.(*model.StockAggregate)
-			if !ok {
-				panic("Type miss match")
-			}
-			res = append(res, val)
+		assert.NoError(t, err)
+		assert.Equal(t, num, len(outData))
+		for _, e := range outData {
+			assert.Equal(t, makeStockAggregateExample(), e.Data)
 		}
-
-		//Assert
-		exp := []*model.StockAggregate{
-			{
-				OpenTime:   1711758929,
-				ClosedTime: 1711758989,
-				Open:       12,
-				Close:      150,
-				High:       150,
-				Low:        23,
-				Volume:     12,
-			}, {
-				OpenTime:   1711759229,
-				ClosedTime: 1711759289,
-				Open:       12,
-				Close:      150,
-				High:       150,
-				Low:        23,
-				Volume:     12,
-			}, {
-				OpenTime:   1711759529,
-				ClosedTime: 1711759589,
-				Open:       12,
-				Close:      150,
-				High:       150,
-				Low:        23,
-				Volume:     12,
-			}, {
-				OpenTime:   1711759829,
-				ClosedTime: 1711759889,
-				Open:       12,
-				Close:      150,
-				High:       150,
-				Low:        23,
-				Volume:     12,
-			},
-		}
-		assert.Equal(t, exp, res)
 	})
 }

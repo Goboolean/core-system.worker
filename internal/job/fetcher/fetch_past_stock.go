@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
+	"github.com/cenkalti/backoff"
 )
 
 var (
@@ -24,9 +24,10 @@ type PastStock struct {
 
 	timeSlice           string
 	isFetchingFullRange bool
-	startTimestamp      int64 // Unix timestamp of start time
+	startTime           time.Time // Unix timestamp of start time
+	endTime             time.Time
 	stockID             string
-	pastRepo            mongo.StockClient
+	pastRepo            TradeRepository
 
 	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
@@ -34,20 +35,20 @@ type PastStock struct {
 	stop *util.StopNotifier
 }
 
-func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, error) {
+func NewPastStock(tradeRepo TradeRepository, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 
 	instance := &PastStock{
 		timeSlice:           DefaultTimeSlice,
 		isFetchingFullRange: DefaultIsFetchingFullRange,
-		pastRepo:            mongo,
+		pastRepo:            tradeRepo,
 		stop:                util.NewStopNotifier(),
 		out:                 make(job.DataChan),
 	}
 
-	if !parmas.IsKeyNilOrEmpty(job.EndDate) {
+	if !parmas.IsKeyNilOrEmpty(job.ProductID) {
 
-		val, ok := (*parmas)[job.EndDate]
+		val, ok := (*parmas)[job.ProductID]
 		if !ok {
 			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidStockID)
 		}
@@ -63,7 +64,19 @@ func NewPastStock(mongo mongo.StockClient, parmas *job.UserParams) (*PastStock, 
 			return nil, fmt.Errorf("create past stock fetch job: %w", err)
 		}
 
-		instance.startTimestamp = val
+		instance.startTime = time.Unix(val, 0)
+
+	}
+
+	if !parmas.IsKeyNilOrEmpty(job.EndDate) {
+		instance.isFetchingFullRange = false
+
+		val, err := strconv.ParseInt((*parmas)[job.EndDate], 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("create past stock fetch job: %w", err)
+		}
+
+		instance.endTime = time.Unix(val, 0)
 
 	}
 
@@ -75,6 +88,7 @@ func (ps *PastStock) Execute() {
 	go func() {
 		defer ps.wg.Done()
 		defer ps.stop.NotifyStop()
+		defer ps.pastRepo.Close()
 		defer close(ps.out)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -86,47 +100,31 @@ func (ps *PastStock) Execute() {
 			cancel()
 		}()
 
-		ps.pastRepo.SetTarget(ps.stockID, ps.timeSlice)
-		//가져올 데이터의 개수
-		var quantity int
-		//처음 가져올 데이터의 Index
-		var index int
-		var err error
-		var count int = ps.pastRepo.GetCount(ctx)
-
-		if ps.isFetchingFullRange {
-			index = 0
-			quantity = count
-		} else {
-
-			index, err = ps.pastRepo.FindLatestIndexBy(ctx, ps.startTimestamp)
-			if err != nil {
-				panic(err)
-			}
-
-			quantity = count - index
-		}
-		var sequence int64 = 0
-
-		duration, _ := time.ParseDuration(ps.timeSlice)
-		err = ps.pastRepo.ForEachDocument(ctx, index, quantity, func(doc mongo.StockDocument) {
-			ps.out <- model.Packet{
-				Sequence: sequence,
-				Data: &model.StockAggregate{
-					OpenTime:   doc.Timestamp,
-					ClosedTime: doc.Timestamp + (duration.Milliseconds() / 1000),
-					Open:       doc.Open,
-					Close:      doc.Close,
-					High:       doc.High,
-					Low:        doc.Low,
-					Volume:     float32(doc.Volume),
-				},
-			}
-
-			sequence++
-		})
+		ps.pastRepo.SelectProduct(ps.stockID, ps.timeSlice, "stock")
+		ps.pastRepo.SetRangeByTime(ps.startTime, ps.endTime)
+		session, err := ps.pastRepo.Session()
 		if err != nil {
 			panic(err)
+		}
+
+		for i := int64(0); session.Next(); i++ {
+			b := backoff.WithContext(backoff.NewExponentialBackOff(), ctx)
+
+			if err := backoff.Retry(func() error {
+				v, err := session.Value(ctx)
+				if err != nil {
+					return err
+				}
+
+				ps.out <- model.Packet{
+					Sequence: i,
+					Data:     v,
+				}
+				return nil
+
+			}, b); err != nil {
+				panic(fmt.Errorf("model exec job: inference service returns error %w", err))
+			}
 		}
 
 	}()
