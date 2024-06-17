@@ -7,4 +7,6 @@ type Common interface {
 
 	// Close stops job and cleans infra of job and returns an error if any.
 	Close() error
+
+	Error() chan error
 }
