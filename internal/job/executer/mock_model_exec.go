@@ -16,8 +16,7 @@ import (
 )
 
 type Mock struct {
-	ModelExecutor
-
+	//TODO: map으로 변경?
 	//user param의 type은 float32
 	modelParam1 float32
 
@@ -28,6 +27,7 @@ type Mock struct {
 
 	in  job.DataChan `type:""`
 	out job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	err chan error
 
 	wg sync.WaitGroup
 
@@ -40,6 +40,7 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 		kServeClient: kServeClient,
 		maxRetry:     DefaultMaxRetry,
 		out:          make(job.DataChan),
+		err:          make(chan error),
 		stop:         util.NewStopNotifier(),
 	}
 
@@ -154,4 +155,8 @@ func (m *Mock) Close() error {
 	m.stop.NotifyStop()
 	m.wg.Wait()
 	return nil
+}
+
+func (m *Mock) Error() chan error {
+	return m.err
 }

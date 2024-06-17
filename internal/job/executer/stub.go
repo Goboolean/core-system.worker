@@ -13,9 +13,9 @@ type Stub struct {
 
 	in  job.DataChan `type:""`
 	out job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	err chan error
 
-	wg sync.WaitGroup
-
+	wg   sync.WaitGroup
 	stop *util.StopNotifier
 }
 
@@ -24,6 +24,7 @@ func NewStub(params *job.UserParams) (*Stub, error) {
 	instance := &Stub{
 		out:  make(job.DataChan),
 		stop: util.NewStopNotifier(),
+		err:  make(chan error),
 	}
 
 	return instance, nil
@@ -79,4 +80,8 @@ func (m *Stub) Close() error {
 	m.stop.NotifyStop()
 	m.wg.Wait()
 	return nil
+}
+
+func (m *Stub) Error() chan error {
+	return m.err
 }

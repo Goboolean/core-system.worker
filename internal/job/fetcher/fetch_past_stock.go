@@ -30,6 +30,7 @@ type PastStock struct {
 	pastRepo            TradeRepository
 
 	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	err chan error
 
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
@@ -44,6 +45,7 @@ func NewPastStock(tradeRepo TradeRepository, parmas *job.UserParams) (*PastStock
 		pastRepo:            tradeRepo,
 		stop:                util.NewStopNotifier(),
 		out:                 make(job.DataChan),
+		err:                 make(chan error),
 	}
 
 	if !parmas.IsKeyNilOrEmpty(job.ProductID) {
@@ -138,4 +140,8 @@ func (ps *PastStock) Close() error {
 	ps.stop.NotifyStop()
 	ps.wg.Wait()
 	return nil
+}
+
+func (ps *PastStock) Error() chan error {
+	return ps.err
 }

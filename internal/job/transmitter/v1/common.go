@@ -13,15 +13,15 @@ import (
 )
 
 type Common struct {
-	transmitter.Transmitter
-
 	annotationDispatcher transmitter.AnnotationDispatcher
 	orderDispatcher      transmitter.OrderEventDispatcher
 
 	task      model.Task
 	productId string
 
-	in job.DataChan
+	in  job.DataChan
+	err chan error
+
 	sn *util.StopNotifier
 	wg *sync.WaitGroup
 }
@@ -38,6 +38,7 @@ func NewCommon(
 		annotationDispatcher: annotationDispatcher,
 		orderDispatcher:      orderDispatcher,
 		sn:                   util.NewStopNotifier(),
+		err:                  make(chan error),
 		wg:                   &sync.WaitGroup{},
 	}
 
@@ -118,4 +119,8 @@ func (b *Common) Close() error {
 	}
 
 	return nil
+}
+
+func (b *Common) Error() chan error {
+	return b.err
 }

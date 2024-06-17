@@ -9,10 +9,9 @@ import (
 )
 
 type Stub struct {
-	Analyzer
-
 	in  job.DataChan
 	out job.DataChan
+	err chan error
 
 	sn *util.StopNotifier
 	wg *sync.WaitGroup
@@ -21,6 +20,7 @@ type Stub struct {
 func NewStub(parmas *job.UserParams) (*Stub, error) {
 	instance := &Stub{
 		out: make(job.DataChan),
+		err: make(chan error),
 		sn:  util.NewStopNotifier(),
 		wg:  &sync.WaitGroup{},
 	}
@@ -33,6 +33,7 @@ func (s *Stub) Execute() {
 	go func() {
 		defer s.wg.Done()
 		defer s.sn.NotifyStop()
+		defer close(s.err)
 		defer close(s.out)
 
 		i := 0
@@ -71,4 +72,8 @@ func (s *Stub) SetInput(in job.DataChan) {
 
 func (s *Stub) Output() job.DataChan {
 	return s.out
+}
+
+func (s *Stub) Error() chan error {
+	return s.err
 }
