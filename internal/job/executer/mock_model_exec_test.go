@@ -106,7 +106,10 @@ func TestMock(t *testing.T) {
 					panic("Type miss match")
 				}
 				res = append(res, stock)
-			case v := <-execute.Error():
+			case v, ok := <-execute.Error():
+				if !ok {
+					continue
+				}
 				errsInPipe = append(errsInPipe, v)
 			}
 		}

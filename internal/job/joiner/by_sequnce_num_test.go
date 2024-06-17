@@ -99,7 +99,10 @@ func TestJoinBySequnceNum(t *testing.T) {
 						break
 					}
 					res = append(res, v)
-				case v := <-joiner.Error():
+				case v, ok := <-joiner.Error():
+					if !ok {
+						continue
+					}
 					errsInJob = append(errsInJob, v)
 				}
 			}

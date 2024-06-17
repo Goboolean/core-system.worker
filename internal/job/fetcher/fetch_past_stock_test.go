@@ -73,7 +73,10 @@ func TestPastStock(t *testing.T) {
 					break
 				}
 				outData = append(outData, v)
-			case v := <-fetchJob.Error():
+			case v, ok := <-fetchJob.Error():
+				if !ok {
+					continue
+				}
 				errsInJob = append(errsInJob, v)
 			}
 		}
