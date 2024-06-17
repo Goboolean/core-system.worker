@@ -16,7 +16,7 @@ type BySequenceNum struct {
 	refIn   job.DataChan
 	modelIn job.DataChan
 	out     job.DataChan
-	err     chan error
+	errChan chan error
 
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
@@ -25,10 +25,10 @@ type BySequenceNum struct {
 func NewBySequence(params *job.UserParams) (*BySequenceNum, error) {
 
 	instance := &BySequenceNum{
-		out:  make(job.DataChan),
-		err:  make(chan error),
-		wg:   sync.WaitGroup{},
-		stop: util.NewStopNotifier(),
+		out:     make(job.DataChan),
+		errChan: make(chan error),
+		wg:      sync.WaitGroup{},
+		stop:    util.NewStopNotifier(),
 	}
 
 	return instance, nil
@@ -38,7 +38,7 @@ func (b *BySequenceNum) Execute() {
 	b.wg.Add(1)
 	go func() {
 		defer b.wg.Done()
-		defer close(b.err)
+		defer close(b.errChan)
 		defer close(b.out)
 		defer b.stop.NotifyStop()
 
@@ -151,5 +151,5 @@ func (b *BySequenceNum) Output() job.DataChan {
 }
 
 func (b *BySequenceNum) Error() chan error {
-	return b.err
+	return b.errChan
 }

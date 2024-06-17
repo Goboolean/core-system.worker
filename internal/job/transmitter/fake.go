@@ -13,8 +13,8 @@ import (
 type Fake struct {
 	Transmitter
 
-	in  job.DataChan
-	err chan error
+	in      job.DataChan
+	errChan chan error
 
 	wg *sync.WaitGroup
 	sn *util.StopNotifier
@@ -22,9 +22,9 @@ type Fake struct {
 
 func NewFake() (*Fake, error) {
 	return &Fake{
-		err: make(chan error),
-		wg:  &sync.WaitGroup{},
-		sn:  util.NewStopNotifier(),
+		errChan: make(chan error),
+		wg:      &sync.WaitGroup{},
+		sn:      util.NewStopNotifier(),
 	}, nil
 
 }
@@ -65,5 +65,5 @@ func (f *Fake) SetInput(in job.DataChan) {
 }
 
 func (f *Fake) Error() chan error {
-	return f.err
+	return f.errChan
 }

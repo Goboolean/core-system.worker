@@ -11,9 +11,9 @@ import (
 type Stub struct {
 	ModelExecutor
 
-	in  job.DataChan `type:""`
-	out job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
-	err chan error
+	in      job.DataChan `type:""`
+	out     job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	errChan chan error
 
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
@@ -22,9 +22,9 @@ type Stub struct {
 func NewStub(params *job.UserParams) (*Stub, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &Stub{
-		out:  make(job.DataChan),
-		stop: util.NewStopNotifier(),
-		err:  make(chan error),
+		out:     make(job.DataChan),
+		stop:    util.NewStopNotifier(),
+		errChan: make(chan error),
 	}
 
 	return instance, nil
@@ -36,7 +36,7 @@ func (m *Stub) Execute() {
 	go func() {
 		defer m.wg.Done()
 		defer m.stop.NotifyStop()
-		defer close(m.err)
+		defer close(m.errChan)
 		defer close(m.out)
 
 		for {
@@ -84,5 +84,5 @@ func (m *Stub) Close() error {
 }
 
 func (m *Stub) Error() chan error {
-	return m.err
+	return m.errChan
 }

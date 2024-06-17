@@ -19,8 +19,8 @@ type Common struct {
 	task      model.Task
 	productId string
 
-	in  job.DataChan
-	err chan error
+	in      job.DataChan
+	errChan chan error
 
 	sn *util.StopNotifier
 	wg *sync.WaitGroup
@@ -38,7 +38,7 @@ func NewCommon(
 		annotationDispatcher: annotationDispatcher,
 		orderDispatcher:      orderDispatcher,
 		sn:                   util.NewStopNotifier(),
-		err:                  make(chan error),
+		errChan:              make(chan error),
 		wg:                   &sync.WaitGroup{},
 	}
 
@@ -76,7 +76,7 @@ func (b *Common) Execute() {
 	b.wg.Add(1)
 	go func() {
 		defer b.wg.Done()
-		defer close(b.err)
+		defer close(b.errChan)
 		for {
 			select {
 			case <-b.sn.Done():
@@ -123,5 +123,5 @@ func (b *Common) Close() error {
 }
 
 func (b *Common) Error() chan error {
-	return b.err
+	return b.errChan
 }

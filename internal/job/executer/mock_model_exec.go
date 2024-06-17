@@ -25,9 +25,9 @@ type Mock struct {
 
 	kServeClient kserve.Client
 
-	in  job.DataChan `type:""`
-	out job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
-	err chan error
+	in      job.DataChan `type:""`
+	out     job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	errChan chan error
 
 	wg sync.WaitGroup
 
@@ -40,7 +40,7 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 		kServeClient: kServeClient,
 		maxRetry:     DefaultMaxRetry,
 		out:          make(job.DataChan),
-		err:          make(chan error),
+		errChan:      make(chan error),
 		stop:         util.NewStopNotifier(),
 	}
 
@@ -74,7 +74,7 @@ func (m *Mock) Execute() {
 	go func() {
 		defer m.wg.Done()
 		defer m.stop.NotifyStop()
-		defer close(m.err)
+		defer close(m.errChan)
 		defer close(m.out)
 		var accumulator = make([]float32, 0)
 
@@ -159,5 +159,5 @@ func (m *Mock) Close() error {
 }
 
 func (m *Mock) Error() chan error {
-	return m.err
+	return m.errChan
 }

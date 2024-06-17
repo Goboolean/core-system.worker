@@ -18,8 +18,8 @@ type StockStub struct {
 	numOfGeneration            int
 	maxRandomDelayMilliseconds int
 
-	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
-	err chan error
+	out     job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	errChan chan error
 
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
@@ -32,7 +32,7 @@ func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
 		maxRandomDelayMilliseconds: DefaultMaxRandomDelayMilliseconds,
 		stop:                       util.NewStopNotifier(),
 		out:                        make(job.DataChan),
-		err:                        make(chan error),
+		errChan:                    make(chan error),
 	}
 
 	if !parmas.IsKeyNilOrEmpty("numOfGeneration") {
@@ -65,7 +65,7 @@ func (ps *StockStub) Execute() {
 	go func() {
 		defer ps.wg.Done()
 		defer ps.stop.NotifyStop()
-		defer close(ps.err)
+		defer close(ps.errChan)
 		defer close(ps.out)
 
 		for i := 0; i < ps.numOfGeneration; i++ {
@@ -107,5 +107,5 @@ func (ps *StockStub) Close() error {
 }
 
 func (ps *StockStub) Error() chan error {
-	return ps.err
+	return ps.errChan
 }
