@@ -91,6 +91,7 @@ func (ps *PastStock) Execute() {
 		defer ps.wg.Done()
 		defer ps.stop.NotifyStop()
 		defer ps.pastRepo.Close()
+		defer close(ps.err)
 		defer close(ps.out)
 
 		ctx, cancel := context.WithCancel(context.Background())

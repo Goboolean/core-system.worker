@@ -65,6 +65,7 @@ func (ps *StockStub) Execute() {
 	go func() {
 		defer ps.wg.Done()
 		defer ps.stop.NotifyStop()
+		defer close(ps.err)
 		defer close(ps.out)
 
 		for i := 0; i < ps.numOfGeneration; i++ {

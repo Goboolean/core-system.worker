@@ -76,6 +76,7 @@ func (b *Common) Execute() {
 	b.wg.Add(1)
 	go func() {
 		defer b.wg.Done()
+		defer close(b.err)
 		for {
 			select {
 			case <-b.sn.Done():

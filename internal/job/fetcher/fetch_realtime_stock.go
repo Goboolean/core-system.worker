@@ -54,6 +54,7 @@ func (rt *RealtimeStock) Execute() {
 	go func() {
 		defer rt.wg.Done()
 		defer rt.stop.NotifyStop()
+		defer close(rt.err)
 		defer close(rt.out)
 
 		ctx, cancel := context.WithCancel(context.Background())

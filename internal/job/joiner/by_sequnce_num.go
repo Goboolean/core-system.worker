@@ -38,6 +38,7 @@ func (b *BySequenceNum) Execute() {
 	b.wg.Add(1)
 	go func() {
 		defer b.wg.Done()
+		defer close(b.err)
 		defer close(b.out)
 		defer b.stop.NotifyStop()
 

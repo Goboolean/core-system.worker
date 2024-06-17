@@ -74,6 +74,7 @@ func (m *Mock) Execute() {
 	go func() {
 		defer m.wg.Done()
 		defer m.stop.NotifyStop()
+		defer close(m.err)
 		defer close(m.out)
 		var accumulator = make([]float32, 0)
 
