@@ -67,10 +67,10 @@ func (mr *MockTradeRepositoryMockRecorder) SelectProduct(arg0, arg1, arg2 any) *
 }
 
 // Session mocks base method.
-func (m *MockTradeRepository) Session() (FetchingSession, error) {
+func (m *MockTradeRepository) Session() (TradeCursor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Session")
-	ret0, _ := ret[0].(FetchingSession)
+	ret0, _ := ret[0].(TradeCursor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -207,10 +207,10 @@ func (mr *MockTradeStreamMockRecorder) SelectProduct(arg0, arg1, arg2 any) *gomo
 }
 
 // Session mocks base method.
-func (m *MockTradeStream) Session() (FetchingSession, error) {
+func (m *MockTradeStream) Session() (TradeCursor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Session")
-	ret0, _ := ret[0].(FetchingSession)
+	ret0, _ := ret[0].(TradeCursor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
