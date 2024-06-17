@@ -28,7 +28,7 @@ type Normal struct {
 	transmitter   transmitter.Transmitter
 
 	//utils
-	mux util.ChannelMux[model.Packet]
+	mux *util.ChannelMux[model.Packet]
 }
 
 func newNormalWithAdapter(
@@ -47,7 +47,7 @@ func newNormalWithAdapter(
 		resAnalyzer:   resAnalyzer,
 		transmitter:   transmitter,
 
-		mux: util.ChannelMux[model.Packet]{},
+		mux: util.NewChannelMux[model.Packet](),
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
