@@ -81,6 +81,30 @@ func (mr *MockTradeRepositoryMockRecorder) Session() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Session", reflect.TypeOf((*MockTradeRepository)(nil).Session))
 }
 
+// SetRangeAll mocks base method.
+func (m *MockTradeRepository) SetRangeAll() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetRangeAll")
+}
+
+// SetRangeAll indicates an expected call of SetRangeAll.
+func (mr *MockTradeRepositoryMockRecorder) SetRangeAll() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRangeAll", reflect.TypeOf((*MockTradeRepository)(nil).SetRangeAll))
+}
+
+// SetRangeByNumberAndEndTime mocks base method.
+func (m *MockTradeRepository) SetRangeByNumberAndEndTime(arg0 int, arg1 time.Time) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetRangeByNumberAndEndTime", arg0, arg1)
+}
+
+// SetRangeByNumberAndEndTime indicates an expected call of SetRangeByNumberAndEndTime.
+func (mr *MockTradeRepositoryMockRecorder) SetRangeByNumberAndEndTime(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRangeByNumberAndEndTime", reflect.TypeOf((*MockTradeRepository)(nil).SetRangeByNumberAndEndTime), arg0, arg1)
+}
+
 // SetRangeByTime mocks base method.
 func (m *MockTradeRepository) SetRangeByTime(arg0, arg1 time.Time) {
 	m.ctrl.T.Helper()
@@ -91,18 +115,6 @@ func (m *MockTradeRepository) SetRangeByTime(arg0, arg1 time.Time) {
 func (mr *MockTradeRepositoryMockRecorder) SetRangeByTime(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRangeByTime", reflect.TypeOf((*MockTradeRepository)(nil).SetRangeByTime), arg0, arg1)
-}
-
-// SetRangeBytStartTimeAndNumber mocks base method.
-func (m *MockTradeRepository) SetRangeBytStartTimeAndNumber(arg0 time.Time, arg1 int) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetRangeBytStartTimeAndNumber", arg0, arg1)
-}
-
-// SetRangeBytStartTimeAndNumber indicates an expected call of SetRangeBytStartTimeAndNumber.
-func (mr *MockTradeRepositoryMockRecorder) SetRangeBytStartTimeAndNumber(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRangeBytStartTimeAndNumber", reflect.TypeOf((*MockTradeRepository)(nil).SetRangeBytStartTimeAndNumber), arg0, arg1)
 }
 
 // MockFetchingSession is a mock of FetchingSession interface.
