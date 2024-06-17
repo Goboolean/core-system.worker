@@ -101,6 +101,8 @@ func (n *Normal) Run() {
 func (n *Normal) Stop() {
 	n.fetcher.Stop()
 	n.modelExecuter.Cancel()
+
+	<-n.transmitter.Done()
 }
 
 func (n *Normal) Done() chan struct{} {

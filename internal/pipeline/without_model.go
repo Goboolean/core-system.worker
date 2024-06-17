@@ -66,6 +66,7 @@ func (wom *WithoutModel) Run() {
 
 func (wom *WithoutModel) Stop() {
 	wom.fetcher.Stop()
+	<-wom.transmitter.Done()
 }
 
 func (wom *WithoutModel) Done() chan struct{} {
