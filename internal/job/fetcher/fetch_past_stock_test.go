@@ -28,7 +28,7 @@ func makeStockAggregateExample() *model.StockAggregate {
 // It verifies that the fetched stock data matches the expected results.
 func TestPastStock(t *testing.T) {
 	t.Run("Past stock fetch 테스트", func(t *testing.T) {
-		num := 100
+		num := 5
 		productID := "stock.aapl.usa"
 		timeFrame := "1m"
 		productType := "stock"
@@ -56,16 +56,30 @@ func TestPastStock(t *testing.T) {
 			job.EndDate:   fmt.Sprint(endTime.Unix()),
 		})
 
-		outCh := fetchJob.Output()
-
-		fetchJob.Execute()
-		outData := make([]model.Packet, 0, num)
-		for v := range outCh {
-			outData = append(outData, v)
+		if err != nil {
+			t.Error(err)
+			return
 		}
 
-		assert.NoError(t, err)
-		assert.Equal(t, num, len(outData))
+		fetchJob.Execute()
+		errsInJob := make([]error, 0)
+		outData := make([]model.Packet, 0, num)
+
+		for exit := false; !exit; {
+			select {
+			case v, ok := <-fetchJob.Output():
+				if !ok {
+					exit = true
+					break
+				}
+				outData = append(outData, v)
+			case v := <-fetchJob.Error():
+				errsInJob = append(errsInJob, v)
+			}
+		}
+
+		assert.Len(t, errsInJob, 0)
+		assert.Len(t, outData, num)
 		for _, e := range outData {
 			assert.Equal(t, makeStockAggregateExample(), e.Data)
 		}

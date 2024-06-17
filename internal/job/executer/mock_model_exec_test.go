@@ -65,6 +65,7 @@ func TestMock(t *testing.T) {
 		execute, err := executer.NewMock(m, &job.UserParams{job.BatchSize: "2"})
 		if err != nil {
 			t.Error(err)
+			return
 		}
 		execute.SetInput(inChan)
 
@@ -91,18 +92,28 @@ func TestMock(t *testing.T) {
 
 		//act
 		execute.Execute()
-		out := execute.Output()
 		res := []*model.StockAggregate{}
-		for packet := range out {
-			val, ok := packet.Data.(*model.StockAggregate)
-			if !ok {
-				panic("Type miss match")
+		errsInPipe := make([]error, 0)
+		for exit := false; !exit; {
+			select {
+			case v, ok := <-execute.Output():
+				if !ok {
+					exit = true
+					break
+				}
+				stock, ok := v.Data.(*model.StockAggregate)
+				if !ok {
+					panic("Type miss match")
+				}
+				res = append(res, stock)
+			case v := <-execute.Error():
+				errsInPipe = append(errsInPipe, v)
 			}
-			res = append(res, val)
 		}
 
 		//assert
 
 		assert.Equal(t, expect, res)
+		assert.Len(t, errsInPipe, 0)
 	})
 }

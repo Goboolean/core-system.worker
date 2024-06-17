@@ -78,7 +78,6 @@ func TestJoinBySequnceNum(t *testing.T) {
 					modelInputChan <- e
 				}
 			}()
-
 			joiner, err := joiner.NewBySequence(&job.UserParams{})
 			if err != nil {
 				t.Error(err)
@@ -87,16 +86,26 @@ func TestJoinBySequnceNum(t *testing.T) {
 
 			joiner.SetRefInput(referenceInputChan)
 			joiner.SetModelInput(modelInputChan)
-			outputChan := joiner.Output()
 
 			//act
-			output := make([]model.Packet, 0)
+			res := make([]model.Packet, 0)
+			errsInJob := make([]error, 0)
 			joiner.Execute()
-			for e := range outputChan {
-				output = append(output, e)
+			for exit := false; !exit; {
+				select {
+				case v, ok := <-joiner.Output():
+					if !ok {
+						exit = true
+						break
+					}
+					res = append(res, v)
+				case v := <-joiner.Error():
+					errsInJob = append(errsInJob, v)
+				}
 			}
 			//assert
-			assert.Equal(t, exp, output)
+			assert.Equal(t, exp, res)
+			assert.Len(t, errsInJob, 0)
 		}
 	})
 
