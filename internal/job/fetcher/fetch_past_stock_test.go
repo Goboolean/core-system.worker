@@ -2,6 +2,7 @@ package fetcher_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -63,27 +64,30 @@ func TestPastStock(t *testing.T) {
 
 		fetchJob.Execute()
 		errsInJob := make([]error, 0)
-		outData := make([]model.Packet, 0, num)
+		res := make([]model.Packet, 0, num)
 
-		for exit := false; !exit; {
-			select {
-			case v, ok := <-fetchJob.Output():
-				if !ok {
-					exit = true
-					break
-				}
-				outData = append(outData, v)
-			case v, ok := <-fetchJob.Error():
-				if !ok {
-					continue
-				}
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range fetchJob.Output() {
+				res = append(res, v)
+			}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range fetchJob.Error() {
 				errsInJob = append(errsInJob, v)
 			}
-		}
+		}()
 
+		wg.Wait()
 		assert.Len(t, errsInJob, 0)
-		assert.Len(t, outData, num)
-		for _, e := range outData {
+		assert.Len(t, res, num)
+		for _, e := range res {
 			assert.Equal(t, makeStockAggregateExample(), e.Data)
 		}
 	})

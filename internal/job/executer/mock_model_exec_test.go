@@ -1,6 +1,9 @@
 package executer_test
 
 import (
+	"fmt"
+	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/kserve"
@@ -94,26 +97,30 @@ func TestMock(t *testing.T) {
 		execute.Execute()
 		res := []*model.StockAggregate{}
 		errsInPipe := make([]error, 0)
-		for exit := false; !exit; {
-			select {
-			case v, ok := <-execute.Output():
-				if !ok {
-					exit = true
-					break
-				}
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range execute.Output() {
 				stock, ok := v.Data.(*model.StockAggregate)
 				if !ok {
-					panic("Type miss match")
+					panic(fmt.Errorf("type mismatch expected *model.StockAggregate got:%v", reflect.TypeOf(v)))
 				}
 				res = append(res, stock)
-			case v, ok := <-execute.Error():
-				if !ok {
-					continue
-				}
+			}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range execute.Error() {
 				errsInPipe = append(errsInPipe, v)
 			}
-		}
+		}()
 
+		wg.Wait()
 		//assert
 
 		assert.Equal(t, expect, res)

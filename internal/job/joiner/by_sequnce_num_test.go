@@ -1,6 +1,7 @@
 package joiner_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
@@ -91,24 +92,29 @@ func TestJoinBySequnceNum(t *testing.T) {
 			res := make([]model.Packet, 0)
 			errsInJob := make([]error, 0)
 			joiner.Execute()
-			for exit := false; !exit; {
-				select {
-				case v, ok := <-joiner.Output():
-					if !ok {
-						exit = true
-						break
-					}
+
+			wg := &sync.WaitGroup{}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for v := range joiner.Output() {
 					res = append(res, v)
-				case v, ok := <-joiner.Error():
-					if !ok {
-						continue
-					}
+				}
+			}()
+
+			wg.Add(1)
+			go func() {
+				wg.Done()
+				for v := range joiner.Error() {
 					errsInJob = append(errsInJob, v)
 				}
-			}
+			}()
+
+			wg.Wait()
 			//assert
 			assert.Equal(t, exp, res)
 			assert.Len(t, errsInJob, 0)
+
 		}
 	})
 
