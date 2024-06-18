@@ -12,12 +12,15 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
-// Fetcher is an interface that represents a job fetcher.
+// Fetcher represents a job fetcher that retrieves trade data.
 type Fetcher interface {
 	job.Common
 
 	// Output returns the data channel for the fetched trade data.
 	Output() job.DataChan
+
+	// Stop stops the fetcher and releases any allocated resources.
+	Stop()
 }
 
 // FetchingSession represents a session to fetch trade data in order

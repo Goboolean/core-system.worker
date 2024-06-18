@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/Goboolean/core-system.worker/internal/job/adapter"
@@ -65,20 +64,11 @@ func (wom *WithoutModel) Run() {
 
 }
 
-func (wom *WithoutModel) Stop() error {
+func (wom *WithoutModel) Stop() {
+	wom.fetcher.Stop()
+	<-wom.transmitter.Done()
+}
 
-	if err := wom.fetcher.Close(); err != nil {
-		return fmt.Errorf("pipeline: failed to shutdown fetch job %w", err)
-	}
-	if err := wom.adapter.Close(); err != nil {
-		return fmt.Errorf("pipeline: failed to shutdown adapt job %w", err)
-	}
-	if err := wom.analyzer.Close(); err != nil {
-		return fmt.Errorf("pipeline: failed to shutdown analyze job %w", err)
-	}
-	if err := wom.transmitter.Close(); err != nil {
-		return fmt.Errorf("pipeline: failed to shutdown transmit job %w", err)
-	}
-
-	return nil
+func (wom *WithoutModel) Done() chan struct{} {
+	return wom.transmitter.Done()
 }

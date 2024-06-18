@@ -9,8 +9,6 @@ import (
 )
 
 type Stub struct {
-	Analyzer
-
 	in  job.DataChan
 	out job.DataChan
 
@@ -57,12 +55,6 @@ func (s *Stub) Execute() {
 
 		}
 	}()
-}
-
-func (s *Stub) Close() error {
-	s.sn.NotifyStop()
-	s.wg.Wait()
-	return nil
 }
 
 func (s *Stub) SetInput(in job.DataChan) {

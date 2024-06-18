@@ -13,8 +13,6 @@ import (
 )
 
 type RealtimeStock struct {
-	Fetcher
-
 	pastRepo mongo.StockClient
 
 	//미리 가져올 데이터의 개수
@@ -22,7 +20,8 @@ type RealtimeStock struct {
 	timeSlice   string
 	stockID     string
 
-	out  job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
 }
@@ -107,8 +106,7 @@ func (rt *RealtimeStock) Output() job.DataChan {
 	return rt.out
 }
 
-func (rt *RealtimeStock) Close() error {
+func (rt *RealtimeStock) Stop() {
 	rt.stop.NotifyStop()
 	rt.wg.Wait()
-	return nil
 }
