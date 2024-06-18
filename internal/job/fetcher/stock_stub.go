@@ -13,8 +13,6 @@ import (
 )
 
 type StockStub struct {
-	Fetcher
-
 	numOfGeneration            int
 	maxRandomDelayMilliseconds int
 
@@ -97,8 +95,7 @@ func (ps *StockStub) Output() job.DataChan {
 	return ps.out
 }
 
-func (ps *StockStub) Close() error {
+func (ps *StockStub) Stop() {
 	ps.stop.NotifyStop()
 	ps.wg.Wait()
-	return nil
 }
