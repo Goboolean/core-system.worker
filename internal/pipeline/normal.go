@@ -89,11 +89,12 @@ func newNormalWithoutAdapter(
 		modelExecuter: modelExec,
 		resAnalyzer:   resAnalyze,
 		transmitter:   transmit,
-
+    
 		mux: util.NewChannelMux[model.Packet](),
 
 		demux:   util.NewChannelDeMux[error](),
 		errChan: make(chan error),
+
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
