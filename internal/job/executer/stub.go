@@ -9,19 +9,21 @@ import (
 )
 
 type Stub struct {
-	in  job.DataChan `type:""`
-	out job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
-
-	wg sync.WaitGroup
+	in      job.DataChan `type:""`
+	out     job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	errChan chan error
 
 	stop *util.StopNotifier
+	wg   *sync.WaitGroup
 }
 
 func NewStub(params *job.UserParams) (*Stub, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &Stub{
-		out:  make(job.DataChan),
-		stop: util.NewStopNotifier(),
+		out:     make(job.DataChan),
+		errChan: make(chan error),
+		stop:    util.NewStopNotifier(),
+		wg:      &sync.WaitGroup{},
 	}
 
 	return instance, nil
@@ -33,6 +35,7 @@ func (m *Stub) Execute() {
 	go func() {
 		defer m.wg.Done()
 		defer m.stop.NotifyStop()
+		defer close(m.errChan)
 		defer close(m.out)
 
 		for {
@@ -75,4 +78,8 @@ func (m *Stub) Output() job.DataChan {
 
 func (m *Stub) Cancel() {
 	m.stop.NotifyStop()
+}
+
+func (m *Stub) Error() chan error {
+	return m.errChan
 }

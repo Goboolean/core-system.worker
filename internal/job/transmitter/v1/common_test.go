@@ -65,10 +65,10 @@ func TestCommon(t *testing.T) {
 		mockAnnotationDispatcher := transmitter.NewMockAnnotationDispatcher(ctrl)
 
 		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any()).Times(numOrder)
-		mockOrderEventDispatcher.EXPECT().Close().AnyTimes()
+		mockOrderEventDispatcher.EXPECT().Close().Times(1)
 
 		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any()).Times(numAnnotation)
-		mockAnnotationDispatcher.EXPECT().Close().AnyTimes()
+		mockAnnotationDispatcher.EXPECT().Close().Times(1)
 
 		transmit, err := v1.NewCommon(mockAnnotationDispatcher, mockOrderEventDispatcher, &job.UserParams{
 			"productID": "test.product",

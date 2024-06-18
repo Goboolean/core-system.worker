@@ -18,7 +18,9 @@ type Common struct {
 	task      model.Task
 	productId string
 
-	in   job.DataChan
+	in      job.DataChan
+	errChan chan error
+
 	done *util.StopNotifier
 }
 
@@ -33,6 +35,7 @@ func NewCommon(
 	instance := &Common{
 		annotationDispatcher: annotationDispatcher,
 		orderDispatcher:      orderDispatcher,
+		errChan:              make(chan error),
 		done:                 util.NewStopNotifier(),
 	}
 
@@ -69,6 +72,7 @@ func NewCommon(
 func (b *Common) Execute() {
 	go func() {
 		defer b.done.NotifyStop()
+		defer close(b.errChan)
 		defer func() {
 			if err := b.orderDispatcher.Close(); err != nil {
 				//TODO: notify error
@@ -80,7 +84,6 @@ func (b *Common) Execute() {
 		}()
 
 		for inPacket := range b.in {
-
 			switch v := inPacket.Data.(type) {
 			case *model.TradeCommand:
 				b.orderDispatcher.Dispatch(
@@ -105,4 +108,8 @@ func (b *Common) SetInput(in job.DataChan) {
 
 func (b *Common) Done() chan struct{} {
 	return b.done.Done()
+}
+
+func (b *Common) Error() chan error {
+	return b.errChan
 }

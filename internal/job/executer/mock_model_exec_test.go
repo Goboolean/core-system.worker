@@ -1,12 +1,17 @@
 package executer_test
 
 import (
+	"fmt"
+	"reflect"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/kserve"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/model"
+	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -65,6 +70,7 @@ func TestMock(t *testing.T) {
 		execute, err := executer.NewMock(m, &job.UserParams{job.BatchSize: "2"})
 		if err != nil {
 			t.Error(err)
+			return
 		}
 		execute.SetInput(inChan)
 
@@ -91,18 +97,38 @@ func TestMock(t *testing.T) {
 
 		//act
 		execute.Execute()
-		out := execute.Output()
 		res := []*model.StockAggregate{}
-		for packet := range out {
-			val, ok := packet.Data.(*model.StockAggregate)
-			if !ok {
-				panic("Type miss match")
-			}
-			res = append(res, val)
-		}
+		errsInPipe := make([]error, 0)
 
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range execute.Output() {
+				stock, ok := v.Data.(*model.StockAggregate)
+				if !ok {
+					panic(fmt.Errorf("type mismatch expected *model.StockAggregate got:%v", reflect.TypeOf(v)))
+				}
+				res = append(res, stock)
+			}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range execute.Error() {
+				errsInPipe = append(errsInPipe, v)
+			}
+		}()
+
+		if util.IsWaitGroupTimeout(wg, 5*time.Second) {
+			t.Error("deadline exceed")
+			return
+		}
 		//assert
 
 		assert.Equal(t, expect, res)
+		assert.Len(t, errsInPipe, 0)
 	})
 }
