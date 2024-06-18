@@ -7,6 +7,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
+	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
 type WithoutModel struct {
@@ -14,6 +15,9 @@ type WithoutModel struct {
 	adapter     adapter.Adapter
 	analyzer    analyzer.Analyzer
 	transmitter transmitter.Transmitter
+
+	demux   *util.ChannelDeMux[error]
+	errChan chan error
 }
 
 func newWithoutModelWithAdapter(
@@ -27,11 +31,22 @@ func newWithoutModelWithAdapter(
 		adapter:     adapter,
 		analyzer:    analyzer,
 		transmitter: transmitter,
+
+		demux:   &util.ChannelDeMux[error]{},
+		errChan: make(chan error),
 	}
 
 	instance.adapter.SetInput(instance.fetcher.Output())
 	instance.analyzer.SetInput(instance.adapter.Output())
 	instance.transmitter.SetInput(instance.analyzer.Output())
+
+	instance.demux.AddInput(
+		instance.fetcher.Error(),
+		instance.adapter.Error(),
+		instance.analyzer.Error(),
+		instance.transmitter.Error(),
+	)
+	instance.errChan = instance.demux.Output()
 
 	return &instance, nil
 }
@@ -45,10 +60,20 @@ func newWithoutModelWithoutAdapter(
 		fetcher:     fetch,
 		analyzer:    analyze,
 		transmitter: transmit,
+
+		demux:   &util.ChannelDeMux[error]{},
+		errChan: make(chan error),
 	}
 
 	instance.analyzer.SetInput(instance.fetcher.Output())
 	instance.transmitter.SetInput(instance.analyzer.Output())
+
+	instance.demux.AddInput(
+		instance.fetcher.Error(),
+		instance.analyzer.Error(),
+		instance.transmitter.Error(),
+	)
+	instance.errChan = instance.demux.Output()
 
 	return &instance, nil
 }
@@ -71,4 +96,8 @@ func (wom *WithoutModel) Stop() {
 
 func (wom *WithoutModel) Done() chan struct{} {
 	return wom.transmitter.Done()
+}
+
+func (wom *WithoutModel) Error() chan error {
+	return wom.errChan
 }
