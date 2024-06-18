@@ -22,6 +22,7 @@ func TestStopNotifier(t *testing.T) {
 		assert.NotNil(t, sn)
 		assert.NotNil(t, sn.Done())
 		select {
+		//If a channel returned by sn.Done() is not closed, default will be selected
 		case x := <-sn.Done():
 			t.Errorf("<-sn.Done() == %v, but it should block", x)
 		default:
@@ -29,7 +30,7 @@ func TestStopNotifier(t *testing.T) {
 
 	})
 
-	t.Run("NotifyStop를 1회 호출했을때 sn.Done은 흐름을 block해야 한다.", func(t *testing.T) {
+	t.Run("NotifyStop를 1회 호출했을때 sn.Done은 흐름을 block하지 않아야 한다.", func(t *testing.T) {
 
 		//arrange
 		sn := util.NewStopNotifier()
@@ -40,6 +41,7 @@ func TestStopNotifier(t *testing.T) {
 		assert.NotNil(t, sn.Done())
 
 		select {
+		//If a channel returned by sn.Done() is closed, the case <-sn.Done() will be selected
 		case <-sn.Done():
 		default:
 			t.Errorf("<-sn.Done() blocked, but it shouldn't block")
@@ -47,7 +49,7 @@ func TestStopNotifier(t *testing.T) {
 
 	})
 
-	t.Run("NotifyStop를 2회(1회 초과) 호출했을때 sn.Done은 흐름을 block해야 한다.", func(t *testing.T) {
+	t.Run("NotifyStop를 2회(1회 초과) 호출했을때 sn.Done은 흐름을 block하지 않아야 한다.", func(t *testing.T) {
 
 		//arrange
 		sn := util.NewStopNotifier()
@@ -59,6 +61,7 @@ func TestStopNotifier(t *testing.T) {
 		assert.NotNil(t, sn.Done())
 
 		select {
+		//If a channel returned by sn.Done() is closed, the case <-sn.Done() will be selected
 		case <-sn.Done():
 		default:
 			t.Errorf("<-sn.Done() blocked, but it shouldn't block")
@@ -79,6 +82,7 @@ func TestStopNotifier(t *testing.T) {
 		assert.NotNil(t, sn.Done())
 
 		select {
+		//If a channel returned by sn.Done() is closed, the case <-sn.Done() will be selected
 		case <-done:
 		default:
 			t.Errorf("<-sn.Done() blocked, but it shouldn't block")
