@@ -2,11 +2,14 @@ package fetcher_test
 
 import (
 	"strconv"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/model"
+	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,17 +21,39 @@ func TestStub(t *testing.T) {
 		stub, err := fetcher.NewStockStub(&job.UserParams{
 			"numOfGeneration":            strconv.FormatInt(int64(num), 10),
 			"maxRandomDelayMilliseconds": strconv.FormatInt(100, 10)})
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 		//act
-		out := make([]model.Packet, 0, num)
-		outChan := stub.Output()
+		wg := &sync.WaitGroup{}
 		stub.Execute()
+		res := make([]model.Packet, 0)
+		errInJob := make([]error, 0)
 
-		for e := range outChan {
-			out = append(out, e)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range stub.Output() {
+				res = append(res, v)
+			}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range stub.Error() {
+				errInJob = append(errInJob, v)
+			}
+		}()
+
+		if util.IsWaitGroupTimeout(wg, 10*time.Second) {
+			t.Errorf("Deadline exceed")
 		}
-		//assert
-		assert.NoError(t, err)
-		assert.Len(t, out, num)
+
+		//asse
+		assert.Len(t, res, num)
+		assert.Len(t, errInJob, 0)
 	})
 }
