@@ -9,16 +9,17 @@ import (
 
 // Execute executes the job with the given context.
 type Fake struct {
-	in job.DataChan
+	in      job.DataChan
+	errChan chan error
 
 	done *util.StopNotifier
 }
 
 func NewFake() (*Fake, error) {
 	return &Fake{
-		done: util.NewStopNotifier(),
+		errChan: make(chan error),
+		done:    util.NewStopNotifier(),
 	}, nil
-
 }
 
 func (f *Fake) Execute() {
@@ -42,6 +43,10 @@ func (f *Fake) Execute() {
 
 func (f *Fake) SetInput(in job.DataChan) {
 	f.in = in
+}
+
+func (f *Fake) Error() chan error {
+	return f.errChan
 }
 
 func (f *Fake) Done() chan struct{} {

@@ -4,4 +4,6 @@ package job
 type Common interface {
 	// Execute executes the job.
 	Execute()
+
+	Error() chan error
 }

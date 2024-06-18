@@ -31,17 +31,32 @@ func TestStub(t *testing.T) {
 		}
 		close(inChan)
 		stub, err := executer.NewStub(&job.UserParams{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
 		stub.SetInput(inChan)
 		//act
 		stub.Execute()
-		out := make([]model.Packet, 0, num)
-		outchan := stub.Output()
-		for e := range outchan {
-			out = append(out, e)
+		errsInPipe := make([]error, 0)
+		res := make([]model.Packet, 0, num)
+
+		for exit := false; !exit; {
+			select {
+			case v, ok := <-stub.Output():
+				if !ok {
+					exit = true
+					break
+				}
+				res = append(res, v)
+			case v := <-stub.Error():
+				errsInPipe = append(errsInPipe, v)
+			}
 		}
 
 		//assert
 		assert.NoError(t, err)
-		assert.Len(t, out, num)
+		assert.Len(t, errsInPipe, 0)
+		assert.Len(t, res, num)
 	})
 }

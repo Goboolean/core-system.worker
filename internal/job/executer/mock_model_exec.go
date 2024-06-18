@@ -15,8 +15,7 @@ import (
 )
 
 type Mock struct {
-	ModelExecutor
-
+	//TODO: map으로 변경?
 	//user param의 type은 float32
 	modelParam1 float32
 
@@ -25,8 +24,9 @@ type Mock struct {
 
 	kServeClient kserve.Client
 
-	in  job.DataChan `type:""`
-	out job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	in      job.DataChan `type:""`
+	out     job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	errChan chan error
 
 	stop *util.StopNotifier
 }
@@ -37,6 +37,7 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 		kServeClient: kServeClient,
 		maxRetry:     DefaultMaxRetry,
 		out:          make(job.DataChan),
+		errChan:      make(chan error),
 		stop:         util.NewStopNotifier(),
 	}
 
@@ -68,6 +69,7 @@ func (m *Mock) Execute() {
 
 	go func() {
 		defer m.stop.NotifyStop()
+		defer close(m.errChan)
 		defer close(m.out)
 		var accumulator = make([]float32, 0)
 
@@ -141,4 +143,8 @@ func (m *Mock) Output() job.DataChan {
 
 func (m *Mock) Cancel() {
 	m.stop.NotifyStop()
+}
+
+func (m *Mock) Error() chan error {
+	return m.errChan
 }

@@ -21,6 +21,7 @@ type RealtimeStock struct {
 	stockID     string
 
 	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	err chan error
 
 	wg   sync.WaitGroup
 	stop *util.StopNotifier
@@ -31,6 +32,7 @@ func NewRealtimeStock(mongo mongo.StockClient, params *job.UserParams) (*Realtim
 	instance := &RealtimeStock{
 		out:  make(job.DataChan),
 		stop: util.NewStopNotifier(),
+		err:  make(chan error),
 	}
 
 	if !params.IsKeyNilOrEmpty(job.EndDate) {
@@ -51,6 +53,7 @@ func (rt *RealtimeStock) Execute() {
 	go func() {
 		defer rt.wg.Done()
 		defer rt.stop.NotifyStop()
+		defer close(rt.err)
 		defer close(rt.out)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -109,4 +112,8 @@ func (rt *RealtimeStock) Output() job.DataChan {
 func (rt *RealtimeStock) Stop() {
 	rt.stop.NotifyStop()
 	rt.wg.Wait()
+}
+
+func (rt *RealtimeStock) Error() chan error {
+	return rt.err
 }

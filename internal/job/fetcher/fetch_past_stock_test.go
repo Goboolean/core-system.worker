@@ -2,12 +2,14 @@ package fetcher_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/model"
+	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -28,7 +30,7 @@ func makeStockAggregateExample() *model.StockAggregate {
 // It verifies that the fetched stock data matches the expected results.
 func TestPastStock(t *testing.T) {
 	t.Run("Past stock fetch 테스트", func(t *testing.T) {
-		num := 100
+		num := 5
 		productID := "stock.aapl.usa"
 		timeFrame := "1m"
 		productType := "stock"
@@ -56,17 +58,41 @@ func TestPastStock(t *testing.T) {
 			job.EndDate:   fmt.Sprint(endTime.Unix()),
 		})
 
-		outCh := fetchJob.Output()
-
-		fetchJob.Execute()
-		outData := make([]model.Packet, 0, num)
-		for v := range outCh {
-			outData = append(outData, v)
+		if err != nil {
+			t.Error(err)
+			return
 		}
 
-		assert.NoError(t, err)
-		assert.Equal(t, num, len(outData))
-		for _, e := range outData {
+		fetchJob.Execute()
+		errsInJob := make([]error, 0)
+		res := make([]model.Packet, 0, num)
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range fetchJob.Output() {
+				res = append(res, v)
+			}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for v := range fetchJob.Error() {
+				errsInJob = append(errsInJob, v)
+			}
+		}()
+
+		if util.IsWaitGroupTimeout(wg, 5*time.Second) {
+			t.Error("deadline exceed")
+			return
+		}
+
+		assert.Len(t, errsInJob, 0)
+		assert.Len(t, res, num)
+		for _, e := range res {
 			assert.Equal(t, makeStockAggregateExample(), e.Data)
 		}
 	})

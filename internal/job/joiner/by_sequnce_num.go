@@ -12,12 +12,14 @@ type BySequenceNum struct {
 	refIn   job.DataChan
 	modelIn job.DataChan
 	out     job.DataChan
+	errChan chan error
 }
 
 func NewBySequence(params *job.UserParams) (*BySequenceNum, error) {
 
 	instance := &BySequenceNum{
-		out: make(job.DataChan),
+		out:     make(job.DataChan),
+		errChan: make(chan error),
 	}
 
 	return instance, nil
@@ -25,6 +27,7 @@ func NewBySequence(params *job.UserParams) (*BySequenceNum, error) {
 
 func (b *BySequenceNum) Execute() {
 	go func() {
+		defer close(b.errChan)
 		defer close(b.out)
 
 		referenceInputBuf := make([]model.Packet, 0, 100)
@@ -124,4 +127,8 @@ func (b *BySequenceNum) SetModelInput(in job.DataChan) {
 
 func (b *BySequenceNum) Output() job.DataChan {
 	return b.out
+}
+
+func (b *BySequenceNum) Error() chan error {
+	return b.errChan
 }
