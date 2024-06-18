@@ -3,7 +3,6 @@ package v1
 import (
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
@@ -22,8 +21,7 @@ type Common struct {
 	in      job.DataChan
 	errChan chan error
 
-	sn *util.StopNotifier
-	wg *sync.WaitGroup
+	done *util.StopNotifier
 }
 
 var ErrInvalidProductId = errors.New("transmit: can't parse productID")
@@ -37,9 +35,8 @@ func NewCommon(
 	instance := &Common{
 		annotationDispatcher: annotationDispatcher,
 		orderDispatcher:      orderDispatcher,
-		sn:                   util.NewStopNotifier(),
 		errChan:              make(chan error),
-		wg:                   &sync.WaitGroup{},
+		done:                 util.NewStopNotifier(),
 	}
 
 	if !params.IsKeyNilOrEmpty(job.ProductID) {
@@ -73,32 +70,34 @@ func NewCommon(
 }
 
 func (b *Common) Execute() {
-	b.wg.Add(1)
 	go func() {
-		defer b.wg.Done()
+		defer b.done.NotifyStop()
 		defer close(b.errChan)
-		for {
-			select {
-			case <-b.sn.Done():
-				return
-			case inPacket, ok := <-b.in:
-				if !ok {
-					return
-				}
-				switch v := inPacket.Data.(type) {
-				case *model.TradeCommand:
-					b.orderDispatcher.Dispatch(
-						&model.OrderEvent{
-							ProductID: b.productId,
-							Command:   *v,
-							CreatedAt: time.Now(),
-							Task:      b.task,
-						})
-				default:
-					b.annotationDispatcher.Dispatch(v)
-				}
+		defer func() {
+			if err := b.orderDispatcher.Close(); err != nil {
+				//TODO: notify error
+			}
+
+			if err := b.annotationDispatcher.Close(); err != nil {
+				//TODO: notify error
+			}
+		}()
+
+		for inPacket := range b.in {
+			switch v := inPacket.Data.(type) {
+			case *model.TradeCommand:
+				b.orderDispatcher.Dispatch(
+					&model.OrderEvent{
+						ProductID: b.productId,
+						Command:   *v,
+						CreatedAt: time.Now(),
+						Task:      b.task,
+					})
+			default:
+				b.annotationDispatcher.Dispatch(v)
 			}
 		}
+
 	}()
 }
 
@@ -107,19 +106,8 @@ func (b *Common) SetInput(in job.DataChan) {
 	b.in = in
 }
 
-func (b *Common) Close() error {
-	b.sn.NotifyStop()
-	b.wg.Wait()
-
-	if err := b.orderDispatcher.Close(); err != nil {
-		return err
-	}
-
-	if err := b.annotationDispatcher.Close(); err != nil {
-		return err
-	}
-
-	return nil
+func (b *Common) Done() chan struct{} {
+	return b.done.Done()
 }
 
 func (b *Common) Error() chan error {

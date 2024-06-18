@@ -1,8 +1,6 @@
 package transmitter
 
 import (
-	"sync"
-
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
@@ -11,35 +9,24 @@ import (
 
 // Execute executes the job with the given context.
 type Fake struct {
-	Transmitter
-
 	in      job.DataChan
 	errChan chan error
 
-	wg *sync.WaitGroup
-	sn *util.StopNotifier
+	done *util.StopNotifier
 }
 
 func NewFake() (*Fake, error) {
 	return &Fake{
 		errChan: make(chan error),
-		wg:      &sync.WaitGroup{},
-		sn:      util.NewStopNotifier(),
+		done:    util.NewStopNotifier(),
 	}, nil
-
 }
 
 func (f *Fake) Execute() {
-	f.wg.Add(1)
 
 	go func() {
-		defer f.wg.Done()
-		select {
-		case <-f.sn.Done():
-		case in, ok := <-f.in:
-			if !ok {
-				return
-			}
+		defer f.done.NotifyStop()
+		for in := range f.in {
 
 			orderEvent := in.Data.(*model.OrderEvent)
 
@@ -54,16 +41,14 @@ func (f *Fake) Execute() {
 	}()
 }
 
-func (f *Fake) Close() error {
-	f.sn.NotifyStop()
-	f.wg.Wait()
-	return nil
-}
-
 func (f *Fake) SetInput(in job.DataChan) {
 	f.in = in
 }
 
 func (f *Fake) Error() chan error {
 	return f.errChan
+}
+
+func (f *Fake) Done() chan struct{} {
+	return f.done.Done()
 }

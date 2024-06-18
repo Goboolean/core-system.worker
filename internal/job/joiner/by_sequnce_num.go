@@ -2,24 +2,17 @@ package joiner
 
 import (
 	"container/list"
-	"sync"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/model"
-	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
 // BySequenceNum는 model.Packet에 있는 sequnce값이 같은 두 데이터를 Pair에 담아 출력합니다.
 type BySequenceNum struct {
-	Joiner
-
 	refIn   job.DataChan
 	modelIn job.DataChan
 	out     job.DataChan
 	errChan chan error
-
-	wg   sync.WaitGroup
-	stop *util.StopNotifier
 }
 
 func NewBySequence(params *job.UserParams) (*BySequenceNum, error) {
@@ -27,20 +20,15 @@ func NewBySequence(params *job.UserParams) (*BySequenceNum, error) {
 	instance := &BySequenceNum{
 		out:     make(job.DataChan),
 		errChan: make(chan error),
-		wg:      sync.WaitGroup{},
-		stop:    util.NewStopNotifier(),
 	}
 
 	return instance, nil
 }
 
 func (b *BySequenceNum) Execute() {
-	b.wg.Add(1)
 	go func() {
-		defer b.wg.Done()
 		defer close(b.errChan)
 		defer close(b.out)
-		defer b.stop.NotifyStop()
 
 		referenceInputBuf := make([]model.Packet, 0, 100)
 		modelInputList := list.New()
@@ -54,9 +42,6 @@ func (b *BySequenceNum) Execute() {
 			}
 
 			select {
-
-			case <-b.stop.Done():
-				return
 			case referenceDataPacket, ok := <-b.refIn:
 				if !ok {
 					refInChanFail = true
@@ -130,12 +115,6 @@ func findLargestPacketIndexBySequence(data []model.Packet, target int64) int {
 	}
 
 	return -2
-}
-
-func (b *BySequenceNum) Stop() error {
-	b.stop.NotifyStop()
-	b.wg.Wait()
-	return nil
 }
 
 func (b *BySequenceNum) SetRefInput(in job.DataChan) {

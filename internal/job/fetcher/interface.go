@@ -12,18 +12,21 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
-// Fetcher is an interface that represents a job fetcher.
+// Fetcher represents a job fetcher that retrieves trade data.
 type Fetcher interface {
 	job.Common
 
 	// Output returns the data channel for the fetched trade data.
 	Output() job.DataChan
+
+	// Stop stops the fetcher and releases any allocated resources.
+	Stop()
 }
 
-// FetchingSession represents a session to fetch trade data in order
-// FetchingSession is used to iterate over
+// TradeCursor represents a session to fetch trade data in order
+// TradeCursor is used to iterate over
 // selected range of trade repository or trade stream
-type FetchingSession interface {
+type TradeCursor interface {
 	// Next advances the session to the next item.
 	// It returns true if there is a next item, false otherwise.
 	//
@@ -51,7 +54,7 @@ type TradeRepository interface {
 
 	// Session returns a fetching session.
 	// Before you call session, you must select product and set range
-	Session() (FetchingSession, error)
+	Session() (TradeCursor, error)
 
 	// Close closes the connection
 	Close() error
@@ -63,7 +66,7 @@ type TradeStream interface {
 
 	// Session returns a fetching session.
 	// Before you call session, you must select product.
-	Session() (FetchingSession, error)
+	Session() (TradeCursor, error)
 
 	// Close closes the connection.
 	Close() error

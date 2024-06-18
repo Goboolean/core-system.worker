@@ -20,8 +20,6 @@ var (
 )
 
 type PastStock struct {
-	Fetcher
-
 	timeSlice           string
 	isFetchingFullRange bool
 	startTime           time.Time // Unix timestamp of start time
@@ -137,10 +135,9 @@ func (ps *PastStock) Output() job.DataChan {
 	return ps.out
 }
 
-func (ps *PastStock) Close() error {
+func (ps *PastStock) Stop() {
 	ps.stop.NotifyStop()
 	ps.wg.Wait()
-	return nil
 }
 
 func (ps *PastStock) Error() chan error {
