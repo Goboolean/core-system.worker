@@ -73,6 +73,7 @@ func newNormalWithoutAdapter(
 		joiner:        join,
 		resAnalyzer:   resAnalyze,
 		transmitter:   transmit,
+		mux:           util.NewChannelMux[model.Packet](),
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
