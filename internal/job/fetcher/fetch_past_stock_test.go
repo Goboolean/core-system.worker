@@ -9,6 +9,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/model"
+	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -84,7 +85,11 @@ func TestPastStock(t *testing.T) {
 			}
 		}()
 
-		wg.Wait()
+		if util.IsWaitGroupTimeout(wg, 5*time.Second) {
+			t.Error("deadline exceed")
+			return
+		}
+
 		assert.Len(t, errsInJob, 0)
 		assert.Len(t, res, num)
 		for _, e := range res {

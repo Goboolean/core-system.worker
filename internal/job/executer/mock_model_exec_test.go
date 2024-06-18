@@ -5,11 +5,13 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/kserve"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/model"
+	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -120,7 +122,10 @@ func TestMock(t *testing.T) {
 			}
 		}()
 
-		wg.Wait()
+		if util.IsWaitGroupTimeout(wg, 5*time.Second) {
+			t.Error("deadline exceed")
+			return
+		}
 		//assert
 
 		assert.Equal(t, expect, res)
