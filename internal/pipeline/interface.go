@@ -7,4 +7,6 @@ type Pipeline interface {
 
 	// Done returns a channel that is closed when all jobs in the pipeline have completed.
 	Done() chan struct{}
+
+	Error() chan error
 }

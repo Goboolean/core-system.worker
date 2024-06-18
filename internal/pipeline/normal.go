@@ -27,7 +27,10 @@ type Normal struct {
 	transmitter   transmitter.Transmitter
 
 	//utils
-	mux *util.ChannelMux[model.Packet]
+	mux   *util.ChannelMux[model.Packet]
+	demux *util.ChannelDeMux[error]
+
+	errChan chan error
 }
 
 func newNormalWithAdapter(
@@ -47,6 +50,9 @@ func newNormalWithAdapter(
 		transmitter:   transmitter,
 
 		mux: util.NewChannelMux[model.Packet](),
+
+		demux:   &util.ChannelDeMux[error]{},
+		errChan: make(chan error),
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
@@ -56,6 +62,16 @@ func newNormalWithAdapter(
 	instance.joiner.SetRefInput(instance.mux.Output())
 	instance.resAnalyzer.SetInput(instance.joiner.Output())
 	instance.transmitter.SetInput(instance.resAnalyzer.Output())
+
+	instance.demux.AddInput(
+		instance.fetcher.Error(),
+		instance.joiner.Error(),
+		instance.modelExecuter.Error(),
+		instance.joiner.Error(),
+		instance.resAnalyzer.Error(),
+		instance.transmitter.Error(),
+	)
+	instance.errChan = instance.demux.Output()
 
 	return &instance, nil
 }
@@ -69,10 +85,15 @@ func newNormalWithoutAdapter(
 
 	instance := Normal{
 		fetcher:       fetch,
-		modelExecuter: modelExec,
 		joiner:        join,
+		modelExecuter: modelExec,
 		resAnalyzer:   resAnalyze,
 		transmitter:   transmit,
+
+		mux: util.NewChannelMux[model.Packet](),
+
+		demux:   util.NewChannelDeMux[error](),
+		errChan: make(chan error),
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
@@ -81,6 +102,15 @@ func newNormalWithoutAdapter(
 	instance.joiner.SetRefInput(instance.mux.Output())
 	instance.resAnalyzer.SetInput(instance.joiner.Output())
 	instance.transmitter.SetInput(instance.resAnalyzer.Output())
+
+	instance.demux.AddInput(
+		instance.fetcher.Error(),
+		instance.joiner.Error(),
+		instance.modelExecuter.Error(),
+		instance.resAnalyzer.Error(),
+		instance.transmitter.Error(),
+	)
+	instance.errChan = instance.demux.Output()
 
 	return &instance, nil
 
@@ -108,4 +138,8 @@ func (n *Normal) Stop() {
 
 func (n *Normal) Done() chan struct{} {
 	return n.transmitter.Done()
+}
+
+func (n *Normal) Error() chan error {
+	return n.errChan
 }

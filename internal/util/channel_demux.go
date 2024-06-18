@@ -14,8 +14,10 @@ func NewChannelDeMux[T any]() *ChannelDeMux[T] {
 	}
 }
 
-func (dm *ChannelDeMux[T]) SetInput(in chan T) {
-	dm.in = append(dm.in, in)
+func (dm *ChannelDeMux[T]) AddInput(in ...chan T) {
+
+	dm.in = append(dm.in, in...)
+
 }
 
 func (dm *ChannelDeMux[T]) Output() chan T {
