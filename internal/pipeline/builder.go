@@ -97,7 +97,7 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 		if err != nil {
 			return nil, fmt.Errorf("build normal pipeline: %w", err)
 		}
-		return newNormalWithAdapter(
+		return NewNormalWithAdapter(
 			fetcher,
 			joiner,
 			modelExecuter,
@@ -106,7 +106,7 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 			transmitter,
 		)
 	} else {
-		return newNormalWithoutAdapter(
+		return NewNormalWithoutAdapter(
 			fetcher,
 			joiner,
 			modelExecuter,
@@ -145,14 +145,14 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 		if err != nil {
 			return nil, fmt.Errorf("build normal pipeline: %w", err)
 		}
-		return newWithoutModelWithAdapter(
+		return NewWithoutModelWithAdapter(
 			fetcher,
 			adapter,
 			analyzer,
 			transmitter,
 		)
 	} else {
-		return newWithoutModelWithoutAdapter(
+		return NewWithoutModelWithoutAdapter(
 			fetcher,
 			analyzer,
 			transmitter,
