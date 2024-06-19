@@ -15,9 +15,7 @@ func NewChannelDeMux[T any]() *ChannelDeMux[T] {
 }
 
 func (dm *ChannelDeMux[T]) AddInput(in ...chan T) {
-
 	dm.in = append(dm.in, in...)
-
 }
 
 func (dm *ChannelDeMux[T]) Output() chan T {
@@ -29,7 +27,6 @@ func (dm *ChannelDeMux[T]) Execute() {
 	for _, e := range dm.in {
 		wg.Add(1)
 		go func(ch chan T) {
-			defer close(ch)
 			defer wg.Done()
 
 			for v := range ch {
