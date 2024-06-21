@@ -1,8 +1,6 @@
 package pipeline
 
 import (
-	"reflect"
-
 	"github.com/Goboolean/core-system.worker/internal/job/adapter"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
@@ -20,7 +18,7 @@ type WithoutModel struct {
 	errChan chan error
 }
 
-func newWithoutModelWithAdapter(
+func NewWithoutModelWithAdapter(
 	fetcher fetcher.Fetcher,
 	adapter adapter.Adapter,
 	analyzer analyzer.Analyzer,
@@ -32,7 +30,7 @@ func newWithoutModelWithAdapter(
 		analyzer:    analyzer,
 		transmitter: transmitter,
 
-		demux:   &util.ChannelDeMux[error]{},
+		demux:   util.NewChannelDeMux[error](),
 		errChan: make(chan error),
 	}
 
@@ -51,7 +49,7 @@ func newWithoutModelWithAdapter(
 	return &instance, nil
 }
 
-func newWithoutModelWithoutAdapter(
+func NewWithoutModelWithoutAdapter(
 	fetch fetcher.Fetcher,
 	analyze analyzer.Analyzer,
 	transmit transmitter.Transmitter) (*WithoutModel, error) {
@@ -61,7 +59,7 @@ func newWithoutModelWithoutAdapter(
 		analyzer:    analyze,
 		transmitter: transmit,
 
-		demux:   &util.ChannelDeMux[error]{},
+		demux:   util.NewChannelDeMux[error](),
 		errChan: make(chan error),
 	}
 
@@ -80,8 +78,9 @@ func newWithoutModelWithoutAdapter(
 
 func (wom *WithoutModel) Run() {
 
+	wom.demux.Execute()
 	wom.fetcher.Execute()
-	if !reflect.ValueOf(wom.adapter).IsNil() {
+	if wom.adapter != nil {
 		wom.adapter.Execute()
 	}
 	wom.analyzer.Execute()
