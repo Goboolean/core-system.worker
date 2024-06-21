@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"errors"
-	"reflect"
 
 	"github.com/Goboolean/core-system.worker/internal/job/adapter"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
@@ -33,7 +32,7 @@ type Normal struct {
 	errChan chan error
 }
 
-func newNormalWithAdapter(
+func NewNormalWithAdapter(
 	fetcher fetcher.Fetcher,
 	joiner joiner.Joiner,
 	modelExecuter executer.ModelExecutor,
@@ -51,7 +50,7 @@ func newNormalWithAdapter(
 
 		mux: util.NewChannelMux[model.Packet](),
 
-		demux:   &util.ChannelDeMux[error]{},
+		demux:   util.NewChannelDeMux[error](),
 		errChan: make(chan error),
 	}
 
@@ -76,7 +75,7 @@ func newNormalWithAdapter(
 	return &instance, nil
 }
 
-func newNormalWithoutAdapter(
+func NewNormalWithoutAdapter(
 	fetch fetcher.Fetcher,
 	join joiner.Joiner,
 	modelExec executer.ModelExecutor,
@@ -89,12 +88,11 @@ func newNormalWithoutAdapter(
 		modelExecuter: modelExec,
 		resAnalyzer:   resAnalyze,
 		transmitter:   transmit,
-    
+
 		mux: util.NewChannelMux[model.Packet](),
 
 		demux:   util.NewChannelDeMux[error](),
 		errChan: make(chan error),
-
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
@@ -119,9 +117,12 @@ func newNormalWithoutAdapter(
 
 func (n *Normal) Run() {
 
+	n.mux.Execute()
+	n.demux.Execute()
+
 	n.fetcher.Execute()
 	n.modelExecuter.Execute()
-	if !reflect.ValueOf(n.adapter).IsNil() {
+	if n.adapter != nil {
 		n.adapter.Execute()
 	}
 	n.joiner.Execute()
