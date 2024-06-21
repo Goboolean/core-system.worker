@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
@@ -25,12 +26,12 @@ func TestWithoutMode(t *testing.T) {
 			"maxRandomDelayMilliseconds": fmt.Sprint(5)})
 		if err != nil {
 			t.Error(err)
-			return
+			t.FailNow()
 		}
 		analyzeJob, err := analyzer.NewStub(&job.UserParams{})
 		if err != nil {
 			t.Error(err)
-			return
+			t.FailNow()
 		}
 		ctrl := gomock.NewController(t)
 		mockOrderEventDispatcher := transmitter.NewMockOrderEventDispatcher(ctrl)
@@ -48,7 +49,7 @@ func TestWithoutMode(t *testing.T) {
 
 		if err != nil {
 			t.Error(err)
-			return
+			t.FailNow()
 		}
 
 		p, err := pipeline.NewWithoutModelWithoutAdapter(
@@ -59,7 +60,7 @@ func TestWithoutMode(t *testing.T) {
 
 		if err != nil {
 			t.Error(err)
-			return
+			t.FailNow()
 		}
 		//act
 		errInPipeline := make([]error, 0)

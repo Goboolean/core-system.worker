@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
@@ -60,7 +61,7 @@ func TestNormal(t *testing.T) {
 
 		if err != nil {
 			t.Error(err)
-			return
+			t.FailNow()
 		}
 
 		p, err := pipeline.NewNormalWithoutAdapter(
@@ -73,7 +74,7 @@ func TestNormal(t *testing.T) {
 
 		if err != nil {
 			t.Error(err)
-			return
+			t.FailNow()
 		}
 		//act
 		errInPipeline := make([]error, 0)
