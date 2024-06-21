@@ -103,6 +103,8 @@ func TestNormal(t *testing.T) {
 		case <-stop.Done():
 			p.Stop()
 			stat = 1
+		case <-time.After(2 * time.Second):
+			t.FailNow()
 		}
 		wg.Wait()
 
