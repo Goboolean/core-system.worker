@@ -33,23 +33,22 @@ func TestPastStock(t *testing.T) {
 		num := 5
 		productID := "stock.aapl.usa"
 		timeFrame := "1m"
-		productType := "stock"
 		startTime := time.Now().AddDate(-1, 0, 0).Truncate(time.Second)
 		endTime := time.Now().Truncate(time.Second)
 
 		ctl := gomock.NewController(t)
 
-		mockSession := fetcher.NewMockFetchingSession(ctl)
+		mockSession := fetcher.NewMockTradeCursor(ctl)
 
 		mockSession.EXPECT().Next().Return(false).Times(1).
 			After(mockSession.EXPECT().Next().Return(true).Times(num))
-		mockSession.EXPECT().Value(gomock.Any()).
+		mockSession.EXPECT().Value().
 			Return(makeStockAggregateExample(), nil).Times(num)
 
 		mockRepo := fetcher.NewMockTradeRepository(ctl)
-		mockRepo.EXPECT().SelectProduct(productID, timeFrame, productType)
+		mockRepo.EXPECT().SelectProduct(productID, timeFrame)
 		mockRepo.EXPECT().SetRangeByTime(startTime, endTime)
-		mockRepo.EXPECT().Session().Return(mockSession, nil)
+		mockRepo.EXPECT().ExecuteQuery(gomock.Any()).Return(mockSession, nil)
 		mockRepo.EXPECT().Close()
 
 		fetchJob, err := fetcher.NewPastStock(mockRepo, &job.UserParams{

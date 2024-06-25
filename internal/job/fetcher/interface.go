@@ -1,6 +1,6 @@
 package fetcher
 
-//go:generate mockgen -destination=fetching_infra_mock.go -package=fetcher --build_flags=--mod=mod . TradeRepository,FetchingSession,TradeStream
+//go:generate mockgen -destination=fetching_infra_mock.go -package=fetcher --build_flags=--mod=mod . TradeRepository,TradeStream,TradeCursor
 
 // fetcher는 pipeline의 trade data fetch 단계를 수행할 수 있는 Job을 구현합니다.
 // 모든 fetch job은 Fetcher 인터페이스를 구현해야 합니다.
