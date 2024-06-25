@@ -103,28 +103,31 @@ func (ps *PastStock) Execute() {
 
 		ps.pastRepo.SelectProduct(ps.stockID, ps.timeSlice, "stock")
 		ps.pastRepo.SetRangeByTime(ps.startTime, ps.endTime)
-		session, err := ps.pastRepo.Session()
-		if err != nil {
-			panic(err)
+
+		b := backoff.WithContext(backoff.NewExponentialBackOff(), ctx)
+		var cursor TradeCursor
+		if err := backoff.Retry(func() error {
+			var err error
+			cursor, err = ps.pastRepo.Session()
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}, b); err != nil {
+			panic(fmt.Errorf("model exec job: inference service returns error %w", err))
 		}
 
-		for i := int64(0); session.Next(); i++ {
-			b := backoff.WithContext(backoff.NewExponentialBackOff(), ctx)
+		for i := int64(0); cursor.Next(); i++ {
 
-			if err := backoff.Retry(func() error {
-				v, err := session.Value(ctx)
-				if err != nil {
-					return err
-				}
+			v, err := cursor.Value(ctx)
+			if err != nil {
+				panic(err)
+			}
 
-				ps.out <- model.Packet{
-					Sequence: i,
-					Data:     v,
-				}
-				return nil
-
-			}, b); err != nil {
-				panic(fmt.Errorf("model exec job: inference service returns error %w", err))
+			ps.out <- model.Packet{
+				Sequence: i,
+				Data:     v,
 			}
 		}
 
