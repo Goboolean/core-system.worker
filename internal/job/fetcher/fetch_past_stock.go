@@ -101,9 +101,9 @@ func (ps *PastStock) Execute() {
 			cancel()
 		}()
 
-		ps.pastRepo.SelectProduct(ps.stockID, ps.timeSlice, "stock")
+		ps.pastRepo.SelectProduct(ps.stockID, ps.timeSlice)
 		ps.pastRepo.SetRangeByTime(ps.startTime, ps.endTime)
-		session, err := ps.pastRepo.Session()
+		session, err := ps.pastRepo.ExecuteQuery(ctx)
 		if err != nil {
 			panic(err)
 		}
@@ -112,7 +112,7 @@ func (ps *PastStock) Execute() {
 			b := backoff.WithContext(backoff.NewExponentialBackOff(), ctx)
 
 			if err := backoff.Retry(func() error {
-				v, err := session.Value(ctx)
+				v, err := session.Value()
 				if err != nil {
 					return err
 				}
