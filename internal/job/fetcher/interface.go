@@ -35,12 +35,12 @@ type TradeCursor interface {
 
 	// Value returns the current item in the fetching session.
 	// It returns the item and an error if there was an error retrieving the item.
-	Value(ctx context.Context) (any, error)
+	Value() (any, error)
 }
 
 type TradeRepository interface {
 	// SelectProduct selects a product by ID, time frame, and product type.
-	SelectProduct(ID string, timeFrame string, productType string)
+	SelectProduct(ID string, timeFrame string)
 
 	// SetRangeByTime sets the time range for trade data.
 	SetRangeByTime(from time.Time, to time.Time)
@@ -52,9 +52,9 @@ type TradeRepository interface {
 	// that were created just before the given end time,
 	SetRangeByNumberAndEndTime(num int, end time.Time)
 
-	// Session returns a fetching session.
-	// Before you call session, you must select product and set range
-	Session() (TradeCursor, error)
+	// ExecuteQuery executes the query and returns a TradeCursor, allowing access to each data item sequentially.
+	// Before calling ExecuteQuery, you MUST select a product and set its range.
+	ExecuteQuery(ctx context.Context) (TradeCursor, error)
 
 	// Close closes the connection
 	Close() error
@@ -65,7 +65,7 @@ type TradeStream interface {
 	SelectProduct(ID string, timeFrame string, productType string)
 
 	// Session returns a fetching session.
-	// Before you call session, you must select product.
+	// Before you call session, you MUST select product.
 	Session() (TradeCursor, error)
 
 	// Close closes the connection.
