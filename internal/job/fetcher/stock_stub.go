@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
@@ -15,12 +14,8 @@ import (
 type StockStub struct {
 	numOfGeneration            int
 	maxRandomDelayMilliseconds int
-
-	out     job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
-	errChan chan error
-
-	wg   sync.WaitGroup
-	stop *util.StopNotifier
+	out                        job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
+	stop                       *util.StopNotifier
 }
 
 func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
@@ -30,7 +25,6 @@ func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
 		maxRandomDelayMilliseconds: DefaultMaxRandomDelayMilliseconds,
 		stop:                       util.NewStopNotifier(),
 		out:                        make(job.DataChan),
-		errChan:                    make(chan error),
 	}
 
 	if !parmas.IsKeyNilOrEmpty("numOfGeneration") {
@@ -58,51 +52,41 @@ func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
 	return instance, nil
 }
 
-func (ps *StockStub) Execute() {
-	ps.wg.Add(1)
-	go func() {
-		defer ps.wg.Done()
-		defer ps.stop.NotifyStop()
-		defer close(ps.errChan)
-		defer close(ps.out)
+func (ps *StockStub) Execute() error {
 
-		for i := 0; i < ps.numOfGeneration; i++ {
+	defer close(ps.out)
+	for i := 0; i < ps.numOfGeneration; i++ {
 
-			select {
-			case <-ps.stop.Done():
-				return
-			default:
-				ps.out <- model.Packet{
-					Sequence: int64(i),
-					Data: &model.StockAggregate{
-						OpenTime:   1716775499,
-						ClosedTime: 1716775499,
-						Open:       1.0,
-						Close:      2.0,
-						High:       3.0,
-						Low:        4.0,
-						Volume:     5.0,
-					},
-				}
-			}
-
-			if ps.maxRandomDelayMilliseconds > 0 {
-				time.Sleep(time.Duration(rand.Intn(ps.maxRandomDelayMilliseconds)) * time.Millisecond)
+		select {
+		case <-ps.stop.Done():
+			return nil
+		default:
+			ps.out <- model.Packet{
+				Sequence: int64(i),
+				Data: &model.StockAggregate{
+					OpenTime:   1716775499,
+					ClosedTime: 1716775499,
+					Open:       1.0,
+					Close:      2.0,
+					High:       3.0,
+					Low:        4.0,
+					Volume:     5.0,
+				},
 			}
 		}
 
-	}()
+		if ps.maxRandomDelayMilliseconds > 0 {
+			time.Sleep(time.Duration(rand.Intn(ps.maxRandomDelayMilliseconds)) * time.Millisecond)
+		}
+	}
+
+	return nil
 }
 
 func (ps *StockStub) Output() job.DataChan {
 	return ps.out
 }
 
-func (ps *StockStub) Stop() {
+func (ps *StockStub) NotifyStop() {
 	ps.stop.NotifyStop()
-	ps.wg.Wait()
-}
-
-func (ps *StockStub) Error() chan error {
-	return ps.errChan
 }

@@ -1,8 +1,6 @@
 package executer_test
 
 import (
-	"fmt"
-	"reflect"
 	"sync"
 	"testing"
 	"time"
@@ -96,7 +94,6 @@ func TestMock(t *testing.T) {
 		}
 
 		//act
-		execute.Execute()
 		res := []*model.StockAggregate{}
 		errsInPipe := make([]error, 0)
 
@@ -106,28 +103,18 @@ func TestMock(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for v := range execute.Output() {
-				stock, ok := v.Data.(*model.StockAggregate)
-				if !ok {
-					panic(fmt.Errorf("type mismatch expected *model.StockAggregate got:%v", reflect.TypeOf(v)))
-				}
-				res = append(res, stock)
+				res = append(res, v.Data.(*model.StockAggregate))
 			}
 		}()
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for v := range execute.Error() {
-				errsInPipe = append(errsInPipe, v)
-			}
-		}()
+		err = execute.Execute()
 
 		if util.IsWaitGroupTimeout(wg, 5*time.Second) {
 			t.Error("deadline exceed")
 			return
 		}
 		//assert
-
+		assert.NoError(t, err)
 		assert.Equal(t, expect, res)
 		assert.Len(t, errsInPipe, 0)
 	})

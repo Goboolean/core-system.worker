@@ -79,11 +79,7 @@ func TestCommon(t *testing.T) {
 			t.Error(err)
 		}
 		transmit.SetInput(inChan)
-
-		//act
-		transmit.Execute()
-		<-transmit.Done()
-
+		err = transmit.Execute()
 		assert.NoError(t, err)
 	})
 }

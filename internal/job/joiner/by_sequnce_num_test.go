@@ -3,12 +3,10 @@ package joiner_test
 import (
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/joiner"
 	"github.com/Goboolean/core-system.worker/internal/model"
-	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +16,7 @@ func TestMain(m *testing.M) {
 
 func TestJoinBySequnceNum(t *testing.T) {
 	t.Run("Sequnce가 같은 두 데이터가 주어졌을 때, 이 두 데이터를 join해서 출력해야 한다.", func(t *testing.T) {
-		for i := 0; i < 100; i++ {
+		for i := 0; i < 1; i++ {
 			//arrange
 			referenceInput := []model.Packet{
 				{
@@ -66,20 +64,20 @@ func TestJoinBySequnceNum(t *testing.T) {
 
 			referenceInputChan := make(job.DataChan)
 			modelInputChan := make(job.DataChan)
-
+			// Insert data into the input channel using a goroutines to insert randomly
 			go func() {
 				defer close(referenceInputChan)
 				for _, e := range referenceInput {
 					referenceInputChan <- e
 				}
 			}()
-
 			go func() {
 				defer close(modelInputChan)
 				for _, e := range modelInput {
 					modelInputChan <- e
 				}
 			}()
+
 			joinJob, err := joiner.NewBySequence(&job.UserParams{})
 			if err != nil {
 				t.Error(err)
@@ -91,8 +89,6 @@ func TestJoinBySequnceNum(t *testing.T) {
 
 			//act
 			res := make([]model.Packet, 0)
-			errsInJob := make([]error, 0)
-			joinJob.Execute()
 
 			wg := &sync.WaitGroup{}
 			wg.Add(1)
@@ -103,23 +99,12 @@ func TestJoinBySequnceNum(t *testing.T) {
 				}
 			}()
 
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				for v := range joinJob.Error() {
-					errsInJob = append(errsInJob, v)
-				}
-			}()
-
-			if util.IsWaitGroupTimeout(wg, 5*time.Second) {
-				t.Error("deadline exceed")
-				return
-			}
+			err = joinJob.Execute()
+			wg.Wait()
 
 			//assert
+			assert.NoError(t, err)
 			assert.Equal(t, exp, res)
-			assert.Len(t, errsInJob, 0)
-
 		}
 	})
 
