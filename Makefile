@@ -1,5 +1,5 @@
 SQL_API_PATH=./api/sql
-
+.PHONY: test
 STAGE_PACKAGES = ./internal/job/fetcher ./internal/job/executer 
 
 proto-generate:
