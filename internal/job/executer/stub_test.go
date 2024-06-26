@@ -36,27 +36,20 @@ func TestStub(t *testing.T) {
 			return
 		}
 		stub.SetInput(inChan)
-		//act
-		stub.Execute()
-		errsInPipe := make([]error, 0)
-		res := make([]model.Packet, 0, num)
 
-		for exit := false; !exit; {
-			select {
-			case v, ok := <-stub.Output():
-				if !ok {
-					exit = true
-					break
-				}
+		//act
+
+		res := make([]model.Packet, 0, num)
+		go func() {
+			for v := range stub.Output() {
 				res = append(res, v)
-			case v := <-stub.Error():
-				errsInPipe = append(errsInPipe, v)
 			}
-		}
+		}()
+
+		err = stub.Execute()
 
 		//assert
 		assert.NoError(t, err)
-		assert.Len(t, errsInPipe, 0)
 		assert.Len(t, res, num)
 	})
 }

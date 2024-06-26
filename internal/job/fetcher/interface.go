@@ -20,7 +20,7 @@ type Fetcher interface {
 	Output() job.DataChan
 
 	// Stop stops the fetcher and releases any allocated resources.
-	Stop()
+	NotifyStop()
 }
 
 // TradeCursor represents a session to fetch trade data in order

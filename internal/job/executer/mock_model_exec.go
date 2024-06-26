@@ -11,6 +11,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
+	"github.com/Goboolean/core-system.worker/internal/util/chanutil"
 	"github.com/cenkalti/backoff"
 )
 
@@ -65,72 +66,71 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 	return instance, nil
 }
 
-func (m *Mock) Execute() {
+func (m *Mock) Execute() error {
 
-	go func() {
-		defer m.stop.NotifyStop()
-		defer close(m.errChan)
-		defer close(m.out)
-		var accumulator = make([]float32, 0)
-
-		for input := range m.in {
-			//TODO: 고루틴이 무한정 생성되는 문제 해결
-			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*60*time.Second))
-			go func() {
-				<-m.stop.Done()
-				cancel()
-			}()
-
-			data, ok := input.Data.(*model.StockAggregate)
-
-			if !ok {
-				panic(fmt.Errorf("model exec job: type mismatch. expected *model.StockAggregate, got %s %w", reflect.TypeOf(input), job.ErrTypeMismatch))
-			}
-
-			//데이터를 1차원 텐서 타입으로 변환한다.
-			//데이터가 충분히 쌓일 때까지 다음 동작을 실행할 수 없도록 막는다.
-			var numOfInput = 4
-			accumulator = append(accumulator, data.High, data.Low, data.Open, data.Close)
-			if len(accumulator)/numOfInput < int(m.batchSize) {
-				continue
-			}
-
-			//이를 http client를 이용해 kserve로 보낸다.
-			var out []float32
-
-			b := backoff.WithMaxRetries(backoff.WithContext(backoff.NewExponentialBackOff(), ctx), uint64(m.maxRetry))
-
-			if err := backoff.Retry(func() error {
-				var err error
-				// Shape = [model.StockAggregate에서 사용되는 데이터의 개수 = 7, batch size]
-				out, err = m.kServeClient.RequestInference(ctx, []int{numOfInput, int(m.batchSize)}, accumulator)
-				return err
-
-			}, b); err != nil {
-				panic(fmt.Errorf("model exec job: inference service returns error %w", err))
-			}
-
-			accumulator = accumulator[numOfInput:]
-
-			//반환 받은 텐서 타입에서 알맞은 타입으로 가공한다.
-			//지금은 모델이 candlestick를 리턴한다고 가정한다.
-			//거래량 중요한 데이터가 아니므로 일단 0처리
-			m.out <- model.Packet{
-				Sequence: input.Sequence,
-				Data: &model.StockAggregate{
-					OpenTime:   data.ClosedTime,
-					ClosedTime: data.ClosedTime + (data.ClosedTime - data.OpenTime),
-					High:       out[0],
-					Low:        out[1],
-					Open:       out[2],
-					Close:      out[3],
-					Volume:     0.0,
-				},
-			}
-
-		}
+	defer close(m.out)
+	defer func() {
+		go chanutil.DummyChannelConsumer(m.in)
 	}()
+	var accumulator = make([]float32, 0)
 
+	for input := range m.in {
+		//TODO: 고루틴이 무한정 생성되는 문제 해결
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*60*time.Second))
+		go func() {
+			<-m.stop.Done()
+			cancel()
+		}()
+
+		data, ok := input.Data.(*model.StockAggregate)
+
+		if !ok {
+			return fmt.Errorf("model exec job: type mismatch. expected *model.StockAggregate, got %s %w", reflect.TypeOf(input), job.ErrTypeMismatch)
+		}
+
+		//데이터를 1차원 텐서 타입으로 변환한다.
+		//데이터가 충분히 쌓일 때까지 다음 동작을 실행할 수 없도록 막는다.
+		var numOfInput = 4
+		accumulator = append(accumulator, data.High, data.Low, data.Open, data.Close)
+		if len(accumulator)/numOfInput < int(m.batchSize) {
+			continue
+		}
+
+		//이를 http client를 이용해 kserve로 보낸다.
+		var out []float32
+
+		b := backoff.WithMaxRetries(backoff.WithContext(backoff.NewExponentialBackOff(), ctx), uint64(m.maxRetry))
+
+		if err := backoff.Retry(func() error {
+			var err error
+			// Shape = [model.StockAggregate에서 사용되는 데이터의 개수 = 7, batch size]
+			out, err = m.kServeClient.RequestInference(ctx, []int{numOfInput, int(m.batchSize)}, accumulator)
+			return err
+
+		}, b); err != nil {
+			return fmt.Errorf("model exec job: inference service returns error %w", err)
+		}
+
+		accumulator = accumulator[numOfInput:]
+
+		//반환 받은 텐서 타입에서 알맞은 타입으로 가공한다.
+		//지금은 모델이 candlestick를 리턴한다고 가정한다.
+		//거래량 중요한 데이터가 아니므로 일단 0처리
+		m.out <- model.Packet{
+			Sequence: input.Sequence,
+			Data: &model.StockAggregate{
+				OpenTime:   data.ClosedTime,
+				ClosedTime: data.ClosedTime + (data.ClosedTime - data.OpenTime),
+				High:       out[0],
+				Low:        out[1],
+				Open:       out[2],
+				Close:      out[3],
+				Volume:     0.0,
+			},
+		}
+	}
+
+	return nil
 }
 
 func (m *Mock) SetInput(input job.DataChan) {
@@ -143,8 +143,4 @@ func (m *Mock) Output() job.DataChan {
 
 func (m *Mock) Cancel() {
 	m.stop.NotifyStop()
-}
-
-func (m *Mock) Error() chan error {
-	return m.errChan
 }

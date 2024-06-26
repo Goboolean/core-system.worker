@@ -27,10 +27,9 @@ func TestStub(t *testing.T) {
 		}
 
 		//act
+
 		wg := &sync.WaitGroup{}
-		stub.Execute()
 		res := make([]model.Packet, 0)
-		errInJob := make([]error, 0)
 
 		wg.Add(1)
 		go func() {
@@ -40,20 +39,14 @@ func TestStub(t *testing.T) {
 			}
 		}()
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for v := range stub.Error() {
-				errInJob = append(errInJob, v)
-			}
-		}()
-
+		err = stub.Execute()
 		if util.IsWaitGroupTimeout(wg, 10*time.Second) {
 			t.Errorf("Deadline exceed")
+			t.FailNow()
 		}
 
-		//asse
+		//assert
+		assert.NoError(t, err, 0)
 		assert.Len(t, res, num)
-		assert.Len(t, errInJob, 0)
 	})
 }

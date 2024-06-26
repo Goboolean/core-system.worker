@@ -12,77 +12,72 @@ type BySequenceNum struct {
 	refIn   job.DataChan
 	modelIn job.DataChan
 	out     job.DataChan
-	errChan chan error
 }
 
 func NewBySequence(params *job.UserParams) (*BySequenceNum, error) {
 
 	instance := &BySequenceNum{
-		out:     make(job.DataChan),
-		errChan: make(chan error),
+		out: make(job.DataChan),
 	}
 
 	return instance, nil
 }
 
-func (b *BySequenceNum) Execute() {
-	go func() {
-		defer close(b.errChan)
-		defer close(b.out)
+func (b *BySequenceNum) Execute() error {
+	defer close(b.out)
 
-		referenceInputBuf := make([]model.Packet, 0, 100)
-		modelInputList := list.New()
+	referenceInputBuf := make([]model.Packet, 0, 100)
+	modelInputList := list.New()
 
-		refInChanFail := false
-		modelInChanFail := false
+	refInChanClosed := false
+	modelInChanClosed := false
 
-		for {
-			if refInChanFail && modelInChanFail {
-				return
+	for {
+		if refInChanClosed && modelInChanClosed {
+			return nil
+		}
+
+		select {
+		case referenceDataPacket, ok := <-b.refIn:
+			if !ok {
+				refInChanClosed = true
+				continue
 			}
 
-			select {
-			case referenceDataPacket, ok := <-b.refIn:
-				if !ok {
-					refInChanFail = true
-					continue
-				}
-
-				referenceInputBuf = append(referenceInputBuf, referenceDataPacket)
-			case modelDataPacket, ok := <-b.modelIn:
-				if !ok {
-					modelInChanFail = true
-					continue
-				}
-
-				modelInputList.PushBack(modelDataPacket)
-
+			referenceInputBuf = append(referenceInputBuf, referenceDataPacket)
+		case modelDataPacket, ok := <-b.modelIn:
+			if !ok {
+				modelInChanClosed = true
+				continue
 			}
 
-			for e := modelInputList.Front(); e != nil; e = e.Next() {
-				if len(referenceInputBuf) == 0 {
-					break
-				}
-				location := findLargestPacketIndexBySequence(referenceInputBuf, e.Value.(model.Packet).Sequence)
-
-				if referenceInputBuf[location].Sequence != e.Value.(model.Packet).Sequence {
-					continue
-				}
-
-				b.out <- model.Packet{
-					Sequence: e.Value.(model.Packet).Sequence,
-					Data: &model.Pair{
-						RefData:   referenceInputBuf[location].Data,
-						ModelData: e.Value.(model.Packet).Data,
-					},
-				}
-
-				referenceInputBuf = referenceInputBuf[min(len(referenceInputBuf), location+1):]
-				modelInputList.Remove(e)
-			}
+			modelInputList.PushBack(modelDataPacket)
 
 		}
-	}()
+
+		for e := modelInputList.Front(); e != nil; e = e.Next() {
+			if len(referenceInputBuf) == 0 {
+				break
+			}
+			location := findLargestPacketIndexBySequence(referenceInputBuf, e.Value.(model.Packet).Sequence)
+
+			if referenceInputBuf[location].Sequence != e.Value.(model.Packet).Sequence {
+				continue
+			}
+
+			b.out <- model.Packet{
+				Sequence: e.Value.(model.Packet).Sequence,
+				Data: &model.Pair{
+					RefData:   referenceInputBuf[location].Data,
+					ModelData: e.Value.(model.Packet).Data,
+				},
+			}
+
+			referenceInputBuf = referenceInputBuf[min(len(referenceInputBuf), location+1):]
+			modelInputList.Remove(e)
+		}
+
+	}
 }
 
 // findLargestPacketIndexBySequence returns the index of the packet with the largest sequence number
@@ -127,8 +122,4 @@ func (b *BySequenceNum) SetModelInput(in job.DataChan) {
 
 func (b *BySequenceNum) Output() job.DataChan {
 	return b.out
-}
-
-func (b *BySequenceNum) Error() chan error {
-	return b.errChan
 }

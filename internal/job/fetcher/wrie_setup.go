@@ -3,11 +3,6 @@
 
 package fetcher
 
-import (
-	"github.com/Goboolean/common/pkg/resolver"
-	"github.com/Goboolean/core-system.worker/internal/infrastructure/mongo"
-	"github.com/Goboolean/core-system.worker/internal/job"
-	"github.com/google/wire"
-)
+import "github.com/Goboolean/common/pkg/resolver"
 
 type mongoConfig resolver.ConfigMap

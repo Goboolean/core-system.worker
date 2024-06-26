@@ -8,7 +8,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
 	"github.com/Goboolean/core-system.worker/internal/model"
-	"github.com/Goboolean/core-system.worker/internal/util"
+	"github.com/Goboolean/core-system.worker/internal/util/chanutil"
 )
 
 type Common struct {
@@ -18,10 +18,7 @@ type Common struct {
 	task      model.Task
 	productId string
 
-	in      job.DataChan
-	errChan chan error
-
-	done *util.StopNotifier
+	in job.DataChan
 }
 
 var ErrInvalidProductId = errors.New("transmit: can't parse productID")
@@ -35,8 +32,6 @@ func NewCommon(
 	instance := &Common{
 		annotationDispatcher: annotationDispatcher,
 		orderDispatcher:      orderDispatcher,
-		errChan:              make(chan error),
-		done:                 util.NewStopNotifier(),
 	}
 
 	if !params.IsKeyNilOrEmpty(job.ProductID) {
@@ -69,47 +64,40 @@ func NewCommon(
 
 }
 
-func (b *Common) Execute() {
-	go func() {
-		defer b.done.NotifyStop()
-		defer close(b.errChan)
-		defer func() {
-			if err := b.orderDispatcher.Close(); err != nil {
-				//TODO: notify error
-			}
+func (b *Common) Execute() error {
 
-			if err := b.annotationDispatcher.Close(); err != nil {
-				//TODO: notify error
-			}
-		}()
-
-		for inPacket := range b.in {
-			switch v := inPacket.Data.(type) {
-			case *model.TradeCommand:
-				b.orderDispatcher.Dispatch(
-					&model.OrderEvent{
-						ProductID: b.productId,
-						Command:   *v,
-						CreatedAt: time.Now(),
-						Task:      b.task,
-					})
-			default:
-				b.annotationDispatcher.Dispatch(v)
-			}
-		}
-
+	defer func() {
+		// On successful completion: do nothing
+		// On failure: wait until the input channel is closed and consume data in input channel
+		// in the goroutine
+		go chanutil.DummyChannelConsumer(b.in)
 	}()
+
+	defer func() {
+		b.annotationDispatcher.Close()
+		b.orderDispatcher.Close()
+	}()
+
+	//TODO: dispatcher error 처리
+	for inPacket := range b.in {
+		switch v := inPacket.Data.(type) {
+		case *model.TradeCommand:
+			b.orderDispatcher.Dispatch(
+				&model.OrderEvent{
+					ProductID: b.productId,
+					Command:   *v,
+					CreatedAt: time.Now(),
+					Task:      b.task,
+				})
+		default:
+			b.annotationDispatcher.Dispatch(v)
+		}
+	}
+
+	return nil
 }
 
 // SetInput sets the input data channel for the transmitter.
 func (b *Common) SetInput(in job.DataChan) {
 	b.in = in
-}
-
-func (b *Common) Done() chan struct{} {
-	return b.done.Done()
-}
-
-func (b *Common) Error() chan error {
-	return b.errChan
 }

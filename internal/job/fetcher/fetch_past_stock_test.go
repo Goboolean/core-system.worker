@@ -62,9 +62,6 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			return
 		}
-
-		fetchJob.Execute()
-		errsInJob := make([]error, 0)
 		res := make([]model.Packet, 0, num)
 
 		wg := &sync.WaitGroup{}
@@ -76,21 +73,14 @@ func TestPastStock(t *testing.T) {
 				res = append(res, v)
 			}
 		}()
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for v := range fetchJob.Error() {
-				errsInJob = append(errsInJob, v)
-			}
-		}()
+		err = fetchJob.Execute()
 
 		if util.IsWaitGroupTimeout(wg, 5*time.Second) {
 			t.Error("deadline exceed")
 			return
 		}
 
-		assert.Len(t, errsInJob, 0)
+		assert.NoError(t, err)
 		assert.Len(t, res, num)
 		for _, e := range res {
 			assert.Equal(t, makeStockAggregateExample(), e.Data)
