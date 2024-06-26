@@ -20,3 +20,5 @@ build-dockerfile:
 wire-job: 
 	wire ${STAGE_PACKAGES}
 
+test:
+	go test ./...
