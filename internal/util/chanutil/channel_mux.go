@@ -1,4 +1,4 @@
-package util
+package chanutil
 
 type ChannelMux[T any] struct {
 	in  chan T
