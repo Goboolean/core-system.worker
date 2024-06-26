@@ -15,5 +15,5 @@ type ModelExecutor interface {
 	Output() job.DataChan
 
 	// Cancel notifies the executor to immediately stop all currently running jobs.
-	Cancel()
+	NotifyStop()
 }

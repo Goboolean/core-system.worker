@@ -12,8 +12,4 @@ type Transmitter interface {
 
 	// SetInput sets the input data channel for the transmitter.
 	SetInput(job.DataChan)
-
-	// Done returns a channel that is closed when the transmitter has completed all its tasks
-	// and cleaned up the given infrastructure.
-	Done() chan struct{}
 }
