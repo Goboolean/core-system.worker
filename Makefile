@@ -1,5 +1,5 @@
 SQL_API_PATH=./api/sql
-
+.PHONY: test
 STAGE_PACKAGES = ./internal/job/fetcher ./internal/job/executer 
 
 proto-generate:
@@ -20,3 +20,5 @@ build-dockerfile:
 wire-job: 
 	wire ${STAGE_PACKAGES}
 
+test:
+	go test ./...
