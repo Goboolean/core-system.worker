@@ -1,0 +1,84 @@
+name: CI
+
+env:
+  INFLUXDB_URL: http://localhost:8086
+  INFLUXDB_BUCKET: bucket
+  INFLUXDB_TOKEN: token
+  INFLUXDB_ORG: org
+
+on:
+  push:
+    branches:
+    - main
+    - feature/*
+
+  jobs:
+    test:
+      runs-on: ubuntu-latest
+      services:
+        influxdb:
+          image: influxdb:latest
+          ports:
+            - 8086:8086
+          env:
+            DOCKER_INFLUXDB_INIT_MODE: setup
+            DOCKER_INFLUXDB_INIT_USERNAME: admin
+            DOCKER_INFLUXDB_INIT_PASSWORD: password
+            DOCKER_INFLUXDB_INIT_ORG: ${{ env.INFLUXDB_ORG }}
+            DOCKER_INFLUXDB_INIT_BUCKET: ${{ env.INFLUXDB_BUCKET }}
+            DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${{ env.INFLUXDB_TOKEN }}
+        
+        kafka:
+          image: wurstmeister/kafka:latest
+          ports:
+            - 9092:9092
+          env:
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        
+        zookeeper:
+          image: wurstmeister/zookeeper:latest
+          ports:
+            - 2181:2181
+
+      steps:
+        - name: Issue Token
+          run: |
+            sleep 5
+            CONTAINER_ID=$(docker ps | grep 'influxdb:latest' | awk '{print $1}')
+            OUTPUT=$(docker exec ${CONTAINER_ID} influx auth create --org org --read-buckets --write-buckets --description "New token for testing")
+            INFLUXDB_TOKEN=$(echo ${OUTPUT} | grep 'New token for testing' | awk '{print $6}')
+
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Setup Go
+          uses: actions/setup-go@v2
+          with:
+            go-version: "1.17.x"
+
+        - name: Run Tests
+          run: go test ./...
+
+      lint:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v1
+
+          - name: Setup Go
+            uses: actions/setup-go@v1
+            with:
+              go-version: "1.17.x"
+
+          - name: Run gofmt
+            run: test -z $(gofmt -l .)
+
+          - name: Run go vet
+            run: go vet ./...
+
+          - name: Run golint
+            run: |
+              go get golang.org/x/lint/golint
+              export PATH=$PATH:$(go env GOPATH)/bin
+              golint -set_exit_status ./...
