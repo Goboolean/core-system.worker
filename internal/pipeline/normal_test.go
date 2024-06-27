@@ -1,10 +1,12 @@
 package pipeline_test
 
 import (
+	"context"
 	"fmt"
-	"sync"
+	"os"
+	"os/signal"
+	"syscall"
 	"testing"
-	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
@@ -14,7 +16,6 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
 	v1 "github.com/Goboolean/core-system.worker/internal/job/transmitter/v1"
 	"github.com/Goboolean/core-system.worker/internal/pipeline"
-	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -76,41 +77,29 @@ func TestNormal(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-		//act
-		errInPipeline := make([]error, 0)
-		p.Run()
+		ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
-		externalChan := make(chan struct{})
-
-		stop := util.NewStopNotifier()
-		wg := sync.WaitGroup{}
-		wg.Add(1)
+		var errCh chan error
 		go func() {
-			defer wg.Done()
-			for e := range p.Error() {
-				errInPipeline = append(errInPipeline, e)
-				stop.NotifyStop()
-			}
+			errCh <- p.Run()
 		}()
 
 		var stat int
-
 		select {
-		case <-p.Done():
+		case err = <-errCh:
+			if err != nil {
+				stat = 1
+				break
+			}
 			stat = 0
-		case <-externalChan:
+			break
+		case <-ctx.Done():
 			p.Stop()
 			stat = 1
-		case <-stop.Done():
-			p.Stop()
-			stat = 1
-		case <-time.After(2 * time.Second):
-			t.FailNow()
 		}
-		wg.Wait()
 
 		//assert
-		assert.Len(t, errInPipeline, 0)
+		assert.NoError(t, err)
 		assert.Equal(t, 0, stat)
 	})
 }
