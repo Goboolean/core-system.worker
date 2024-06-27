@@ -6,6 +6,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
 	"github.com/Goboolean/core-system.worker/internal/util"
+	"golang.org/x/sync/errgroup"
 )
 
 type WithoutModel struct {
@@ -14,8 +15,7 @@ type WithoutModel struct {
 	analyzer    analyzer.Analyzer
 	transmitter transmitter.Transmitter
 
-	demux   *util.ChannelDeMux[error]
-	errChan chan error
+	done *util.StopNotifier
 }
 
 func NewWithoutModelWithAdapter(
@@ -30,21 +30,12 @@ func NewWithoutModelWithAdapter(
 		analyzer:    analyzer,
 		transmitter: transmitter,
 
-		demux:   util.NewChannelDeMux[error](),
-		errChan: make(chan error),
+		done: util.NewStopNotifier(),
 	}
 
 	instance.adapter.SetInput(instance.fetcher.Output())
 	instance.analyzer.SetInput(instance.adapter.Output())
 	instance.transmitter.SetInput(instance.analyzer.Output())
-
-	instance.demux.AddInput(
-		instance.fetcher.Error(),
-		instance.adapter.Error(),
-		instance.analyzer.Error(),
-		instance.transmitter.Error(),
-	)
-	instance.errChan = instance.demux.Output()
 
 	return &instance, nil
 }
@@ -58,45 +49,67 @@ func NewWithoutModelWithoutAdapter(
 		fetcher:     fetch,
 		analyzer:    analyze,
 		transmitter: transmit,
-
-		demux:   util.NewChannelDeMux[error](),
-		errChan: make(chan error),
+		done:        util.NewStopNotifier(),
 	}
 
 	instance.analyzer.SetInput(instance.fetcher.Output())
 	instance.transmitter.SetInput(instance.analyzer.Output())
 
-	instance.demux.AddInput(
-		instance.fetcher.Error(),
-		instance.analyzer.Error(),
-		instance.transmitter.Error(),
-	)
-	instance.errChan = instance.demux.Output()
-
 	return &instance, nil
 }
 
-func (wom *WithoutModel) Run() {
+func (wom *WithoutModel) Run() error {
+	g := errgroup.Group{}
+	stop := util.StopNotifier{}
+	go func() {
+		select {
+		case <-stop.Done():
+			wom.fetcher.NotifyStop()
+			break
+		case <-wom.done.Done():
+			break
+		}
+	}()
 
-	wom.demux.Execute()
-	wom.fetcher.Execute()
-	if wom.adapter != nil {
-		wom.adapter.Execute()
-	}
-	wom.analyzer.Execute()
-	wom.transmitter.Execute()
+	g.Go(func() error {
+		return wom.fetcher.Execute()
+	})
 
+	g.Go(func() error {
+		err := wom.adapter.Execute()
+		if err != nil {
+			stop.NotifyStop()
+		}
+		return err
+	})
+
+	g.Go(func() error {
+		err := wom.analyzer.Execute()
+		if err != nil {
+			stop.NotifyStop()
+		}
+		return err
+	})
+
+	g.Go(func() error {
+		err := wom.transmitter.Execute()
+		if err != nil {
+			stop.NotifyStop()
+		}
+		return err
+	})
+
+	var err error
+	go func() {
+		err = g.Wait()
+		wom.done.NotifyStop()
+	}()
+
+	<-wom.done.Done()
+	return err
 }
 
 func (wom *WithoutModel) Stop() {
-	wom.fetcher.Stop()
-	<-wom.transmitter.Done()
-}
-
-func (wom *WithoutModel) Done() chan struct{} {
-	return wom.transmitter.Done()
-}
-
-func (wom *WithoutModel) Error() chan error {
-	return wom.errChan
+	wom.fetcher.NotifyStop()
+	<-wom.done.Done()
 }
