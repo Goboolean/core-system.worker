@@ -11,6 +11,8 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
+	"github.com/Goboolean/core-system.worker/internal/util/chanutil"
+	"golang.org/x/sync/errgroup"
 )
 
 var ErrTypeNotMatch = errors.New("pipeline: cannot build a pipeline because the types are not compatible between the jobs")
@@ -26,10 +28,8 @@ type Normal struct {
 	transmitter   transmitter.Transmitter
 
 	//utils
-	mux   *util.ChannelMux[model.Packet]
-	demux *util.ChannelDeMux[error]
-
-	errChan chan error
+	mux  *chanutil.ChannelMux[model.Packet]
+	done *util.StopNotifier
 }
 
 func NewNormalWithAdapter(
@@ -48,10 +48,8 @@ func NewNormalWithAdapter(
 		resAnalyzer:   resAnalyzer,
 		transmitter:   transmitter,
 
-		mux: util.NewChannelMux[model.Packet](),
-
-		demux:   util.NewChannelDeMux[error](),
-		errChan: make(chan error),
+		mux:  chanutil.NewChannelMux[model.Packet](),
+		done: util.NewStopNotifier(),
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
@@ -61,16 +59,6 @@ func NewNormalWithAdapter(
 	instance.joiner.SetRefInput(instance.mux.Output())
 	instance.resAnalyzer.SetInput(instance.joiner.Output())
 	instance.transmitter.SetInput(instance.resAnalyzer.Output())
-
-	instance.demux.AddInput(
-		instance.fetcher.Error(),
-		instance.joiner.Error(),
-		instance.modelExecuter.Error(),
-		instance.joiner.Error(),
-		instance.resAnalyzer.Error(),
-		instance.transmitter.Error(),
-	)
-	instance.errChan = instance.demux.Output()
 
 	return &instance, nil
 }
@@ -89,10 +77,8 @@ func NewNormalWithoutAdapter(
 		resAnalyzer:   resAnalyze,
 		transmitter:   transmit,
 
-		mux: util.NewChannelMux[model.Packet](),
-
-		demux:   util.NewChannelDeMux[error](),
-		errChan: make(chan error),
+		mux:  chanutil.NewChannelMux[model.Packet](),
+		done: util.NewStopNotifier(),
 	}
 
 	instance.mux.SetInput(instance.fetcher.Output())
@@ -102,46 +88,78 @@ func NewNormalWithoutAdapter(
 	instance.resAnalyzer.SetInput(instance.joiner.Output())
 	instance.transmitter.SetInput(instance.resAnalyzer.Output())
 
-	instance.demux.AddInput(
-		instance.fetcher.Error(),
-		instance.joiner.Error(),
-		instance.modelExecuter.Error(),
-		instance.resAnalyzer.Error(),
-		instance.transmitter.Error(),
-	)
-	instance.errChan = instance.demux.Output()
-
 	return &instance, nil
 
 }
 
-func (n *Normal) Run() {
+func (n *Normal) Run() error {
+	g := errgroup.Group{}
+	stop := util.StopNotifier{}
+	go func() {
+		select {
+		case <-stop.Done():
+			n.fetcher.NotifyStop()
+			break
+		case <-n.done.Done():
+			break
+		}
+	}()
 
-	n.mux.Execute()
-	n.demux.Execute()
+	g.Go(func() error {
+		return n.fetcher.Execute()
+	})
 
-	n.fetcher.Execute()
-	n.modelExecuter.Execute()
-	if n.adapter != nil {
-		n.adapter.Execute()
-	}
-	n.joiner.Execute()
-	n.resAnalyzer.Execute()
-	n.transmitter.Execute()
+	g.Go(func() error {
+		err := n.joiner.Execute()
+		if err != nil {
+			stop.NotifyStop()
+		}
+		return err
+	})
 
+	g.Go(func() error {
+		err := n.modelExecuter.Execute()
+		if err != nil {
+			stop.NotifyStop()
+		}
+		return err
+	})
+
+	g.Go(func() error {
+		err := n.adapter.Execute()
+		if err != nil {
+			stop.NotifyStop()
+		}
+		return err
+	})
+
+	g.Go(func() error {
+		err := n.resAnalyzer.Execute()
+		if err != nil {
+			stop.NotifyStop()
+		}
+		return err
+	})
+
+	g.Go(func() error {
+		err := n.transmitter.Execute()
+		if err != nil {
+			stop.NotifyStop()
+		}
+		return err
+	})
+
+	var err error
+	go func() {
+		err = g.Wait()
+		n.done.NotifyStop()
+	}()
+
+	<-n.done.Done()
+	return err
 }
 
 func (n *Normal) Stop() {
-	n.fetcher.Stop()
-	n.modelExecuter.Cancel()
-
-	<-n.transmitter.Done()
-}
-
-func (n *Normal) Done() chan struct{} {
-	return n.transmitter.Done()
-}
-
-func (n *Normal) Error() chan error {
-	return n.errChan
+	n.fetcher.NotifyStop()
+	<-n.done.Done()
 }
