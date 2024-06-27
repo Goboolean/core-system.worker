@@ -16,6 +16,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
 	v1 "github.com/Goboolean/core-system.worker/internal/job/transmitter/v1"
 	"github.com/Goboolean/core-system.worker/internal/pipeline"
+	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -77,24 +78,26 @@ func TestNormal(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-		ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+		ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
-		var errCh chan error
+		var stat = 0
+
+		externalCh := make(chan struct{})
+		done := util.NewStopNotifier()
 		go func() {
-			errCh <- p.Run()
-		}()
-
-		var stat int
-		select {
-		case err = <-errCh:
-			if err != nil {
+			select {
+			//karfka, message broker
+			case <-externalCh:
+				cancel()
 				stat = 1
+			case <-done.Done():
 				break
 			}
-			stat = 0
-			break
-		case <-ctx.Done():
-			p.Stop()
+		}()
+
+		err = p.Run(ctx)
+		done.NotifyStop()
+		if err != nil {
 			stat = 1
 		}
 
