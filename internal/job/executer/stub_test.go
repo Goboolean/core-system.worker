@@ -1,6 +1,7 @@
 package executer_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
@@ -40,13 +41,17 @@ func TestStub(t *testing.T) {
 		//act
 
 		res := make([]model.Packet, 0, num)
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			for v := range stub.Output() {
 				res = append(res, v)
 			}
 		}()
 
 		err = stub.Execute()
+		wg.Wait()
 
 		//assert
 		assert.NoError(t, err)
