@@ -7,6 +7,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/sync/errgroup"
 )
 
 func TestStub(t *testing.T) {
@@ -40,13 +41,17 @@ func TestStub(t *testing.T) {
 		//act
 
 		res := make([]model.Packet, 0, num)
-		go func() {
+		g := errgroup.Group{}
+
+		g.Go(func() error {
 			for v := range stub.Output() {
 				res = append(res, v)
 			}
-		}()
+			return nil
+		})
 
-		err = stub.Execute()
+		g.Go(stub.Execute)
+		err = g.Wait()
 
 		//assert
 		assert.NoError(t, err)
