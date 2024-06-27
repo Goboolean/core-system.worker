@@ -1,13 +1,13 @@
 package executer_test
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/sync/errgroup"
 )
 
 func TestStub(t *testing.T) {
@@ -41,17 +41,17 @@ func TestStub(t *testing.T) {
 		//act
 
 		res := make([]model.Packet, 0, num)
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		g := errgroup.Group{}
+
+		g.Go(func() error {
 			for v := range stub.Output() {
 				res = append(res, v)
 			}
-		}()
+			return nil
+		})
 
-		err = stub.Execute()
-		wg.Wait()
+		g.Go(stub.Execute)
+		err = g.Wait()
 
 		//assert
 		assert.NoError(t, err)
