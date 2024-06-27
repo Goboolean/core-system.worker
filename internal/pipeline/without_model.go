@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"context"
+
 	"github.com/Goboolean/core-system.worker/internal/job/adapter"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
@@ -58,12 +60,15 @@ func NewWithoutModelWithoutAdapter(
 	return &instance, nil
 }
 
-func (wom *WithoutModel) Run() error {
+func (wom *WithoutModel) Run(ctx context.Context) error {
 	g := errgroup.Group{}
 	stop := util.StopNotifier{}
 	go func() {
 		select {
 		case <-stop.Done():
+			wom.fetcher.NotifyStop()
+			break
+		case <-ctx.Done():
 			wom.fetcher.NotifyStop()
 			break
 		case <-wom.done.Done():
@@ -76,6 +81,10 @@ func (wom *WithoutModel) Run() error {
 	})
 
 	g.Go(func() error {
+		if wom.adapter == nil {
+			return nil
+		}
+
 		err := wom.adapter.Execute()
 		if err != nil {
 			stop.NotifyStop()
@@ -107,9 +116,4 @@ func (wom *WithoutModel) Run() error {
 
 	<-wom.done.Done()
 	return err
-}
-
-func (wom *WithoutModel) Stop() {
-	wom.fetcher.NotifyStop()
-	<-wom.done.Done()
 }

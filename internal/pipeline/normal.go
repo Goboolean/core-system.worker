@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"errors"
 
 	"github.com/Goboolean/core-system.worker/internal/job/adapter"
@@ -12,6 +13,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
 	"github.com/Goboolean/core-system.worker/internal/util/chanutil"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -92,12 +94,16 @@ func NewNormalWithoutAdapter(
 
 }
 
-func (n *Normal) Run() error {
+func (n *Normal) Run(ctx context.Context) error {
 	g := errgroup.Group{}
 	stop := util.StopNotifier{}
+
 	go func() {
 		select {
 		case <-stop.Done():
+			n.fetcher.NotifyStop()
+			break
+		case <-ctx.Done():
 			n.fetcher.NotifyStop()
 			break
 		case <-n.done.Done():
@@ -105,8 +111,12 @@ func (n *Normal) Run() error {
 		}
 	}()
 
+	n.mux.Execute()
+
 	g.Go(func() error {
-		return n.fetcher.Execute()
+		err := n.fetcher.Execute()
+		log.Debug("fetch job is completed")
+		return err
 	})
 
 	g.Go(func() error {
@@ -114,6 +124,7 @@ func (n *Normal) Run() error {
 		if err != nil {
 			stop.NotifyStop()
 		}
+		log.Debug("join job is completed")
 		return err
 	})
 
@@ -122,14 +133,20 @@ func (n *Normal) Run() error {
 		if err != nil {
 			stop.NotifyStop()
 		}
+		log.Debug("execute job is completed")
 		return err
 	})
 
 	g.Go(func() error {
+		if n.adapter == nil {
+			return nil
+		}
+
 		err := n.adapter.Execute()
 		if err != nil {
 			stop.NotifyStop()
 		}
+		log.Debug("adapt job is completed")
 		return err
 	})
 
@@ -138,6 +155,7 @@ func (n *Normal) Run() error {
 		if err != nil {
 			stop.NotifyStop()
 		}
+		log.Debug("analyze job is completed")
 		return err
 	})
 
@@ -146,20 +164,17 @@ func (n *Normal) Run() error {
 		if err != nil {
 			stop.NotifyStop()
 		}
+		log.Debug("transmit job is completed")
 		return err
 	})
 
 	var err error
 	go func() {
 		err = g.Wait()
+		log.Info("Pipeline job is completed")
 		n.done.NotifyStop()
 	}()
 
 	<-n.done.Done()
 	return err
-}
-
-func (n *Normal) Stop() {
-	n.fetcher.NotifyStop()
-	<-n.done.Done()
 }
