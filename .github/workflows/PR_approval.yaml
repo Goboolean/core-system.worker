@@ -34,3 +34,4 @@ jobs:
             } catch (error) {
               core.setFailed(`Failed to list reviews: ${error.message}`);
             }
+
