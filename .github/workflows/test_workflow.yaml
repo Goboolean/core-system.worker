@@ -1,0 +1,12 @@
+name: Auto Assign
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  add_assignees:
+    runs-on: ubuntu-latest
