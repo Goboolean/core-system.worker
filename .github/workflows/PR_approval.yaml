@@ -1,0 +1,36 @@
+name: Require PR Approval
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: read
+  actions: write
+
+jobs:
+  require_review: 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v4
+      with:
+        script: |
+          try {
+              const { data: reviews } = await github.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+              });
+
+              console.log("Reviews:", reviews); // add log
+
+              const approvals = reviews.filter(review => review.state === 'APPROVED');
+
+              console.log("Approvals:", approvals); // add log
+
+              if (approvals.length < 1) {
+                core.setFailed('PR requires at least one approval.');
+              }
+            } catch (error) {
+              core.setFailed(`Failed to list reviews: ${error.message}`);
+            }
