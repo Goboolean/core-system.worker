@@ -10,3 +10,5 @@ permissions:
 jobs:
   add_assignees:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v4
