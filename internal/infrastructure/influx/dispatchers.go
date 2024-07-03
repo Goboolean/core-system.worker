@@ -48,13 +48,13 @@ func NewOrderEventDispatcher(o *Opts) (*OrderEventDispatcher, error) {
 
 	client := influxdb2.NewClient(o.Url, o.Token)
 
-	if !bucketExists(client, o.BucketName) {
-		return nil, ErrBucketNotExist
-	}
-
 	instance := &OrderEventDispatcher{
 		client: client,
 		writer: client.WriteAPI(o.Org, o.BucketName),
+	}
+
+	if instance.bucketExists(o.BucketName) {
+		return nil, ErrBucketNotExist
 	}
 
 	return instance, nil
@@ -74,6 +74,13 @@ func (d *OrderEventDispatcher) Dispatch(taskID string, event *model.OrderEvent) 
 	))
 
 }
+
+func (d *OrderEventDispatcher) bucketExists(bucket string) bool {
+	bucketApi := d.client.BucketsAPI()
+	_, err := bucketApi.FindBucketByName(context.Background(), bucket)
+	return err == nil
+}
+
 func (d *OrderEventDispatcher) Close() error {
 	d.writer.Flush()
 	d.client.Close()
@@ -81,7 +88,6 @@ func (d *OrderEventDispatcher) Close() error {
 }
 
 // Close closes the dispatcher.
-
 type AnnotationDispatcher struct {
 	client influxdb2.Client
 	writer api.WriteAPI
@@ -106,13 +112,14 @@ func NewAnnotationDispatcher(o *Opts) (*AnnotationDispatcher, error) {
 	}
 
 	client := influxdb2.NewClient(o.Url, o.Token)
-	if !bucketExists(client, o.BucketName) {
-		return nil, ErrBucketNotExist
-	}
 
 	instance := &AnnotationDispatcher{
 		client: client,
 		writer: client.WriteAPI(o.Org, o.BucketName),
+	}
+
+	if instance.bucketExists(o.BucketName) {
+		return nil, ErrBucketNotExist
 	}
 
 	return instance, nil
@@ -136,8 +143,8 @@ func (d *AnnotationDispatcher) Close() error {
 	return nil
 }
 
-func bucketExists(c influxdb2.Client, bucket string) bool {
-	bucketApi := c.BucketsAPI()
+func (d *AnnotationDispatcher) bucketExists(bucket string) bool {
+	bucketApi := d.client.BucketsAPI()
 	_, err := bucketApi.FindBucketByName(context.Background(), bucket)
 	return err == nil
 }
