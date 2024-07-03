@@ -64,15 +64,16 @@ func TestCommon(t *testing.T) {
 		mockOrderEventDispatcher := transmitter.NewMockOrderEventDispatcher(ctrl)
 		mockAnnotationDispatcher := transmitter.NewMockAnnotationDispatcher(ctrl)
 
-		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any()).Times(numOrder)
+		mockOrderEventDispatcher.EXPECT().Dispatch("sampleTask", gomock.Any()).Times(numOrder)
 		mockOrderEventDispatcher.EXPECT().Close().Times(1)
 
-		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any()).Times(numAnnotation)
+		mockAnnotationDispatcher.EXPECT().Dispatch("sampleTask", gomock.Any(), gomock.Any()).Times(numAnnotation)
 		mockAnnotationDispatcher.EXPECT().Close().Times(1)
 
 		transmit, err := v1.NewCommon(mockAnnotationDispatcher, mockOrderEventDispatcher, &job.UserParams{
 			"productID": "test.product",
 			"task":      "realtimeTrade",
+			"taskID":    "sampleTask",
 		})
 
 		if err != nil {
