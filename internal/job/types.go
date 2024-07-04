@@ -19,6 +19,7 @@ const (
 	ProductID = "productID"
 	BatchSize = "batchSize"
 	Task      = "task"
+	TaskID    = "taskID"
 
 	NumOfGeneration            = "numOfGeneration"
 	MaxRandomDelayMilliseconds = "maxRandomDelayMilliseconds"
