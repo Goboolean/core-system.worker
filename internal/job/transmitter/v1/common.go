@@ -17,6 +17,7 @@ type Common struct {
 
 	task      model.Task
 	productId string
+	taskID    string
 
 	in job.DataChan
 }
@@ -60,6 +61,17 @@ func NewCommon(
 
 	}
 
+	if !params.IsKeyNilOrEmpty(job.TaskID) {
+
+		val, ok := (*params)[job.TaskID]
+		if !ok {
+			return nil, fmt.Errorf("create past stock fetch job: %w", ErrInvalidTaskString)
+		}
+
+		instance.taskID = val
+
+	}
+
 	return instance, nil
 
 }
@@ -83,6 +95,7 @@ func (b *Common) Execute() error {
 		switch v := inPacket.Data.(type) {
 		case *model.TradeCommand:
 			b.orderDispatcher.Dispatch(
+				b.taskID,
 				&model.OrderEvent{
 					ProductID: b.productId,
 					Command:   *v,
@@ -90,7 +103,7 @@ func (b *Common) Execute() error {
 					Task:      b.task,
 				})
 		default:
-			b.annotationDispatcher.Dispatch(v)
+			b.annotationDispatcher.Dispatch(b.taskID, v, time.Now())
 		}
 	}
 

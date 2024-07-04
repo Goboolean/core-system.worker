@@ -8,7 +8,6 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/model"
 )
 
-// OrderEventDispatcher is an interface that represents an order event dispatcher.
 type OrderEventDispatcher interface {
 	// Dispatch dispatches the given order event.
 	Dispatch(taskID string, event *model.OrderEvent)

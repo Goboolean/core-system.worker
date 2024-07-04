@@ -10,8 +10,8 @@
 package transmitter
 
 import (
-	context "context"
 	reflect "reflect"
+	time "time"
 
 	model "github.com/Goboolean/core-system.worker/internal/model"
 	gomock "go.uber.org/mock/gomock"
@@ -55,27 +55,15 @@ func (mr *MockOrderEventDispatcherMockRecorder) Close() *gomock.Call {
 }
 
 // Dispatch mocks base method.
-func (m *MockOrderEventDispatcher) Dispatch(arg0 *model.OrderEvent) {
+func (m *MockOrderEventDispatcher) Dispatch(arg0 string, arg1 *model.OrderEvent) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Dispatch", arg0)
+	m.ctrl.Call(m, "Dispatch", arg0, arg1)
 }
 
 // Dispatch indicates an expected call of Dispatch.
-func (mr *MockOrderEventDispatcherMockRecorder) Dispatch(arg0 any) *gomock.Call {
+func (mr *MockOrderEventDispatcherMockRecorder) Dispatch(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockOrderEventDispatcher)(nil).Dispatch), arg0)
-}
-
-// Flush mocks base method.
-func (m *MockOrderEventDispatcher) Flush(arg0 context.Context) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Flush", arg0)
-}
-
-// Flush indicates an expected call of Flush.
-func (mr *MockOrderEventDispatcherMockRecorder) Flush(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flush", reflect.TypeOf((*MockOrderEventDispatcher)(nil).Flush), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockOrderEventDispatcher)(nil).Dispatch), arg0, arg1)
 }
 
 // MockAnnotationDispatcher is a mock of AnnotationDispatcher interface.
@@ -116,25 +104,13 @@ func (mr *MockAnnotationDispatcherMockRecorder) Close() *gomock.Call {
 }
 
 // Dispatch mocks base method.
-func (m *MockAnnotationDispatcher) Dispatch(arg0 any) {
+func (m *MockAnnotationDispatcher) Dispatch(arg0 string, arg1 any, arg2 time.Time) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Dispatch", arg0)
+	m.ctrl.Call(m, "Dispatch", arg0, arg1, arg2)
 }
 
 // Dispatch indicates an expected call of Dispatch.
-func (mr *MockAnnotationDispatcherMockRecorder) Dispatch(arg0 any) *gomock.Call {
+func (mr *MockAnnotationDispatcherMockRecorder) Dispatch(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockAnnotationDispatcher)(nil).Dispatch), arg0)
-}
-
-// Flush mocks base method.
-func (m *MockAnnotationDispatcher) Flush(arg0 context.Context) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Flush", arg0)
-}
-
-// Flush indicates an expected call of Flush.
-func (mr *MockAnnotationDispatcherMockRecorder) Flush(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flush", reflect.TypeOf((*MockAnnotationDispatcher)(nil).Flush), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockAnnotationDispatcher)(nil).Dispatch), arg0, arg1, arg2)
 }
