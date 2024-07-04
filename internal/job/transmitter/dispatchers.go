@@ -3,7 +3,7 @@
 package transmitter
 
 import (
-	"context"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/model"
 )
@@ -11,10 +11,7 @@ import (
 // OrderEventDispatcher is an interface that represents an order event dispatcher.
 type OrderEventDispatcher interface {
 	// Dispatch dispatches the given order event.
-	Dispatch(event *model.OrderEvent)
-
-	// Flush flushes any pending events in the dispatcher.
-	Flush(ctx context.Context)
+	Dispatch(taskID string, event *model.OrderEvent)
 
 	// Close closes the dispatcher.
 	Close() error
@@ -23,10 +20,7 @@ type OrderEventDispatcher interface {
 // AnnotationDispatcher is an interface that represents an annotation dispatcher.
 type AnnotationDispatcher interface {
 	// Dispatch dispatches the given data.
-	Dispatch(data any)
-
-	// Flush flushes any pending data in the dispatcher.
-	Flush(ctx context.Context)
+	Dispatch(taskID string, data any, createdAt time.Time)
 
 	// Close closes the dispatcher.
 	Close() error
