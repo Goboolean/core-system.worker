@@ -3,7 +3,7 @@
 package transmitter
 
 import (
-	time "time"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/model"
 )
