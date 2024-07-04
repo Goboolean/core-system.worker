@@ -51,10 +51,10 @@ func TestNormal(t *testing.T) {
 		mockOrderEventDispatcher := transmitter.NewMockOrderEventDispatcher(ctrl)
 		mockAnnotationDispatcher := transmitter.NewMockAnnotationDispatcher(ctrl)
 
-		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any()).Times(num)
+		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(num)
 		mockOrderEventDispatcher.EXPECT().Close().Times(1)
 
-		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any()).AnyTimes()
+		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		mockAnnotationDispatcher.EXPECT().Close().Times(1)
 
 		transmitJob, err := v1.NewCommon(mockAnnotationDispatcher,

@@ -19,7 +19,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestWithoutMode(t *testing.T) {
+func TestWithoutModel(t *testing.T) {
 	t.Run("어뎁터가 필요하지 않은 without model pipeline에 job을 주입했을 때 job사이에서 데이터가 흘러야 한다.", func(t *testing.T) {
 		//arrange
 		num := 100
@@ -39,10 +39,10 @@ func TestWithoutMode(t *testing.T) {
 		mockOrderEventDispatcher := transmitter.NewMockOrderEventDispatcher(ctrl)
 		mockAnnotationDispatcher := transmitter.NewMockAnnotationDispatcher(ctrl)
 
-		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any()).Times(num)
+		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(num)
 		mockOrderEventDispatcher.EXPECT().Close().Times(1)
 
-		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any()).AnyTimes()
+		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		mockAnnotationDispatcher.EXPECT().Close().Times(1)
 
 		transmitJob, err := v1.NewCommon(mockAnnotationDispatcher,
