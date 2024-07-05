@@ -27,7 +27,7 @@ type StockTradeCursor struct {
 
 const DefaultLimit = 100
 
-func NewTradeCursor(dataSource *influx.DB) (*StockTradeCursor, error) {
+func NewStockTradeCursor(dataSource *influx.DB) (*StockTradeCursor, error) {
 	return &StockTradeCursor{
 		pastTradeDataSource: dataSource,
 		limit:               DefaultLimit,
