@@ -87,6 +87,7 @@ func (c *StockTradeCursor) Next(ctx context.Context) (*model.StockAggregate, err
 	}
 
 	data := c.buf[c.idx]
+	c.idx++
 	return data, nil
 }
 
