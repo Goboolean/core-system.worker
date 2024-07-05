@@ -38,17 +38,14 @@ func NewStockTradeCursor(dataSource *influx.DB) (*StockTradeCursor, error) {
 	}, nil
 }
 
-func (c *StockTradeCursor) SetStartTime(t time.Time) {
-	c.current = t
-}
-
-func (c *StockTradeCursor) SelectProduct(productID string, timeFrame string) error {
-
+func (c *StockTradeCursor) ConfigureStockTradeCursor(startTime time.Time, productID string, timeFrame string) error {
 	var err error
 	var duration time.Duration
 	if duration, err = time.ParseDuration(timeFrame); err != nil {
 		return fmt.Errorf("select product: invalid duration format")
 	}
+
+	c.current = startTime
 	c.productID = productID
 	c.timeFrame = timeFrame
 	c.timeFrameDuration = duration

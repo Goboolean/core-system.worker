@@ -93,8 +93,8 @@ func (ps *PastStock) Execute() error {
 		cancel()
 	}()
 
-	ps.cursor.SelectProduct(ps.stockID, ps.timeSlice)
-	ps.cursor.SetStartTime(ps.startTime)
+	ps.cursor.ConfigureStockTradeCursor(ps.startTime, ps.stockID, ps.timeSlice)
+
 	count := int64(0)
 
 	e, err := ps.cursor.Next(ctx)
@@ -111,9 +111,8 @@ func (ps *PastStock) Execute() error {
 			Sequence: count,
 			Data:     e,
 		}
-		count++
 
-		fmt.Println(count)
+		count++
 	}
 
 	return nil
