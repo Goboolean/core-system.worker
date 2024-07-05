@@ -28,8 +28,8 @@ func MockRun() error {
 		}
 	}()
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
+	for range ctx.Done() {
 	}
+	return ctx.Err()
+
 }
