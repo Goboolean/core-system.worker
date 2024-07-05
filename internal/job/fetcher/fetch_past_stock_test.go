@@ -1,89 +1,120 @@
 package fetcher_test
 
 import (
+	"context"
 	"fmt"
-	"sync"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/model"
-	"github.com/Goboolean/core-system.worker/internal/util"
+	"github.com/Goboolean/fetch-system.IaC/pkg/influx"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
 )
 
-func makeStockAggregateExample() *model.StockAggregate {
-	return &model.StockAggregate{
-		OpenTime:   0,
-		ClosedTime: 0,
-		Open:       12,
-		Close:      150,
-		High:       150,
-		Low:        23,
-		Volume:     12,
-	}
+var opts = influx.Opts{
+	Url:             os.Getenv("INFLUXDB_URL"),
+	Token:           os.Getenv("INFLUXDB_TOKEN"),
+	Org:             os.Getenv("INFLUXDB_ORG"),
+	TradeBucketName: os.Getenv("INFLUXDB_BUCKET"),
+}
+var rawInfluxClient influxdb2.Client
+
+var testStockID = "stock.aapl.usa"
+var testTimeFrame = "1m"
+
+func TestMain(m *testing.M) {
+	rawInfluxClient = influxdb2.NewClient(opts.Url, opts.Token)
+	m.Run()
+	rawInfluxClient.Close()
 }
 
-// TestPastStock is a unit test function that tests the functionality of fetching past stock data.
-// It verifies that the fetched stock data matches the expected results.
+func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
+
+	org, err := client.OrganizationsAPI().FindOrganizationByName(context.Background(), orgName)
+	if err != nil {
+		return err
+	}
+
+	bucket, err := client.BucketsAPI().FindBucketByName(context.Background(), bucketName)
+	if err != nil {
+		return nil
+	}
+
+	client.BucketsAPI().DeleteBucket(context.Background(), bucket)
+	_, err = client.BucketsAPI().CreateBucketWithName(context.Background(), org, bucketName)
+
+	return err
+}
+
 func TestPastStock(t *testing.T) {
 	t.Run("Past stock fetch 테스트", func(t *testing.T) {
-		num := 5
-		productID := "stock.aapl.usa"
-		timeFrame := "1m"
-		productType := "stock"
-		startTime := time.Now().AddDate(-1, 0, 0).Truncate(time.Second)
-		endTime := time.Now().Truncate(time.Second)
+		RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName)
+		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
+		storeNum := 20
+		storeInterval := time.Minute
+		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
+		for i := 0; i < storeNum; i++ {
+			writer.WritePoint(
+				context.Background(),
+				write.NewPoint(
+					fmt.Sprintf("%s.%s", testStockID, testTimeFrame),
+					map[string]string{},
+					map[string]interface{}{
+						"open":   float64(i),
+						"close":  float64(2.0),
+						"high":   float64(3.0),
+						"low":    float64(4.0),
+						"volume": float64(4),
+					},
+					start.Add(time.Duration(i)*storeInterval),
+				),
+			)
+		}
 
-		ctl := gomock.NewController(t)
-
-		mockSession := fetcher.NewMockFetchingSession(ctl)
-
-		mockSession.EXPECT().Next().Return(false).Times(1).
-			After(mockSession.EXPECT().Next().Return(true).Times(num))
-		mockSession.EXPECT().Value(gomock.Any()).
-			Return(makeStockAggregateExample(), nil).Times(num)
-
-		mockRepo := fetcher.NewMockTradeRepository(ctl)
-		mockRepo.EXPECT().SelectProduct(productID, timeFrame, productType)
-		mockRepo.EXPECT().SetRangeByTime(startTime, endTime)
-		mockRepo.EXPECT().Session().Return(mockSession, nil)
-		mockRepo.EXPECT().Close()
-
-		fetchJob, err := fetcher.NewPastStock(mockRepo, &job.UserParams{
-			job.ProductID: productID,
-			job.StartDate: fmt.Sprint(startTime.Unix()),
-			job.EndDate:   fmt.Sprint(endTime.Unix()),
-		})
-
+		query, err := influx.NewDB(&opts)
 		if err != nil {
 			t.Error(err)
-			return
+			t.FailNow()
 		}
-		res := make([]model.Packet, 0, num)
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
+		defer cancel()
+		err = query.Ping(ctx)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
 
-		wg := &sync.WaitGroup{}
+		cursor, err := fetcher.NewStockTradeCursor(query)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
 
-		wg.Add(1)
+		fetchJob, err := fetcher.NewPastStock(*cursor, &job.UserParams{
+			job.ProductID: testStockID,
+			job.StartDate: fmt.Sprint(start.Unix()),
+			job.EndDate:   fmt.Sprint(start.Add(time.Duration(storeNum) * storeInterval).Unix()),
+		})
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		out := make([]model.Packet, 0)
 		go func() {
-			defer wg.Done()
 			for v := range fetchJob.Output() {
-				res = append(res, v)
+				out = append(out, v)
 			}
 		}()
+
 		err = fetchJob.Execute()
 
-		if util.IsWaitGroupTimeout(wg, 5*time.Second) {
-			t.Error("deadline exceed")
-			return
-		}
-
 		assert.NoError(t, err)
-		assert.Len(t, res, num)
-		for _, e := range res {
-			assert.Equal(t, makeStockAggregateExample(), e.Data)
-		}
+		assert.Len(t, out, storeNum)
 	})
 }
