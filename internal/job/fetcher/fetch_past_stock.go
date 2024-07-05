@@ -111,9 +111,8 @@ func (ps *PastStock) Execute() error {
 			Sequence: count,
 			Data:     e,
 		}
-		count++
 
-		fmt.Println(count)
+		count++
 	}
 
 	return nil
