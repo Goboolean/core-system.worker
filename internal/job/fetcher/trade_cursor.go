@@ -17,9 +17,10 @@ type StockTradeCursor struct {
 	current             time.Time
 	limit               int
 
-	productID         string
-	timeFrame         string
-	timeFrameDuration time.Duration
+	productID           string
+	timeFrame           string
+	timeFrameDuration   time.Duration
+	shouldNotFetchTrade bool
 
 	buf []*model.StockAggregate
 	idx int
@@ -33,6 +34,7 @@ func NewStockTradeCursor(dataSource *influx.DB) (*StockTradeCursor, error) {
 		limit:               DefaultLimit,
 		buf:                 make([]*model.StockAggregate, 0),
 		idx:                 0,
+		shouldNotFetchTrade: false,
 	}, nil
 }
 
@@ -54,6 +56,11 @@ func (c *StockTradeCursor) SelectProduct(productID string, timeFrame string) err
 }
 
 func (c *StockTradeCursor) Next(ctx context.Context) (*model.StockAggregate, error) {
+
+	if len(c.buf) == c.idx && c.shouldNotFetchTrade {
+		return nil, nil
+	}
+
 	if c.idx >= len(c.buf) {
 		b := backoff.WithContext(backoff.NewExponentialBackOff(), ctx)
 		var buf []*infraModel.StockAggregate
@@ -68,8 +75,12 @@ func (c *StockTradeCursor) Next(ctx context.Context) (*model.StockAggregate, err
 			return nil, err
 		}
 
-		sz := 0
-		if len(buf) > 0 {
+		if len(buf) < c.limit+1 {
+			c.shouldNotFetchTrade = true
+		}
+
+		sz := len(buf)
+		if len(buf) == c.limit+1 {
 			sz = len(buf) - 1
 		}
 		c.buf = make([]*model.StockAggregate, sz)
@@ -80,10 +91,6 @@ func (c *StockTradeCursor) Next(ctx context.Context) (*model.StockAggregate, err
 			c.buf[i] = mapStockAggregate(buf[i], c.timeFrameDuration)
 		}
 		c.idx = 0
-	}
-
-	if len(c.buf) == 0 {
-		return nil, nil
 	}
 
 	data := c.buf[c.idx]
