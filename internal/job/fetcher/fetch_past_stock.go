@@ -10,7 +10,6 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
-	"github.com/cenkalti/backoff"
 )
 
 var (
@@ -24,20 +23,21 @@ type PastStock struct {
 	startTime           time.Time // Unix timestamp of start time
 	endTime             time.Time
 	stockID             string
-	pastRepo            TradeRepository
+
+	cursor StockTradeCursor
 
 	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	stop *util.StopNotifier
 }
 
-func NewPastStock(tradeRepo TradeRepository, parmas *job.UserParams) (*PastStock, error) {
+func NewPastStock(stockCursor StockTradeCursor, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 
 	instance := &PastStock{
 		timeSlice:           DefaultTimeSlice,
 		isFetchingFullRange: DefaultIsFetchingFullRange,
-		pastRepo:            tradeRepo,
+		cursor:              stockCursor,
 		stop:                util.NewStopNotifier(),
 		out:                 make(job.DataChan),
 	}
@@ -82,7 +82,7 @@ func NewPastStock(tradeRepo TradeRepository, parmas *job.UserParams) (*PastStock
 func (ps *PastStock) Execute() error {
 
 	defer close(ps.out)
-	defer ps.pastRepo.Close()
+	defer ps.cursor.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -93,31 +93,26 @@ func (ps *PastStock) Execute() error {
 		cancel()
 	}()
 
-	ps.pastRepo.SelectProduct(ps.stockID, ps.timeSlice, "stock")
-	ps.pastRepo.SetRangeByTime(ps.startTime, ps.endTime)
-	session, err := ps.pastRepo.Session()
-	if err != nil {
-		panic(err)
-	}
+	ps.cursor.SelectProduct(ps.stockID, ps.timeSlice)
+	ps.cursor.SetStartTime(ps.startTime)
+	count := int64(0)
 
-	for i := int64(0); session.Next(); i++ {
-		b := backoff.WithContext(backoff.NewExponentialBackOff(), ctx)
-
-		if err := backoff.Retry(func() error {
-			v, err := session.Value(ctx)
-			if err != nil {
-				return err
-			}
-
-			ps.out <- model.Packet{
-				Sequence: i,
-				Data:     v,
-			}
-			return nil
-
-		}, b); err != nil {
-			return fmt.Errorf("model exec job: inference service returns error %w", err)
+	e, err := ps.cursor.Next(ctx)
+	for ; e != nil; e, err = ps.cursor.Next(ctx) {
+		if err != nil {
+			return fmt.Errorf("execute fetch job:fail to fetch trade %w", err)
 		}
+
+		if e.ClosedTime > ps.endTime.Unix() {
+			return nil
+		}
+
+		ps.out <- model.Packet{
+			Sequence: count,
+			Data:     e,
+		}
+
+		count++
 	}
 
 	return nil
