@@ -97,7 +97,8 @@ func (ps *PastStock) Execute() error {
 	ps.cursor.SetStartTime(ps.startTime)
 	count := int64(0)
 
-	for e, err := ps.cursor.Next(ctx); e != nil; {
+	e, err := ps.cursor.Next(ctx)
+	for ; e != nil; e, err = ps.cursor.Next(ctx) {
 		if err != nil {
 			return fmt.Errorf("execute fetch job:fail to fetch trade %w", err)
 		}
@@ -111,6 +112,8 @@ func (ps *PastStock) Execute() error {
 			Data:     e,
 		}
 		count++
+
+		fmt.Println(count)
 	}
 
 	return nil
