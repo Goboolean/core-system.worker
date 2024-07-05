@@ -28,8 +28,7 @@ func MockRun() error {
 		}
 	}()
 
-	for range ctx.Done() {
-	}
+<-ctx.Done()
 	return ctx.Err()
 
 }
