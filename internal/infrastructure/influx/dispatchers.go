@@ -8,6 +8,7 @@ import (
 
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/fetch-system.IaC/pkg/influx/mapper"
+
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"github.com/influxdata/influxdb-client-go/v2/api/write" // Change the import statement to use the correct version of the Point type
@@ -53,7 +54,7 @@ func NewOrderEventDispatcher(o *Opts) (*OrderEventDispatcher, error) {
 		writer: client.WriteAPI(o.Org, o.BucketName),
 	}
 
-	if instance.bucketExists(o.BucketName) {
+	if !instance.bucketExists(o.BucketName) {
 		return nil, ErrBucketNotExist
 	}
 
@@ -118,7 +119,7 @@ func NewAnnotationDispatcher(o *Opts) (*AnnotationDispatcher, error) {
 		writer: client.WriteAPI(o.Org, o.BucketName),
 	}
 
-	if instance.bucketExists(o.BucketName) {
+	if !instance.bucketExists(o.BucketName) {
 		return nil, ErrBucketNotExist
 	}
 
