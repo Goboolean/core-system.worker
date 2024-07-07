@@ -42,10 +42,13 @@ func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
 
 	bucket, err := client.BucketsAPI().FindBucketByName(context.Background(), bucketName)
 	if err != nil {
-		return nil
+		return err
 	}
 
-	client.BucketsAPI().DeleteBucket(context.Background(), bucket)
+	if err := client.BucketsAPI().DeleteBucket(context.Background(), bucket); err != nil {
+		return err
+	}
+
 	_, err = client.BucketsAPI().CreateBucketWithName(context.Background(), org, bucketName)
 
 	return err
@@ -53,13 +56,16 @@ func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
 
 func TestPastStock(t *testing.T) {
 	t.Run("Past stock fetch 테스트", func(t *testing.T) {
-		RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName)
+		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
 		storeNum := 20
 		storeInterval := time.Minute
 		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
 		for i := 0; i < storeNum; i++ {
-			writer.WritePoint(
+			err := writer.WritePoint(
 				context.Background(),
 				write.NewPoint(
 					fmt.Sprintf("%s.%s", testStockID, testTimeFrame),
@@ -74,6 +80,11 @@ func TestPastStock(t *testing.T) {
 					start.Add(time.Duration(i)*storeInterval),
 				),
 			)
+
+			if err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
 		}
 
 		query, err := influx.NewDB(&opts)
