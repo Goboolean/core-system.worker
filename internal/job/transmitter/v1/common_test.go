@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
@@ -21,7 +22,7 @@ type TestAnnotation struct {
 func TestCommon(t *testing.T) {
 	t.Run("annotation과 order가 무작이 순서로 입력됐을 때 적절히 이벤트를 발행해야 한다.", func(t *testing.T) {
 		//arrange
-
+		start := time.Now()
 		numOrder := 3
 		numAnnotation := 3
 		inChan := make(job.DataChan, numOrder+numAnnotation)
@@ -37,7 +38,7 @@ func TestCommon(t *testing.T) {
 				}
 
 				inChan <- model.Packet{
-					Sequence: 0,
+					Time: start.Add(time.Duration(i) * time.Second),
 					Data: &model.TradeCommand{
 						ProportionPercent: 0,
 						Action:            model.Buy,
@@ -51,8 +52,8 @@ func TestCommon(t *testing.T) {
 				}
 
 				inChan <- model.Packet{
-					Sequence: 0,
-					Data:     &TestAnnotation{},
+					Time: start.Add(time.Duration(j) * time.Second),
+					Data: &TestAnnotation{},
 				}
 				j--
 				fmt.Printf("annotation is queued, i:%d\n", j)
