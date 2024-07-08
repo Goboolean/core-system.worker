@@ -50,18 +50,13 @@ jobs:
           OUTPUT=$(docker exec ${CONTAINER_ID} influx auth create --org org --read-buckets --write-buckets --description "New token for testing")
           INFLUXDB_TOKEN=$(echo ${OUTPUT} | grep 'New token for testing' | awk '{print $6}')
 
-      - name: Setup InfluxDB CLI
-        uses: influxdata/influxdb-action@v3
-        with:
-          influxdb_version: 2.7.5
-          influxdb_start: false
-
       - name: Create Bucket
         run: |
-          influx bucket create --host ${INFLUXDB_URL} --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_TRADE_BUCKET} --org ${INFLUXDB_ORG}
-          influx bucket create --host ${INFLUXDB_URL} --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ORDER_EVENT_BUCKET} --org ${INFLUXDB_ORG}
-          influx bucket create --host ${INFLUXDB_URL} --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ANNOATAION_BUCCKDET} --org ${INFLUXDB_ORG}
-            
+          CONTAINER_ID=$(docker ps | grep 'influxdb:latest' | awk '{print $1}')
+          docker exec ${CONTAINER_ID} influx bucket create --host ${INFLUXDB_URL} --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_TRADE_BUCKET} --org ${INFLUXDB_ORG}
+          docker exec ${CONTAINER_ID} influx bucket create --host ${INFLUXDB_URL} --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ORDER_EVENT_BUCKET} --org ${INFLUXDB_ORG}
+          docker exec ${CONTAINER_ID} influx bucket create --host ${INFLUXDB_URL} --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ANNOATAION_BUCCKDET} --org ${INFLUXDB_ORG}      
+     
       - name: Checkout
         uses: actions/checkout@v2
       
