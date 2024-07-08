@@ -95,8 +95,6 @@ func (ps *PastStock) Execute() error {
 
 	ps.cursor.ConfigureStockTradeCursor(ps.startTime, ps.stockID, ps.timeSlice)
 
-	count := int64(0)
-
 	e, err := ps.cursor.Next(ctx)
 	for ; e != nil; e, err = ps.cursor.Next(ctx) {
 		if err != nil {
@@ -108,11 +106,10 @@ func (ps *PastStock) Execute() error {
 		}
 
 		ps.out <- model.Packet{
-			Sequence: count,
-			Data:     e,
+			Time: time.Unix(e.ClosedTime, 0),
+			Data: e,
 		}
 
-		count++
 	}
 
 	return nil
