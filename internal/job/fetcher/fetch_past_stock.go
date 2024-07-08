@@ -97,8 +97,6 @@ func (ps *PastStock) Execute() error {
 		return fmt.Errorf("execute fetch job:fail to configure trade cursor %w", err)
 	}
 
-	count := int64(0)
-
 	e, err := ps.cursor.Next(ctx)
 	for ; e != nil; e, err = ps.cursor.Next(ctx) {
 		if err != nil {
@@ -110,11 +108,10 @@ func (ps *PastStock) Execute() error {
 		}
 
 		ps.out <- model.Packet{
-			Sequence: count,
-			Data:     e,
+			Time: time.Unix(e.ClosedTime, 0),
+			Data: e,
 		}
 
-		count++
 	}
 
 	return nil

@@ -57,10 +57,11 @@ func TestMock(t *testing.T) {
 			},
 		}
 		inChan := make(job.DataChan, len(input))
+		start := time.Now()
 		for i, e := range input {
 			inChan <- model.Packet{
-				Sequence: int64(i),
-				Data:     e,
+				Time: start.Add(time.Duration(i) * time.Second),
+				Data: e,
 			}
 		}
 		close(inChan)

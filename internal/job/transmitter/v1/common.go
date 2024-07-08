@@ -3,7 +3,6 @@ package v1
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
@@ -99,11 +98,11 @@ func (b *Common) Execute() error {
 				&model.OrderEvent{
 					ProductID: b.productId,
 					Command:   *v,
-					CreatedAt: time.Now(),
+					CreatedAt: inPacket.Time,
 					Task:      b.task,
 				})
 		default:
-			b.annotationDispatcher.Dispatch(b.taskID, v, time.Now())
+			b.annotationDispatcher.Dispatch(b.taskID, v, inPacket.Time)
 		}
 	}
 
