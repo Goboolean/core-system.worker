@@ -2,28 +2,29 @@ package joiner
 
 import (
 	"container/list"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/model"
 )
 
-// BySequenceNum는 model.Packet에 있는 sequnce값이 같은 두 데이터를 Pair에 담아 출력합니다.
-type BySequenceNum struct {
+// ByTime는 model.Packet에 있는 sequnce값이 같은 두 데이터를 Pair에 담아 출력합니다.
+type ByTime struct {
 	refIn   job.DataChan
 	modelIn job.DataChan
 	out     job.DataChan
 }
 
-func NewBySequence(params *job.UserParams) (*BySequenceNum, error) {
+func NewTime(params *job.UserParams) (*ByTime, error) {
 
-	instance := &BySequenceNum{
+	instance := &ByTime{
 		out: make(job.DataChan),
 	}
 
 	return instance, nil
 }
 
-func (b *BySequenceNum) Execute() error {
+func (b *ByTime) Execute() error {
 	defer close(b.out)
 
 	referenceInputBuf := make([]model.Packet, 0, 100)
@@ -59,14 +60,14 @@ func (b *BySequenceNum) Execute() error {
 			if len(referenceInputBuf) == 0 {
 				break
 			}
-			location := findLargestPacketIndexBySequence(referenceInputBuf, e.Value.(model.Packet).Sequence)
+			location := findLargestPacketIndexByTime(referenceInputBuf, e.Value.(model.Packet).Time)
 
-			if referenceInputBuf[location].Sequence != e.Value.(model.Packet).Sequence {
+			if referenceInputBuf[location].Time.Unix() != e.Value.(model.Packet).Time.Unix() {
 				continue
 			}
 
 			b.out <- model.Packet{
-				Sequence: e.Value.(model.Packet).Sequence,
+				Time: e.Value.(model.Packet).Time,
 				Data: &model.Pair{
 					RefData:   referenceInputBuf[location].Data,
 					ModelData: e.Value.(model.Packet).Data,
@@ -80,11 +81,11 @@ func (b *BySequenceNum) Execute() error {
 	}
 }
 
-// findLargestPacketIndexBySequence returns the index of the packet with the largest sequence number
+// findLargestPacketIndexByTime returns the index of the packet with the largest sequence number
 // that is less than or equal to the target sequence number.
 // -1 means all element has sequnce that is grater than target
 // WARINING: TO BE USED ONLY WITH ARRAYS SORTED IN ASCENDING ORDER
-func findLargestPacketIndexBySequence(data []model.Packet, target int64) int {
+func findLargestPacketIndexByTime(data []model.Packet, target time.Time) int {
 	// data는 순서가 보장돼 있고 대부분 앞 부분에 찾고자 하는 값이 있을 것이라
 	// 예상할 수 있으므로 순차탐색
 	sz := len(data)
@@ -92,19 +93,23 @@ func findLargestPacketIndexBySequence(data []model.Packet, target int64) int {
 		return -1
 	}
 
-	first := data[0].Sequence
-	last := data[sz-1].Sequence
+	first := data[0].Time
+	last := data[sz-1].Time
 
-	if first > target {
+	// first > target
+	if first.Sub(target) > 0 {
 		return -1
 	}
 
-	if last <= target {
+	//last <= target
+	if last.Sub(target) <= 0 {
 		return sz - 1
 	}
 
 	for i := 0; i < sz-1; i++ {
-		if data[i+1].Sequence > target {
+
+		// data[i+1].Time > target
+		if data[i+1].Time.Sub(target) > 0 {
 			return i
 		}
 	}
@@ -112,14 +117,14 @@ func findLargestPacketIndexBySequence(data []model.Packet, target int64) int {
 	return -2
 }
 
-func (b *BySequenceNum) SetRefInput(in job.DataChan) {
+func (b *ByTime) SetRefInput(in job.DataChan) {
 	b.refIn = in
 }
 
-func (b *BySequenceNum) SetModelInput(in job.DataChan) {
+func (b *ByTime) SetModelInput(in job.DataChan) {
 	b.modelIn = in
 }
 
-func (b *BySequenceNum) Output() job.DataChan {
+func (b *ByTime) Output() job.DataChan {
 	return b.out
 }
