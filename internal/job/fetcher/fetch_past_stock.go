@@ -93,7 +93,9 @@ func (ps *PastStock) Execute() error {
 		cancel()
 	}()
 
-	ps.cursor.ConfigureStockTradeCursor(ps.startTime, ps.stockID, ps.timeSlice)
+	if err := ps.cursor.ConfigureStockTradeCursor(ps.startTime, ps.stockID, ps.timeSlice); err != nil {
+		return fmt.Errorf("execute fetch job:fail to configure trade cursor %w", err)
+	}
 
 	count := int64(0)
 
