@@ -24,14 +24,14 @@ type PastStock struct {
 	endTime             time.Time
 	stockID             string
 
-	cursor StockTradeCursor
+	cursor *StockTradeCursor
 
 	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	stop *util.StopNotifier
 }
 
-func NewPastStock(stockCursor StockTradeCursor, parmas *job.UserParams) (*PastStock, error) {
+func NewPastStock(stockCursor *StockTradeCursor, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 
 	instance := &PastStock{
