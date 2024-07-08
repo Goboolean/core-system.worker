@@ -53,7 +53,7 @@ jobs:
       - name: Setup InfluxDB CLI
         uses: influxdata/influxdb-action@v3
         with:
-          influxdb_version: latest
+          influxdb_version: 2.7.6
           influxdb_start: false
 
       - name: Create Bucket
