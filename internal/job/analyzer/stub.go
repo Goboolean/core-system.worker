@@ -27,10 +27,10 @@ func (s *Stub) Execute() error {
 	}()
 
 	i := 0
-	for range s.in {
+	for input := range s.in {
 		//아무런 동작이 일어나지 않는 값
 		s.out <- model.Packet{
-			Sequence: int64(i),
+			Time: input.Time,
 			Data: &model.TradeCommand{
 				Action:            model.Sell,
 				ProportionPercent: 0,

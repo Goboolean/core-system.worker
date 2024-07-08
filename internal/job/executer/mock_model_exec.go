@@ -117,7 +117,7 @@ func (m *Mock) Execute() error {
 		//지금은 모델이 candlestick를 리턴한다고 가정한다.
 		//거래량 중요한 데이터가 아니므로 일단 0처리
 		m.out <- model.Packet{
-			Sequence: input.Sequence,
+			Time: input.Time,
 			Data: &model.StockAggregate{
 				OpenTime:   data.ClosedTime,
 				ClosedTime: data.ClosedTime + (data.ClosedTime - data.OpenTime),

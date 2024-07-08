@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
@@ -37,7 +38,7 @@ func TestCommon(t *testing.T) {
 				}
 
 				inChan <- model.Packet{
-					Sequence: 0,
+					Time: time.Now(),
 					Data: &model.TradeCommand{
 						ProportionPercent: 0,
 						Action:            model.Buy,
@@ -51,8 +52,8 @@ func TestCommon(t *testing.T) {
 				}
 
 				inChan <- model.Packet{
-					Sequence: 0,
-					Data:     &TestAnnotation{},
+					Time: time.Now(),
+					Data: &TestAnnotation{},
 				}
 				j--
 				fmt.Printf("annotation is queued, i:%d\n", j)
