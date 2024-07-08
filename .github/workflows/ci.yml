@@ -5,7 +5,10 @@ env:
   INFLUXDB_BUCKET: bucket
   INFLUXDB_TOKEN: token
   INFLUXDB_ORG: org
-
+  INFLUXDB_TRADE_BUCKET: trade
+  INFLUXDB_ORDER_EVENT_BUCKET: orderEvent
+  INFLUXDB_ANNOATAION_BUCCKDET: annotationBucket
+  
 on:
   push:
     branches:
@@ -46,7 +49,14 @@ jobs:
           CONTAINER_ID=$(docker ps | grep 'influxdb:latest' | awk '{print $1}')
           OUTPUT=$(docker exec ${CONTAINER_ID} influx auth create --org org --read-buckets --write-buckets --description "New token for testing")
           INFLUXDB_TOKEN=$(echo ${OUTPUT} | grep 'New token for testing' | awk '{print $6}')
-      
+
+      - name: Create Bucket
+        run: |
+          CONTAINER_ID=$(docker ps | grep 'influxdb:latest' | awk '{print $1}')
+          docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_TRADE_BUCKET} --org ${INFLUXDB_ORG}
+          docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ORDER_EVENT_BUCKET} --org ${INFLUXDB_ORG}
+          docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ANNOATAION_BUCCKDET} --org ${INFLUXDB_ORG}      
+     
       - name: Checkout
         uses: actions/checkout@v2
       
