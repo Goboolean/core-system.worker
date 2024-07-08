@@ -11,7 +11,9 @@ import (
 	"github.com/cenkalti/backoff"
 )
 
-// StockTradeCursor는 특정 시점 이후 StockTradeData를 1개씩 가져올 수 있도록 하는
+// StockTradeCursor is a cursor structure designed for sequentially accessing stock trade data.
+// It retrieves an appropriate amount of data from a data source containing past trading data,
+// stores it in a buffer, and sequentially provides this data.
 type StockTradeCursor struct {
 	pastTradeDataSource *influx.DB
 	current             time.Time
@@ -38,6 +40,8 @@ func NewStockTradeCursor(dataSource *influx.DB) (*StockTradeCursor, error) {
 	}, nil
 }
 
+// ConfigureStockTradeCursor selects the data that StockTradeCursor will retrieve.
+// This function should be called before invoking the Next() function.
 func (c *StockTradeCursor) ConfigureStockTradeCursor(startTime time.Time, productID string, timeFrame string) error {
 	var err error
 	var duration time.Duration
@@ -52,6 +56,9 @@ func (c *StockTradeCursor) ConfigureStockTradeCursor(startTime time.Time, produc
 	return nil
 }
 
+// Next fetches the current trade data pointed by the cursor and moves the cursor to the next trade trade data.
+// If an error occurs during data retrieval, it returns (nil, err).
+// If there is no more data to retrieve, it returns (nil, nil).
 func (c *StockTradeCursor) Next(ctx context.Context) (*model.StockAggregate, error) {
 
 	if len(c.buf) == c.idx && c.shouldNotFetchTrade {
