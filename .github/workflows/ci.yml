@@ -53,9 +53,9 @@ jobs:
       - name: Create Bucket
         run: |
           CONTAINER_ID=$(docker ps | grep 'influxdb:latest' | awk '{print $1}')
-          docker exec ${CONTAINER_ID} influx bucket create --host ${INFLUXDB_URL} --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_TRADE_BUCKET} --org ${INFLUXDB_ORG}
-          docker exec ${CONTAINER_ID} influx bucket create --host ${INFLUXDB_URL} --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ORDER_EVENT_BUCKET} --org ${INFLUXDB_ORG}
-          docker exec ${CONTAINER_ID} influx bucket create --host ${INFLUXDB_URL} --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ANNOATAION_BUCCKDET} --org ${INFLUXDB_ORG}      
+          docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_TRADE_BUCKET} --org ${INFLUXDB_ORG}
+          docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ORDER_EVENT_BUCKET} --org ${INFLUXDB_ORG}
+          docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ANNOATAION_BUCCKDET} --org ${INFLUXDB_ORG}      
      
       - name: Checkout
         uses: actions/checkout@v2
