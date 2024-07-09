@@ -41,7 +41,7 @@ func (m *Stub) Execute() error {
 			data := input.Data.(*model.StockAggregate)
 
 			m.out <- model.Packet{
-				Sequence: input.Sequence,
+				Time: input.Time,
 				Data: &model.StockAggregate{
 					OpenTime:   data.ClosedTime,
 					ClosedTime: data.ClosedTime + (data.ClosedTime - data.OpenTime),

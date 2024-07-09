@@ -55,6 +55,7 @@ func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
 func (ps *StockStub) Execute() error {
 
 	defer close(ps.out)
+	start := time.Now()
 	for i := 0; i < ps.numOfGeneration; i++ {
 
 		select {
@@ -62,7 +63,7 @@ func (ps *StockStub) Execute() error {
 			return nil
 		default:
 			ps.out <- model.Packet{
-				Sequence: int64(i),
+				Time: start.Add(time.Duration(i) * time.Second),
 				Data: &model.StockAggregate{
 					OpenTime:   1716775499,
 					ClosedTime: 1716775499,
