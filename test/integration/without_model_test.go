@@ -60,6 +60,10 @@ func TestPipelineWithoutModel(t *testing.T) {
 		}
 
 		p, err := pipeline.Build(*config)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
 
 		ctx := context.Background()
 		err = p.Run(ctx)
