@@ -2,6 +2,7 @@ package executer_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
@@ -15,10 +16,10 @@ func TestStub(t *testing.T) {
 		//arrange
 		num := 100
 		inChan := make(job.DataChan, num)
-
+		start := time.Now()
 		for i := 0; i < num; i++ {
 			inChan <- model.Packet{
-				Sequence: int64(i),
+				Time: start.Add(time.Duration(i) * time.Second),
 				Data: &model.StockAggregate{
 					OpenTime:   1716775499,
 					ClosedTime: 1716775499,
