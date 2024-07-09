@@ -19,7 +19,7 @@ func NewExample(parmas *job.UserParams) (*Example, error) {
 	return instance, nil
 }
 
-func (s *Stub) Execute() error {
+func (s *Example) Execute() error {
 
 	defer close(s.out)
 	defer func() {
@@ -42,10 +42,10 @@ func (s *Stub) Execute() error {
 	return nil
 }
 
-func (s *Stub) SetInput(in job.DataChan) {
+func (s *Example) SetInput(in job.DataChan) {
 	s.in = in
 }
 
-func (s *Stub) Output() job.DataChan {
+func (s *Example) Output() job.DataChan {
 	return s.out
 }
