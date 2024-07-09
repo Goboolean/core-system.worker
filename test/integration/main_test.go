@@ -18,7 +18,7 @@ var (
 
 	tradeBucket      = os.Getenv("INFLUXDB_TRADE_BUCKET")
 	orderBucket      = os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET")
-	annotationBucket = os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET")
+	annotationBucket = os.Getenv("INFLUXDB_ANNOTATION_EVENT_BUCKET")
 )
 
 func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
