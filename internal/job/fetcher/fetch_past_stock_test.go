@@ -17,7 +17,7 @@ import (
 )
 
 var opts = influx.Opts{
-	Url:             os.Getenv("INFLUXDB_URL"),
+	URL:             os.Getenv("INFLUXDB_URL"),
 	Token:           os.Getenv("INFLUXDB_TOKEN"),
 	Org:             os.Getenv("INFLUXDB_ORG"),
 	TradeBucketName: os.Getenv("INFLUXDB_BUCKET"),
@@ -28,7 +28,7 @@ var testStockID = "stock.aapl.usa"
 var testTimeFrame = "1m"
 
 func TestMain(m *testing.M) {
-	rawInfluxClient = influxdb2.NewClient(opts.Url, opts.Token)
+	rawInfluxClient = influxdb2.NewClient(opts.URL, opts.Token)
 	m.Run()
 	rawInfluxClient.Close()
 }
@@ -106,7 +106,7 @@ func TestPastStock(t *testing.T) {
 			t.FailNow()
 		}
 
-		fetchJob, err := fetcher.NewPastStock(*cursor, &job.UserParams{
+		fetchJob, err := fetcher.NewPastStock(cursor, &job.UserParams{
 			job.ProductID: testStockID,
 			job.StartDate: fmt.Sprint(start.Unix()),
 			job.EndDate:   fmt.Sprint(start.Add(time.Duration(storeNum) * storeInterval).Unix()),
