@@ -28,7 +28,7 @@ func (s *Example) Execute() error {
 
 	for v := range s.in {
 		t := v.Time
-		stock := v.Data.(*model.StockAggregate)
+		//stock := v.Data.(*model.StockAggregate)
 		//여기에 연산 로직 구현
 
 		s.out <- model.Packet{
