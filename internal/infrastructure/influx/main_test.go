@@ -40,7 +40,10 @@ func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
 		return nil
 	}
 
-	client.BucketsAPI().DeleteBucket(context.Background(), bucket)
+	if err := client.BucketsAPI().DeleteBucket(context.Background(), bucket); err != nil {
+		return err
+	}
+
 	_, err = client.BucketsAPI().CreateBucketWithName(context.Background(), org, bucketName)
 
 	return err
