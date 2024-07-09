@@ -17,7 +17,7 @@ func provideInfluxConfig() *influx.Opts {
 		URL:             os.Getenv("INFLUXDB_URL"),
 		Token:           os.Getenv("INFLUXDB_TOKEN"),
 		Org:             os.Getenv("INFLUXDB_ORG"),
-		TradeBucketName: os.Getenv("INFLUXDB_BUCKET"),
+		TradeBucketName: os.Getenv("INFLUXDB_TRADE_BUCKET"),
 	}
 }
 
