@@ -12,7 +12,7 @@ import (
 var rawInfluxClient influxdb2.Client
 
 var (
-	influxDBUrl   = os.Getenv("INFLUXDB_HOST")
+	influxDBUrl   = os.Getenv("INFLUXDB_URL")
 	influxDBOrg   = os.Getenv("INFLUXDB_ORG")
 	influxDBToken = os.Getenv("INFLUXDB_TOKEN")
 
