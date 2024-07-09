@@ -4,11 +4,11 @@ dataOrigin:
   timeFrame:
     seconds: 60 #string, seconds 초 단위, example: "300s"
   productID: "stock.aapl.usa" #{type}.{symbol}.{locale}
-  productType: "stock" #"option"|"stock"|"crypto"
+  productType: "stockStub" #"option"|"stock"|"crypto"
   startTimestamp: 1720396800 #long(int64),Unix timestamp(epoch time), realtime일 때는 미적용.
   endTimestamp: 1720420200 #long(int64),Unix timestamp(epoch time), realtime일 때는 미적용.
 strategy:
   ID: "stub" #string
-  inputType: "stock" #"candlestick"|"valueList"|"probeDist"
+  inputType: "stockStub" #"candlestick"|"valueList"|"probeDist"
   params: #map[string]float32
     param1: 3.14
