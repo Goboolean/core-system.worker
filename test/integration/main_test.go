@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 var rawInfluxClient influxdb2.Client
@@ -21,7 +22,6 @@ var (
 )
 
 func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
-
 	org, err := client.OrganizationsAPI().FindOrganizationByName(context.Background(), orgName)
 	if err != nil {
 		return err
@@ -36,6 +36,12 @@ func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
 	_, err = client.BucketsAPI().CreateBucketWithName(context.Background(), org, bucketName)
 
 	return err
+}
+
+func TestPing(t *testing.T) {
+	ok, err := rawInfluxClient.Ping(context.Background())
+	assert.True(t, ok)
+	assert.NoError(t, err)
 }
 
 func TestMain(m *testing.M) {
