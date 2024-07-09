@@ -1,8 +1,6 @@
 module github.com/Goboolean/core-system.worker
 
-go 1.22.0
-
-toolchain go1.22.2
+go 1.22.2
 
 require (
 	github.com/Goboolean/common v0.0.0-20231130153141-cb54596b217d
