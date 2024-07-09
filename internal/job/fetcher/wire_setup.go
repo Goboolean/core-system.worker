@@ -8,6 +8,7 @@ import (
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/fetch-system.IaC/pkg/influx"
+
 	"github.com/google/wire"
 )
 

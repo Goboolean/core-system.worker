@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	github.com/Goboolean/common v0.0.0-20231130153141-cb54596b217d
-	github.com/Goboolean/fetch-system.IaC v0.0.0-20240704054007-7950c393d309
+	github.com/Goboolean/fetch-system.IaC v0.0.0-20240709073651-acf8ff66d5b2
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/google/wire v0.6.0
 	github.com/influxdata/influxdb-client-go/v2 v2.13.0
@@ -20,11 +20,9 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/oapi-codegen/runtime v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )

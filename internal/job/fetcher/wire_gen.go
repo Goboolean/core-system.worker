@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-// Injectors from wrie_setup.go:
+// Injectors from wire_setup.go:
 
 func InitializePastStock(p *job.UserParams) (Fetcher, error) {
 	opts := provideInfluxConfig()
@@ -31,7 +31,7 @@ func InitializePastStock(p *job.UserParams) (Fetcher, error) {
 	return pastStock, nil
 }
 
-// wrie_setup.go:
+// wire_setup.go:
 
 func provideInfluxConfig() *influx.Opts {
 	return &influx.Opts{
