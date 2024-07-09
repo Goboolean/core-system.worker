@@ -35,7 +35,7 @@ func InitializePastStock(p *job.UserParams) (Fetcher, error) {
 
 func provideInfluxConfig() *influx.Opts {
 	return &influx.Opts{
-		Url:             os.Getenv("INFLUXDB_URL"),
+		URL:             os.Getenv("INFLUXDB_URL"),
 		Token:           os.Getenv("INFLUXDB_TOKEN"),
 		Org:             os.Getenv("INFLUXDB_ORG"),
 		TradeBucketName: os.Getenv("INFLUXDB_BUCKET"),
