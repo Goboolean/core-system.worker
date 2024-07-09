@@ -120,7 +120,7 @@ func TestPastStock(t *testing.T) {
 			t.FailNow()
 		}
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
-		storeNum := 100
+		storeNum := 300
 		storeInterval := time.Minute
 		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
 		for i := 0; i < storeNum; i++ {
