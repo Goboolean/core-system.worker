@@ -80,7 +80,10 @@ func TestCountRecordsInMeasurement(t *testing.T) {
 	bucket := annotationBucket
 	measurement := "testMeasurement"
 
-	RecreateBucket(rawInfluxClient, influxDBOrg, bucket)
+	if err := RecreateBucket(rawInfluxClient, influxDBOrg, bucket); err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	startTime := time.Unix(1720396800, 0)
 	num := 390
 	writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, bucket)
