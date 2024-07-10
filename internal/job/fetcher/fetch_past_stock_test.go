@@ -20,8 +20,9 @@ var opts = influx.Opts{
 	URL:             os.Getenv("INFLUXDB_URL"),
 	Token:           os.Getenv("INFLUXDB_TOKEN"),
 	Org:             os.Getenv("INFLUXDB_ORG"),
-	TradeBucketName: os.Getenv("INFLUXDB_BUCKET"),
+	TradeBucketName: os.Getenv("INFLUXDB_TRADE_BUCKET"),
 }
+
 var rawInfluxClient influxdb2.Client
 
 var testStockID = "stock.aapl.usa"
@@ -54,14 +55,72 @@ func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
 	return err
 }
 
+func TestPing(t *testing.T) {
+	ok, err := rawInfluxClient.Ping(context.Background())
+	assert.True(t, ok)
+	assert.NoError(t, err)
+}
+
 func TestPastStock(t *testing.T) {
-	t.Run("Past stock fetch 테스트", func(t *testing.T) {
+	t.Run("저장된 데이터가 없을 때, 0개의 데이터를 가져와야 한다.", func(t *testing.T) {
+		//arrange
+		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+		start := time.Now()
+
+		query, err := influx.NewDB(&opts)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
+		defer cancel()
+		err = query.Ping(ctx)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		cursor, err := fetcher.NewStockTradeCursor(query)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		fetchJob, err := fetcher.NewPastStock(cursor, &job.UserParams{
+			job.ProductID: testStockID,
+			job.StartDate: fmt.Sprint(start.Unix()),
+			job.EndDate:   fmt.Sprint(start.Add(time.Minute).Unix()),
+		})
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		out := make([]model.Packet, 0)
+		go func() {
+			for v := range fetchJob.Output() {
+				out = append(out, v)
+			}
+		}()
+
+		err = fetchJob.Execute()
+
+		assert.NoError(t, err)
+		assert.Len(t, out, 0)
+	})
+
+	t.Run("데이터가 저장된 만큼, 데이터를 가져와야 한다.", func(t *testing.T) {
+
 		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
-		storeNum := 20
+		storeNum := 350
 		storeInterval := time.Minute
 		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
 		for i := 0; i < storeNum; i++ {
@@ -127,5 +186,6 @@ func TestPastStock(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Len(t, out, storeNum)
+
 	})
 }
