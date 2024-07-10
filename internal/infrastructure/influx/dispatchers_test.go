@@ -20,7 +20,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 		}
 		num := 100
 		dispatcher, err := influx.NewOrderEventDispatcher(&influx.Opts{
-			Url:        url,
+			URL:        url,
 			Token:      token,
 			Org:        org,
 			BucketName: bucket,
@@ -81,7 +81,7 @@ func TestAnnotationDispatcher(t *testing.T) {
 
 		num := 100
 		dispatcher, err := influx.NewAnnotationDispatcher(&influx.Opts{
-			Url:        url,
+			URL:        url,
 			Token:      token,
 			Org:        org,
 			BucketName: bucket,
