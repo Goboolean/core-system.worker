@@ -11,4 +11,7 @@ var providerRepo = map[Spec]jobProvider{
 	{ID: "stub", InputType: "stockStub"}: func(p *job.UserParams) (Analyzer, error) {
 		return NewStub(p)
 	},
+	{ID: "stub", InputType: "stock"}: func(p *job.UserParams) (Analyzer, error) {
+		return NewStub(p)
+	},
 }
