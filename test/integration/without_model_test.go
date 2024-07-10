@@ -2,7 +2,6 @@ package integration
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -30,7 +29,7 @@ func TestPipelineWithoutModel(t *testing.T) {
 		}
 
 		startTime := time.Unix(1720396800, 0)
-		num := 390
+		num := 350
 		writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, tradeBucket)
 		for i := 0; i < num; i++ {
 			err := writer.WritePoint(context.Background(),
@@ -71,23 +70,13 @@ func TestPipelineWithoutModel(t *testing.T) {
 		//assert
 		assert.NoError(t, err)
 
-		q, err := rawInfluxClient.QueryAPI(influxDBOrg).
-			Query(context.Background(),
-				fmt.Sprintf(`from(bucket: "%s")
-			|> range(start:0)
-			|> filter(fn: (r) => r["_measurement"] == "%s")
-			|> count())`, orderBucket, config.TaskID))
-
+		var count int
+		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, orderBucket, config.TaskID)
 		assert.NoError(t, err)
-		assert.Equal(t, num, q.Record().ValueByKey(q.TableMetadata().Column(0).Name()))
+		assert.Equal(t, num, count)
 
-		q, err = rawInfluxClient.QueryAPI(influxDBOrg).
-			Query(context.Background(),
-				fmt.Sprintf(`from(bucket: "%s")
-		|> range(start:0)
-		|> filter(fn: (r) => r["_measurement"] == "%s")
-		|> count())`, annotationBucket, config.TaskID))
+		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, annotationBucket, config.TaskID)
 		assert.NoError(t, err)
-		assert.Equal(t, num, q.Record().ValueByKey(q.TableMetadata().Column(0).Name()))
+		assert.Equal(t, num, count)
 	})
 }

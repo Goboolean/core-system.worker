@@ -26,7 +26,6 @@ func (s *Stub) Execute() error {
 		go chanutil.DummyChannelConsumer(s.in)
 	}()
 
-	i := 0
 	for input := range s.in {
 		//아무런 동작이 일어나지 않는 값
 		s.out <- model.Packet{
@@ -36,7 +35,13 @@ func (s *Stub) Execute() error {
 				ProportionPercent: 0,
 			},
 		}
-		i++
+		s.out <- model.Packet{
+			Time: input.Time,
+			Data: model.ExampleAnnotation{
+				Description: "hello world",
+			},
+		}
+
 	}
 	return nil
 }
