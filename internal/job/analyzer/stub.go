@@ -36,6 +36,12 @@ func (s *Stub) Execute() error {
 				ProportionPercent: 0,
 			},
 		}
+		s.out <- model.Packet{
+			Time: input.Time,
+			Data: &model.ExampleAnnotation{
+				Description: "hello world",
+			},
+		}
 		i++
 	}
 	return nil
