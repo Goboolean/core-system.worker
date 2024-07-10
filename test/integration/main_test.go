@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,19 +51,16 @@ func CountRecordsInMeasurement(client influxdb2.Client, orgName, bucketName, mea
 				`from(bucket: "%s")
 				|> range(start:0)
 				|> filter(fn: (r) => r["_measurement"] == "%s")
-				|> count()`, annotationBucket, measurement))
+				|> count()`, bucketName, measurement))
 	if err != nil {
 		return 0, err
-	}
-
-	if !q.Next() {
-		return 0, nil
 	}
 
 	num := int64(0)
 
 	// 각 record 별 count에서 최댓값을 찾는다.
 	for q.Next() {
+		fmt.Println("CountRecordsInMeasurement: records: ", q.Record().Values())
 		val := q.Record().ValueByKey("_value").(int64)
 		if val > num {
 			num = val
@@ -75,6 +74,38 @@ func TestPing(t *testing.T) {
 	ok, err := rawInfluxClient.Ping(context.Background())
 	assert.True(t, ok)
 	assert.NoError(t, err)
+}
+
+func TestCountRecordsInMeasurement(t *testing.T) {
+	bucket := annotationBucket
+	measurement := "testMeasurement"
+
+	RecreateBucket(rawInfluxClient, influxDBOrg, bucket)
+	startTime := time.Unix(1720396800, 0)
+	num := 390
+	writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, bucket)
+	for i := 0; i < num; i++ {
+		err := writer.WritePoint(context.Background(),
+			write.NewPoint(
+				measurement,
+				map[string]string{},
+				map[string]interface{}{
+					"testString": "hello",
+					"testNum":    3,
+					"testFloat":  3.14,
+				},
+				startTime.Add(time.Duration(i)*time.Minute),
+			))
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+	}
+
+	count, err := CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, bucket, measurement)
+	assert.Equal(t, num, count)
+	assert.NoError(t, err)
+
 }
 
 func TestMain(m *testing.M) {
