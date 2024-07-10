@@ -14,7 +14,7 @@ import (
 
 func provideOrderEventDispatcher() (transmitter.OrderEventDispatcher, error) {
 	return influx.NewOrderEventDispatcher(&influx.Opts{
-		Url:        os.Getenv("INFLUXDB_URL"),
+		RUL:        os.Getenv("INFLUXDB_URL"),
 		Token:      os.Getenv("INFLUXDB_TOKEN"),
 		Org:        os.Getenv("INFLUXDB_ORG"),
 		BucketName: os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET"),
@@ -23,7 +23,7 @@ func provideOrderEventDispatcher() (transmitter.OrderEventDispatcher, error) {
 
 func provideAnnotationDispatcher() (transmitter.AnnotationDispatcher, error) {
 	return influx.NewAnnotationDispatcher(&influx.Opts{
-		Url:        os.Getenv("INFLUXDB_URL"),
+		RUL:        os.Getenv("INFLUXDB_URL"),
 		Token:      os.Getenv("INFLUXDB_TOKEN"),
 		Org:        os.Getenv("INFLUXDB_ORG"),
 		BucketName: os.Getenv("INFLUXDB_ANNOTATION_BUCKET"),

@@ -17,7 +17,7 @@ import (
 var ErrBucketNotExist = errors.New("create dispatcher: influxdb bucket does not exists")
 
 type Opts struct {
-	Url        string
+	URL        string
 	Token      string
 	Org        string
 	BucketName string
@@ -31,7 +31,7 @@ type OrderEventDispatcher struct {
 
 func NewOrderEventDispatcher(o *Opts) (*OrderEventDispatcher, error) {
 
-	if o.Url == "" {
+	if o.URL == "" {
 		return nil, fmt.Errorf("create influx db client: Required field Url is blank")
 	}
 
@@ -47,7 +47,7 @@ func NewOrderEventDispatcher(o *Opts) (*OrderEventDispatcher, error) {
 		return nil, fmt.Errorf("create influx db client: Required field TradeBucketName is blank")
 	}
 
-	client := influxdb2.NewClient(o.Url, o.Token)
+	client := influxdb2.NewClient(o.URL, o.Token)
 
 	instance := &OrderEventDispatcher{
 		client: client,
@@ -96,7 +96,7 @@ type AnnotationDispatcher struct {
 
 func NewAnnotationDispatcher(o *Opts) (*AnnotationDispatcher, error) {
 
-	if o.Url == "" {
+	if o.URL == "" {
 		return nil, fmt.Errorf("create influx db client: Required field Url is blank")
 	}
 
@@ -112,7 +112,7 @@ func NewAnnotationDispatcher(o *Opts) (*AnnotationDispatcher, error) {
 		return nil, fmt.Errorf("create influx db client: Required field TradeBucketName is blank")
 	}
 
-	client := influxdb2.NewClient(o.Url, o.Token)
+	client := influxdb2.NewClient(o.URL, o.Token)
 
 	instance := &AnnotationDispatcher{
 		client: client,
