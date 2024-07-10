@@ -7,7 +7,7 @@ env:
   INFLUXDB_ORG: org
   INFLUXDB_TRADE_BUCKET: trade
   INFLUXDB_ORDER_EVENT_BUCKET: orderEvent
-  INFLUXDB_ANNOTATION_BUCKET: annotationBucket
+  INFLUXDB_ANNOTATION_BUCKET: annotation
   
 on:
   push:
