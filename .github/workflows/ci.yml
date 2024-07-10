@@ -7,7 +7,7 @@ env:
   INFLUXDB_ORG: org
   INFLUXDB_TRADE_BUCKET: trade
   INFLUXDB_ORDER_EVENT_BUCKET: orderEvent
-  INFLUXDB_ANNOATAION_BUCCKDET: annotationBucket
+  INFLUXDB_ANNOTATION_BUCKET: annotationBucket
   
 on:
   push:
@@ -55,7 +55,7 @@ jobs:
           CONTAINER_ID=$(docker ps | grep 'influxdb:latest' | awk '{print $1}')
           docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_TRADE_BUCKET} --org ${INFLUXDB_ORG}
           docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ORDER_EVENT_BUCKET} --org ${INFLUXDB_ORG}
-          docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ANNOATAION_BUCCKDET} --org ${INFLUXDB_ORG}      
+          docker exec ${CONTAINER_ID} influx bucket create --token ${INFLUXDB_TOKEN} --name ${INFLUXDB_ANNOTATION_BUCKET} --org ${INFLUXDB_ORG}      
      
       - name: Checkout
         uses: actions/checkout@v2
