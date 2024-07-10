@@ -71,11 +71,11 @@ func TestNormalPipeline(t *testing.T) {
 		assert.NoError(t, err)
 
 		var count int
-		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, tradeBucket, config.TaskID)
+		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, orderBucket, config.TaskID)
 		assert.NoError(t, err)
 		assert.Equal(t, num, count)
 
-		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, orderBucket, config.TaskID)
+		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, annotationBucket, config.TaskID)
 		assert.NoError(t, err)
 		assert.Equal(t, num, count)
 	})

@@ -29,7 +29,7 @@ func TestPipelineWithoutModel(t *testing.T) {
 		}
 
 		startTime := time.Unix(1720396800, 0)
-		num := 390
+		num := 350
 		writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, tradeBucket)
 		for i := 0; i < num; i++ {
 			err := writer.WritePoint(context.Background(),
@@ -71,11 +71,11 @@ func TestPipelineWithoutModel(t *testing.T) {
 		assert.NoError(t, err)
 
 		var count int
-		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, tradeBucket, config.TaskID)
+		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, orderBucket, config.TaskID)
 		assert.NoError(t, err)
 		assert.Equal(t, num, count)
 
-		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, orderBucket, config.TaskID)
+		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, annotationBucket, config.TaskID)
 		assert.NoError(t, err)
 		assert.Equal(t, num, count)
 	})
