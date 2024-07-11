@@ -43,12 +43,12 @@ jobs:
           ALLOW_PLAINTEXT_LISTENER: "yes"
     
     steps:
-      # - name: Issue Token
-      #   run: |
-      #     sleep 5
-      #     CONTAINER_ID=$(docker ps | grep 'influxdb:latest' | awk '{print $1}')
-      #     OUTPUT=$(docker exec ${CONTAINER_ID} influx auth create --org org --read-buckets --write-buckets --description "New token for testing")
-      #     INFLUXDB_TOKEN=$(echo ${OUTPUT} | grep 'New token for testing' | awk '{print $6}')
+      - name: Issue Token
+        run: |
+          sleep 5
+          CONTAINER_ID=$(docker ps | grep 'influxdb:latest' | awk '{print $1}')
+          OUTPUT=$(docker exec ${CONTAINER_ID} influx auth create --org org --read-buckets --write-buckets --description "New token for testing")
+          INFLUXDB_TOKEN=$(echo ${OUTPUT} | grep 'New token for testing' | awk '{print $6}')
 
       - name: Create Bucket
         run: |
