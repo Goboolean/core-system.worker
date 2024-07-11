@@ -193,10 +193,7 @@ func TestPastStock(t *testing.T) {
 	})
 
 	t.Run("존재하지 않는 timeFrame일 때 데이터를 가져와선 안 된다.", func(t *testing.T) {
-		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
+
 		time.Sleep(100 * time.Millisecond)
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
 		storeNum := 350
