@@ -27,7 +27,6 @@ func TestPipelineWithoutModel(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-
 		startTime := time.Unix(1720396800, 0)
 		num := 350
 		writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, tradeBucket)

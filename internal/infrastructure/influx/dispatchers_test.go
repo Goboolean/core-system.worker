@@ -42,7 +42,6 @@ func TestOrderEventDispatcher(t *testing.T) {
 				CreatedAt: time.Now(),
 				Task:      model.BackTest,
 			})
-			// time.Sleep(100 * time.Millisecond)
 		}
 		dispatcher.Close()
 		//assert
@@ -101,7 +100,6 @@ func TestAnnotationDispatcher(t *testing.T) {
 				Description: "hello world",
 				Price:       3.14,
 			}, time.Now())
-			// time.Sleep(100 * time.Millisecond)
 		}
 		dispatcher.Close()
 		//assert
