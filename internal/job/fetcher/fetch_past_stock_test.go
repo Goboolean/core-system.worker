@@ -197,6 +197,7 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
+		rawInfluxClient = influxdb2.NewClient(opts.URL, opts.Token)
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
 
 		time.Sleep(150 * time.Millisecond)
@@ -275,6 +276,7 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
+		rawInfluxClient = influxdb2.NewClient(opts.URL, opts.Token)
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
 
 		time.Sleep(150 * time.Millisecond)
