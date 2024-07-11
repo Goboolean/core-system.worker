@@ -18,28 +18,27 @@ var (
 )
 
 type PastStock struct {
-	timeSlice           string
-	isFetchingFullRange bool
-	startTime           time.Time // Unix timestamp of start time
-	endTime             time.Time
-	stockID             string
+	timeFrame string
+	startTime time.Time // Unix timestamp of start time
+	endTime   time.Time
+	stockID   string
 
-	cursor StockTradeCursor
+	cursor *StockTradeCursor
 
 	out job.DataChan `type:"*StockAggregate"` //Job은 자신의 Output 채널에 대해 소유권을 가진다.
 
 	stop *util.StopNotifier
 }
 
-func NewPastStock(stockCursor StockTradeCursor, parmas *job.UserParams) (*PastStock, error) {
+func NewPastStock(stockCursor *StockTradeCursor, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 
 	instance := &PastStock{
-		timeSlice:           DefaultTimeSlice,
-		isFetchingFullRange: DefaultIsFetchingFullRange,
-		cursor:              stockCursor,
-		stop:                util.NewStopNotifier(),
-		out:                 make(job.DataChan),
+		timeFrame: DefaultTimeSlice,
+
+		cursor: stockCursor,
+		stop:   util.NewStopNotifier(),
+		out:    make(job.DataChan),
 	}
 
 	if !parmas.IsKeyNilOrEmpty(job.ProductID) {
@@ -53,8 +52,6 @@ func NewPastStock(stockCursor StockTradeCursor, parmas *job.UserParams) (*PastSt
 	}
 
 	if !parmas.IsKeyNilOrEmpty(job.StartDate) {
-		instance.isFetchingFullRange = false
-
 		val, err := strconv.ParseInt((*parmas)[job.StartDate], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("create past stock fetch job: %w", err)
@@ -65,8 +62,6 @@ func NewPastStock(stockCursor StockTradeCursor, parmas *job.UserParams) (*PastSt
 	}
 
 	if !parmas.IsKeyNilOrEmpty(job.EndDate) {
-		instance.isFetchingFullRange = false
-
 		val, err := strconv.ParseInt((*parmas)[job.EndDate], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("create past stock fetch job: %w", err)
@@ -74,6 +69,10 @@ func NewPastStock(stockCursor StockTradeCursor, parmas *job.UserParams) (*PastSt
 
 		instance.endTime = time.Unix(val, 0)
 
+	}
+
+	if !parmas.IsKeyNilOrEmpty(job.TimeFrame) {
+		instance.timeFrame = (*parmas)[job.TimeFrame]
 	}
 
 	return instance, nil
@@ -93,9 +92,9 @@ func (ps *PastStock) Execute() error {
 		cancel()
 	}()
 
-	ps.cursor.ConfigureStockTradeCursor(ps.startTime, ps.stockID, ps.timeSlice)
-
-	count := int64(0)
+	if err := ps.cursor.ConfigureStockTradeCursor(ps.startTime, ps.stockID, ps.timeFrame); err != nil {
+		return fmt.Errorf("execute fetch job:fail to configure trade cursor %w", err)
+	}
 
 	e, err := ps.cursor.Next(ctx)
 	for ; e != nil; e, err = ps.cursor.Next(ctx) {
@@ -108,11 +107,10 @@ func (ps *PastStock) Execute() error {
 		}
 
 		ps.out <- model.Packet{
-			Sequence: count,
-			Data:     e,
+			Time: time.Unix(e.ClosedTime, 0),
+			Data: e,
 		}
 
-		count++
 	}
 
 	return nil

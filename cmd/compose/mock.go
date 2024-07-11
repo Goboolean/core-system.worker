@@ -23,12 +23,12 @@ func MockRun() error {
 	go func() {
 		for {
 			deadline, _ := ctx.Deadline()
-			log.Info("time left: %s\n", time.Until(deadline))
+			log.Infof("time left: %s\n", time.Until(deadline))
 			time.Sleep(1 * time.Second)
 		}
 	}()
 
-<-ctx.Done()
+	<-ctx.Done()
 	return ctx.Err()
 
 }

@@ -42,7 +42,7 @@ func TestNormal(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		joinJob, err := joiner.NewBySequence(&job.UserParams{})
+		joinJob, err := joiner.NewByTime(&job.UserParams{})
 		if err != nil {
 			t.Error(err)
 			return
@@ -59,7 +59,9 @@ func TestNormal(t *testing.T) {
 
 		transmitJob, err := v1.NewCommon(mockAnnotationDispatcher,
 			mockOrderEventDispatcher,
-			&job.UserParams{})
+			&job.UserParams{
+				job.TaskID: "2023-3240985",
+			})
 
 		if err != nil {
 			t.Error(err)

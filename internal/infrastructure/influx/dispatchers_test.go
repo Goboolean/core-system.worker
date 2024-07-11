@@ -14,10 +14,13 @@ import (
 func TestOrderEventDispatcher(t *testing.T) {
 	t.Run("발송한 order event의 개수와 bucket에 있는 order event의 개수가 같아야 한다.", func(t *testing.T) {
 		//arrange
-		RecreateBucket(rawInfluxDBClient, org, bucket)
+		if err := RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
 		num := 100
 		dispatcher, err := influx.NewOrderEventDispatcher(&influx.Opts{
-			Url:        url,
+			URL:        url,
 			Token:      token,
 			Org:        org,
 			BucketName: bucket,
@@ -39,7 +42,6 @@ func TestOrderEventDispatcher(t *testing.T) {
 				CreatedAt: time.Now(),
 				Task:      model.BackTest,
 			})
-			// time.Sleep(100 * time.Millisecond)
 		}
 		dispatcher.Close()
 		//assert
@@ -71,10 +73,14 @@ func TestAnnotationDispatcher(t *testing.T) {
 	// "Testing for the mapper has already been conducted, so specific tests for the mapper will be omitted.
 	t.Run("발송한 order event의 개수와 bucket에 있는 order event의 개수가 같아야 한다.", func(t *testing.T) {
 		//arrange
-		RecreateBucket(rawInfluxDBClient, org, bucket)
+		if err := RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
 		num := 100
 		dispatcher, err := influx.NewAnnotationDispatcher(&influx.Opts{
-			Url:        url,
+			URL:        url,
 			Token:      token,
 			Org:        org,
 			BucketName: bucket,
@@ -94,7 +100,6 @@ func TestAnnotationDispatcher(t *testing.T) {
 				Description: "hello world",
 				Price:       3.14,
 			}, time.Now())
-			// time.Sleep(100 * time.Millisecond)
 		}
 		dispatcher.Close()
 		//assert

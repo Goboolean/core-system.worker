@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
@@ -25,7 +26,6 @@ func TestCommon(t *testing.T) {
 		numOrder := 3
 		numAnnotation := 3
 		inChan := make(job.DataChan, numOrder+numAnnotation)
-		fmt.Println("hello")
 		i := numOrder
 		j := numAnnotation
 		//주문 이벤트와 어노테이션을 무작위로 선택해 inChan에 전송한다.
@@ -37,7 +37,7 @@ func TestCommon(t *testing.T) {
 				}
 
 				inChan <- model.Packet{
-					Sequence: 0,
+					Time: time.Now(),
 					Data: &model.TradeCommand{
 						ProportionPercent: 0,
 						Action:            model.Buy,
@@ -51,8 +51,8 @@ func TestCommon(t *testing.T) {
 				}
 
 				inChan <- model.Packet{
-					Sequence: 0,
-					Data:     &TestAnnotation{},
+					Time: time.Now(),
+					Data: &TestAnnotation{},
 				}
 				j--
 				fmt.Printf("annotation is queued, i:%d\n", j)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/configuration"
 	"github.com/Goboolean/core-system.worker/internal/job"
@@ -13,7 +14,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/job/joiner"
-	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
+	v1 "github.com/Goboolean/core-system.worker/internal/job/transmitter/v1"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -73,7 +74,7 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	joiner, err := joiner.NewBySequence(&p)
+	joiner, err := joiner.NewByTime(&p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
@@ -83,7 +84,7 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
-	transmitter, err := transmitter.NewFake()
+	transmitter, err := v1.Create(&p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
@@ -131,7 +132,7 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 	}
 	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
 	// 현재 생성자 미구현으로 dummy 객체로 대체
-	transmitter, err := transmitter.NewFake()
+	transmitter, err := v1.Create(&p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
@@ -195,6 +196,7 @@ func extractUserParams(config configuration.AppConfig) job.UserParams {
 		job.EndDate:   fmt.Sprint(config.DataOrigin.EndTimestamp),
 		job.BatchSize: fmt.Sprint(config.Model.BatchSize),
 		job.ProductID: config.DataOrigin.ProductID,
+		job.TaskID:    config.TaskID,
 	}
 
 	for k, v := range config.Model.Params {
@@ -205,5 +207,10 @@ func extractUserParams(config configuration.AppConfig) job.UserParams {
 		p[strings.Join([]string{"strategy", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
 	}
 
+	timeFrame := (time.Duration(config.DataOrigin.TimeFrame.Seconds) * time.Second).String()
+	timeFrame = strings.Replace(timeFrame, "m0s", "m", 1)
+	timeFrame = strings.Replace(timeFrame, "h0m", "h", 1)
+
+	p[job.TimeFrame] = fmt.Sprint(timeFrame)
 	return p
 }

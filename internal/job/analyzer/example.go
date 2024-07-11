@@ -6,50 +6,46 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/util/chanutil"
 )
 
-type Stub struct {
+type Example struct {
 	in  job.DataChan
 	out job.DataChan
 }
 
-func NewStub(parmas *job.UserParams) (*Stub, error) {
-	instance := &Stub{
+func NewExample(parmas *job.UserParams) (*Example, error) {
+	instance := &Example{
 		out: make(job.DataChan),
 	}
 
 	return instance, nil
 }
 
-func (s *Stub) Execute() error {
+func (s *Example) Execute() error {
 
 	defer close(s.out)
 	defer func() {
 		go chanutil.DummyChannelConsumer(s.in)
 	}()
 
-	for input := range s.in {
-		//아무런 동작이 일어나지 않는 값
+	for v := range s.in {
+		t := v.Time
+		//stock := v.Data.(*model.StockAggregate)
+		//여기에 연산 로직 구현
+
 		s.out <- model.Packet{
-			Time: input.Time,
+			Time: t,
 			Data: &model.TradeCommand{
 				Action:            model.Sell,
 				ProportionPercent: 0,
 			},
 		}
-		s.out <- model.Packet{
-			Time: input.Time,
-			Data: model.ExampleAnnotation{
-				Description: "hello world",
-			},
-		}
-
 	}
 	return nil
 }
 
-func (s *Stub) SetInput(in job.DataChan) {
+func (s *Example) SetInput(in job.DataChan) {
 	s.in = in
 }
 
-func (s *Stub) Output() job.DataChan {
+func (s *Example) Output() job.DataChan {
 	return s.out
 }

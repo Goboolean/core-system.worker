@@ -83,6 +83,11 @@ func (c *StockTradeCursor) Next(ctx context.Context) (*model.StockAggregate, err
 			c.shouldNotFetchTrade = true
 		}
 
+		if len(buf) == 0 {
+			c.idx = 0
+			return nil, nil
+		}
+
 		sz := len(buf)
 		if len(buf) == c.limit+1 {
 			sz = len(buf) - 1
