@@ -115,7 +115,6 @@ func TestPastStock(t *testing.T) {
 	})
 
 	t.Run("데이터가 저장된 만큼, 데이터를 가져와야 한다.", func(t *testing.T) {
-
 		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
