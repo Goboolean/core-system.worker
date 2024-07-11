@@ -100,7 +100,7 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-
+		//act
 		out := make([]model.Packet, 0)
 		go func() {
 			for v := range fetchJob.Output() {
@@ -109,12 +109,13 @@ func TestPastStock(t *testing.T) {
 		}()
 
 		err = fetchJob.Execute()
-
+		//assert
 		assert.NoError(t, err)
 		assert.Len(t, out, 0)
 	})
 
 	t.Run("데이터가 저장된 만큼, 데이터를 가져와야 한다.", func(t *testing.T) {
+		//arrange
 		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -175,7 +176,7 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-
+		//act
 		out := make([]model.Packet, 0)
 		go func() {
 			for v := range fetchJob.Output() {
@@ -184,13 +185,14 @@ func TestPastStock(t *testing.T) {
 		}()
 
 		err = fetchJob.Execute()
-
+		//assert
 		assert.NoError(t, err)
 		assert.Len(t, out, storeNum)
 
 	})
 
 	t.Run("존재하지 않는 timeFrame일 때 데이터를 가져와선 안 된다.", func(t *testing.T) {
+		//arrange
 		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -252,7 +254,7 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-
+		//act
 		out := make([]model.Packet, 0)
 		go func() {
 			for v := range fetchJob.Output() {
@@ -261,13 +263,14 @@ func TestPastStock(t *testing.T) {
 		}()
 
 		err = fetchJob.Execute()
-
+		//assert
 		assert.NoError(t, err)
 		assert.Len(t, out, 0)
 
 	})
 
 	t.Run("존재하지 않는 ProductID일 때 데이터를 가져와선 안 된다.", func(t *testing.T) {
+		//arrange
 		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -329,7 +332,7 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-
+		//act
 		out := make([]model.Packet, 0)
 		go func() {
 			for v := range fetchJob.Output() {
@@ -338,7 +341,7 @@ func TestPastStock(t *testing.T) {
 		}()
 
 		err = fetchJob.Execute()
-
+		//assert
 		assert.NoError(t, err)
 		assert.Len(t, out, 0)
 
