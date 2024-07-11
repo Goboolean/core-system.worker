@@ -347,4 +347,82 @@ func TestPastStock(t *testing.T) {
 		assert.Len(t, out, 0)
 
 	})
+
+	t.Run("존재하지 않는 timeFrame일 때 데이터를 가져와선 안 된다.3", func(t *testing.T) {
+		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
+
+		time.Sleep(150 * time.Millisecond)
+		storeNum := 350
+		storeInterval := time.Minute
+		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
+		for i := 0; i < storeNum; i++ {
+			err := writer.WritePoint(
+				context.Background(),
+				write.NewPoint(
+					fmt.Sprintf("%s.%s", testStockID, testTimeFrame),
+					map[string]string{},
+					map[string]interface{}{
+						"open":   float64(i),
+						"close":  float64(2.0),
+						"high":   float64(3.0),
+						"low":    float64(4.0),
+						"volume": float64(4),
+					},
+					start.Add(time.Duration(i)*storeInterval),
+				),
+			)
+
+			if err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+		}
+
+		query, err := influx.NewDB(&opts)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
+		defer cancel()
+		err = query.Ping(ctx)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		cursor, err := fetcher.NewStockTradeCursor(query)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		fetchJob, err := fetcher.NewPastStock(cursor, &job.UserParams{
+			job.ProductID: testStockID,
+			job.StartDate: fmt.Sprint(start.Unix()),
+			job.EndDate:   fmt.Sprint(start.Add(time.Duration(storeNum) * storeInterval).Unix()),
+			job.TimeFrame: "1h",
+		})
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		out := make([]model.Packet, 0)
+		go func() {
+			for v := range fetchJob.Output() {
+				out = append(out, v)
+			}
+		}()
+
+		err = fetchJob.Execute()
+
+		assert.NoError(t, err)
+		assert.Len(t, out, 0)
+
+	})
 }
