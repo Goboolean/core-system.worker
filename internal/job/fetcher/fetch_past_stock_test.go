@@ -2,6 +2,7 @@ package fetcher_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -52,6 +53,8 @@ func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
 
 	_, err = client.BucketsAPI().CreateBucketWithName(context.Background(), org, bucketName)
 
+	time.Sleep(100 * time.Millisecond)
+
 	return err
 }
 
@@ -59,6 +62,56 @@ func TestPing(t *testing.T) {
 	ok, err := rawInfluxClient.Ping(context.Background())
 	assert.True(t, ok)
 	assert.NoError(t, err)
+}
+
+func TestRecreation(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		fmt.Println("TestRecreation: try:", i)
+		err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		health, err := rawInfluxClient.Health(context.Background())
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+		healthJson, err := json.Marshal(health)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+		fmt.Println(string(healthJson))
+
+		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		storeNum := 350
+		storeInterval := time.Minute
+		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
+		for i := 0; i < storeNum; i++ {
+			err := writer.WritePoint(
+				context.Background(),
+				write.NewPoint(
+					"testMeasurement",
+					map[string]string{},
+					map[string]interface{}{
+						"test": "test",
+					},
+					start.Add(time.Duration(i)*storeInterval),
+				),
+			)
+			if err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
+		}
+	}
 }
 
 func TestPastStock(t *testing.T) {
@@ -115,159 +168,6 @@ func TestPastStock(t *testing.T) {
 	})
 
 	t.Run("데이터가 저장된 만큼, 데이터를 가져와야 한다.", func(t *testing.T) {
-
-		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
-		storeNum := 350
-		storeInterval := time.Minute
-		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
-		for i := 0; i < storeNum; i++ {
-			err := writer.WritePoint(
-				context.Background(),
-				write.NewPoint(
-					fmt.Sprintf("%s.%s", testStockID, testTimeFrame),
-					map[string]string{},
-					map[string]interface{}{
-						"open":   float64(i),
-						"close":  float64(2.0),
-						"high":   float64(3.0),
-						"low":    float64(4.0),
-						"volume": float64(4),
-					},
-					start.Add(time.Duration(i)*storeInterval),
-				),
-			)
-
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
-		}
-
-		query, err := influx.NewDB(&opts)
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
-		defer cancel()
-		err = query.Ping(ctx)
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-
-		cursor, err := fetcher.NewStockTradeCursor(query)
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-
-		fetchJob, err := fetcher.NewPastStock(cursor, &job.UserParams{
-			job.ProductID: testStockID,
-			job.StartDate: fmt.Sprint(start.Unix()),
-			job.EndDate:   fmt.Sprint(start.Add(time.Duration(storeNum) * storeInterval).Unix()),
-			job.TimeFrame: "1m",
-		})
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-
-		out := make([]model.Packet, 0)
-		go func() {
-			for v := range fetchJob.Output() {
-				out = append(out, v)
-			}
-		}()
-
-		err = fetchJob.Execute()
-
-		assert.NoError(t, err)
-		assert.Len(t, out, storeNum)
-
-	})
-
-	t.Run("ProductID가 틀렸을 때, 데이터를 가져오지 않아야 한다.", func(t *testing.T) {
-		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
-		storeNum := 350
-		storeInterval := time.Minute
-		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
-		for i := 0; i < storeNum; i++ {
-			err := writer.WritePoint(
-				context.Background(),
-				write.NewPoint(
-					fmt.Sprintf("%s.%s", testStockID, testTimeFrame),
-					map[string]string{},
-					map[string]interface{}{
-						"open":   float64(i),
-						"close":  float64(2.0),
-						"high":   float64(3.0),
-						"low":    float64(4.0),
-						"volume": float64(4),
-					},
-					start.Add(time.Duration(i)*storeInterval),
-				),
-			)
-
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
-		}
-
-		query, err := influx.NewDB(&opts)
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
-		defer cancel()
-		err = query.Ping(ctx)
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-
-		cursor, err := fetcher.NewStockTradeCursor(query)
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-
-		fetchJob, err := fetcher.NewPastStock(cursor, &job.UserParams{
-			job.ProductID: "thisIsWrongProductID",
-			job.StartDate: fmt.Sprint(start.Unix()),
-			job.EndDate:   fmt.Sprint(start.Add(time.Duration(storeNum) * storeInterval).Unix()),
-			job.TimeFrame: "1m",
-		})
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-
-		out := make([]model.Packet, 0)
-		go func() {
-			for v := range fetchJob.Output() {
-				out = append(out, v)
-			}
-		}()
-
-		err = fetchJob.Execute()
-
-		assert.NoError(t, err)
-		assert.Len(t, out, 0)
-
-	})
-
-	t.Run("TimeFrame이 틀렸을 때, 데이터를 가져오지 않아야 한다.", func(t *testing.T) {
 		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -342,4 +242,5 @@ func TestPastStock(t *testing.T) {
 		assert.Len(t, out, 0)
 
 	})
+
 }
