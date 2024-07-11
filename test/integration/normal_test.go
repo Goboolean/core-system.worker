@@ -28,7 +28,7 @@ func TestNormalPipeline(t *testing.T) {
 			t.FailNow()
 		}
 
-		time.Sleep(150 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 
 		startTime := time.Unix(1720396800, 0)
 		num := 390
