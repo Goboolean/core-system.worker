@@ -197,8 +197,9 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-		time.Sleep(100 * time.Millisecond)
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
+
+		time.Sleep(150 * time.Millisecond)
 		storeNum := 350
 		storeInterval := time.Minute
 		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
