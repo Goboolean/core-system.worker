@@ -115,6 +115,59 @@ func TestPastStock(t *testing.T) {
 		assert.Len(t, out, 0)
 	})
 
+	t.Run("저장된 데이터가 없을 때, 0개의 데이터를 가져와야 한다.2", func(t *testing.T) {
+		//arrange
+		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+		time.Sleep(100 * time.Millisecond)
+		start := time.Now()
+
+		query, err := influx.NewDB(&opts)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
+		defer cancel()
+		err = query.Ping(ctx)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		cursor, err := fetcher.NewStockTradeCursor(query)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		fetchJob, err := fetcher.NewPastStock(cursor, &job.UserParams{
+			job.ProductID: testStockID,
+			job.StartDate: fmt.Sprint(start.Unix()),
+			job.EndDate:   fmt.Sprint(start.Add(time.Minute).Unix()),
+			job.TimeFrame: "1m",
+		})
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+
+		out := make([]model.Packet, 0)
+		go func() {
+			for v := range fetchJob.Output() {
+				out = append(out, v)
+			}
+		}()
+
+		err = fetchJob.Execute()
+
+		assert.NoError(t, err)
+		assert.Len(t, out, 0)
+	})
+
 	// t.Run("데이터가 저장된 만큼, 데이터를 가져와야 한다.", func(t *testing.T) {
 	// 	if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 	// 		t.Error(err)
