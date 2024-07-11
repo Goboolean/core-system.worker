@@ -68,7 +68,6 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-		time.Sleep(100 * time.Millisecond)
 		start := time.Now()
 
 		query, err := influx.NewDB(&opts)
@@ -120,7 +119,6 @@ func TestPastStock(t *testing.T) {
 			t.Error(err)
 			t.FailNow()
 		}
-		time.Sleep(100 * time.Millisecond)
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
 		storeNum := 350
 		storeInterval := time.Minute
@@ -199,7 +197,6 @@ func TestPastStock(t *testing.T) {
 		}
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
 
-		time.Sleep(1000 * time.Millisecond)
 		storeNum := 350
 		storeInterval := time.Minute
 		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
@@ -277,7 +274,6 @@ func TestPastStock(t *testing.T) {
 		}
 		writer := rawInfluxClient.WriteAPIBlocking(opts.Org, opts.TradeBucketName)
 
-		time.Sleep(1000 * time.Millisecond)
 		storeNum := 350
 		storeInterval := time.Minute
 		start := time.Now().Add(-time.Duration(storeNum) * storeInterval)
