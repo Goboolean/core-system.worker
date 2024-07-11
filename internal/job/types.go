@@ -20,6 +20,7 @@ const (
 	BatchSize = "batchSize"
 	Task      = "task"
 	TaskID    = "taskID"
+	TimeFrame = "timeFrame"
 
 	NumOfGeneration            = "numOfGeneration"
 	MaxRandomDelayMilliseconds = "maxRandomDelayMilliseconds"

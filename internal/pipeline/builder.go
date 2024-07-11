@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Goboolean/core-system.worker/configuration"
 	"github.com/Goboolean/core-system.worker/internal/job"
@@ -206,5 +207,10 @@ func extractUserParams(config configuration.AppConfig) job.UserParams {
 		p[strings.Join([]string{"strategy", k}, ".")] = strconv.FormatFloat(float64(v), 'f', -1, 32)
 	}
 
+	timeFrame := (time.Duration(config.DataOrigin.TimeFrame.Seconds) * time.Second).String()
+	timeFrame = strings.Replace(timeFrame, "m0s", "m", 1)
+	timeFrame = strings.Replace(timeFrame, "h0m", "h", 1)
+
+	p[job.TimeFrame] = fmt.Sprint(timeFrame)
 	return p
 }

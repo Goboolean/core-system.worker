@@ -94,6 +94,7 @@ func TestPastStock(t *testing.T) {
 			job.ProductID: testStockID,
 			job.StartDate: fmt.Sprint(start.Unix()),
 			job.EndDate:   fmt.Sprint(start.Add(time.Minute).Unix()),
+			job.TimeFrame: "1m",
 		})
 		if err != nil {
 			t.Error(err)
@@ -169,6 +170,7 @@ func TestPastStock(t *testing.T) {
 			job.ProductID: testStockID,
 			job.StartDate: fmt.Sprint(start.Unix()),
 			job.EndDate:   fmt.Sprint(start.Add(time.Duration(storeNum) * storeInterval).Unix()),
+			job.TimeFrame: "1m",
 		})
 		if err != nil {
 			t.Error(err)
