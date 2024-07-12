@@ -19,7 +19,12 @@ type StockTradeCursor struct {
 	current             time.Time
 	limit               int
 
-	productID           string
+	// Unique identifier of the product in the format {type}.{ticker}.{locale}
+	productID string
+	// The interval at which Trade Data is stored.
+	// It is also the duration that one Trade Data contains.
+	// Follows the following regular expression: ^[0-9]{1,2}[m|s]$.
+	// Examples: 1m, 30s, 1s, etc.
 	timeFrame           string
 	timeFrameDuration   time.Duration
 	shouldNotFetchTrade bool
