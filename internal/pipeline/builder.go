@@ -89,7 +89,7 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	modelExecuter, err := executer.Create(extractModelExecterSpec(config), &p)
+	modelExecuter, err := executer.Create(extractModelExecuterSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
@@ -189,7 +189,7 @@ func extractFetcherSpec(config configuration.AppConfig) fetcher.Spec {
 	return spec
 }
 
-func extractModelExecterSpec(config configuration.AppConfig) executer.Spec {
+func extractModelExecuterSpec(config configuration.AppConfig) executer.Spec {
 
 	var spec executer.Spec
 
