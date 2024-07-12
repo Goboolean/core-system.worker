@@ -8,13 +8,15 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/model"
 )
 
-// ByTime는 model.Packet에 있는 sequnce값이 같은 두 데이터를 Pair에 담아 출력합니다.
+// ByTime pairs reference data and model output data that share the same Time
+// and passes them as model.Pair objects.
 type ByTime struct {
 	refIn   job.DataChan
 	modelIn job.DataChan
 	out     job.DataChan
 }
 
+// NewByTime creates new instance of ByTime
 func NewByTime(params *job.UserParams) (*ByTime, error) {
 
 	instance := &ByTime{
@@ -24,6 +26,11 @@ func NewByTime(params *job.UserParams) (*ByTime, error) {
 	return instance, nil
 }
 
+// Execute starts to receive and join data
+//
+// If the Job fails to perform its task, Execute returns an error.
+// If the Job completes successfully, it returns nil.
+// DO NOT CALL Execute() TWICE. IT MUST BE PANIC
 func (b *ByTime) Execute() error {
 	defer close(b.out)
 
@@ -81,9 +88,9 @@ func (b *ByTime) Execute() error {
 	}
 }
 
-// findLargestPacketIndexBySequence returns the index of the packet with the largest sequence number
-// that is less than or equal to the target sequence number.
-// -1 means all element has sequnce that is grater than target
+// findLargestPacketIndexBySequence returns the index of the packet with the latest time
+// that is before or at the target time.
+// -1 means all element has time that is later than target
 // WARINING: TO BE USED ONLY WITH ARRAYS SORTED IN ASCENDING ORDER
 func findLargestPacketIndexByTime(data []model.Packet, target time.Time) int {
 	// data는 순서가 보장돼 있고 대부분 앞 부분에 찾고자 하는 값이 있을 것이라
