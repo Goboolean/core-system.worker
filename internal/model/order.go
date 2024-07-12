@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Action represents the action to be performed for an order.
 type Action int8
 
 const (
@@ -12,6 +13,7 @@ const (
 	Sell Action = 1
 )
 
+// String returns the string representation of the Action.
 func (a Action) String() string {
 	switch a {
 	case Buy:
@@ -23,6 +25,7 @@ func (a Action) String() string {
 	}
 }
 
+// Task represents the task to be performed by the application.
 type Task int8
 
 const (
@@ -30,6 +33,7 @@ const (
 	RealtimeTrade Task = 1
 )
 
+// String returns the string representation of the Task.
 func (a Task) String() string {
 	switch a {
 	case BackTest:
@@ -43,6 +47,8 @@ func (a Task) String() string {
 
 var ErrInvalidTaskString = errors.New("ParseTask: can't parse taskString")
 
+// ParseTask parses the taskString and returns the corresponding Task.
+// If the taskString is invalid, it returns an error.
 func ParseTask(taskString string) (Task, error) {
 	switch taskString {
 	case BackTest.String():
@@ -54,21 +60,16 @@ func ParseTask(taskString string) (Task, error) {
 	}
 }
 
-// TODO: 기술적 요구에 맞게 수정
+// OrderEvent represents the order event that the worker dispatches to external systems.
 type OrderEvent struct {
 	ProductID string
 	Command   TradeCommand
-	//CreatedAtTimestamp is the timestamp when the order event was created.
 	CreatedAt time.Time
-	// Task refers to the operation currently being performed by this application.
-	// There are BackTest and RealtimeTrade.
-	// External systems can look at this value and
-	// decide whether to settle actual trades or simulate trades with past data.
-	Task Task
+	Task      Task
 }
 
-// Order represents an order in the system.
+// TradeCommand represents an order in the system.
 type TradeCommand struct {
-	ProportionPercent int    // Proportion is the target percentage of the order
-	Action            Action // Action to be performed for the order Buy or Sell
+	ProportionPercent int
+	Action            Action
 }

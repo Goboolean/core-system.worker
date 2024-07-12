@@ -5,8 +5,9 @@ import "time"
 // Packet is a struct used to transfer data between jobs.
 // It includes not only data but metadata exchanged between jobs.
 type Packet struct {
-	// Sequence represents the order in which the data was generated.
-	// The sequence remains unchanged when moving between jobs.
+
+	// Time indicates the timestamp of the current data, representing the moment the data pertains to.
+	// It signifies the time when the target trading data was recorded.
 	Time time.Time
 
 	// Data can store any type of data, regardless of its type.

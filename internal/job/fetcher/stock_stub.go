@@ -11,6 +11,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
+// StockStub은 가짜 stock data를 packet에 실어서 output channel에 전달합니다.
 type StockStub struct {
 	numOfGeneration            int
 	maxRandomDelayMilliseconds int
@@ -18,6 +19,11 @@ type StockStub struct {
 	stop                       *util.StopNotifier
 }
 
+// NewStockStub creates new instance of StockStub
+//
+// Params list:
+// "numOfGeneration": The number of data generations
+// "maxRandomDelayMilliseconds": Maximum random delay in milliseconds between data generation.
 func NewStockStub(parmas *job.UserParams) (*StockStub, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 

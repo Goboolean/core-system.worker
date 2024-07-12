@@ -17,9 +17,11 @@ var (
 	ErrDocumentTypeMismatch = errors.New("fetch: mongo: document type mismatch")
 )
 
+// PastStock은 과거 주식 데이터를 순서대로 하나씩 가져와 model.Packet에 포장해 output 채널로 전달합니다.
+// PastStock은 지정된 주식의 데이터를 지정된
 type PastStock struct {
 	timeFrame string
-	startTime time.Time // Unix timestamp of start time
+	startTime time.Time
 	endTime   time.Time
 	stockID   string
 
@@ -30,15 +32,19 @@ type PastStock struct {
 	stop *util.StopNotifier
 }
 
+// Parameter List:
+// job.ProductID: The unique identifier of the product in the format {type}.{ticker}.{locale}.
+// job.StartDate: The start date for data collection.
+// job.EndDate: The end date for data collection.
+// job.TimeFrame: The interval at which Trade Data is stored.
 func NewPastStock(stockCursor *StockTradeCursor, parmas *job.UserParams) (*PastStock, error) {
 	//여기에 기본값 입력 아웃풋 채널은 job이 소유권을 가져야 한다.
 
 	instance := &PastStock{
 		timeFrame: DefaultTimeSlice,
-
-		cursor: stockCursor,
-		stop:   util.NewStopNotifier(),
-		out:    make(job.DataChan),
+		cursor:    stockCursor,
+		stop:      util.NewStopNotifier(),
+		out:       make(job.DataChan),
 	}
 
 	if !parmas.IsKeyNilOrEmpty(job.ProductID) {
@@ -85,8 +91,7 @@ func (ps *PastStock) Execute() error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	//stop sig를 받았을 때 하던 작업을 멈추고 강제종료 하기 위한 부분.
-	//graceful shutdown을 원하면 이 부분이 없어도 됩니다.
+	// This goroutine stops the ongoing work and forces a shutdown when a termination signal is received.	//graceful shutdown을 원하면 이 부분이 없어도 됩니다.
 	go func() {
 		<-ps.stop.Done()
 		cancel()
