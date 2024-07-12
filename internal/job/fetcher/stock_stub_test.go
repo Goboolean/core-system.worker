@@ -14,7 +14,7 @@ import (
 )
 
 func TestStub(t *testing.T) {
-	//테스트에 시간이 오래 걸립니다.
+	// The test takes a long time.
 	t.Run("stub에 지정한 개수만큼 output chan에 데이터를 출력해야 한다.", func(t *testing.T) {
 		//arrange
 		num := 100

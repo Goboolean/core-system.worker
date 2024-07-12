@@ -17,8 +17,9 @@ var (
 	ErrDocumentTypeMismatch = errors.New("fetch: mongo: document type mismatch")
 )
 
-// PastStock은 과거 주식 데이터를 순서대로 하나씩 가져와 model.Packet에 포장해 output 채널로 전달합니다.
-// PastStock은 지정된 주식의 데이터를 지정된
+// PastStock retrieves historical stock data sequentially and packages each piece into a model.Packet,
+// then sends it to the output channel.
+// PastStock fetches data for the specified stock within the given range.
 type PastStock struct {
 	timeFrame string
 	startTime time.Time
