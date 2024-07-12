@@ -33,7 +33,7 @@ type PastStock struct {
 }
 
 // Parameter List:
-// job.ProductID: The unique identifier of the product in the format {type}.{ticker}.{locale}.
+// job.ProductID: The unique identifier of the product in the format {type}.{ticker}.{locale}
 // job.StartDate: The start date for data collection.
 // job.EndDate: The end date for data collection.
 // job.TimeFrame: The interval at which Trade Data is stored.
