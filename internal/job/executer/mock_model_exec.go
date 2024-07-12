@@ -15,6 +15,8 @@ import (
 	"github.com/cenkalti/backoff"
 )
 
+// Mock is a struct that describes the typical logic of requesting KServe to execute a model.
+// Depending on the actual model specifications, the content of this struct may vary.
 type Mock struct {
 	//TODO: map으로 변경?
 	//user param의 type은 float32
@@ -32,6 +34,11 @@ type Mock struct {
 	stop *util.StopNotifier
 }
 
+// NewMock creates new NewMock instance
+//
+// Param list
+// job.BatchSize: the number of trade data that you feed into your model at each iteration of the inference
+// "param1": an example param of model params
 func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) {
 	//여기에 기본값 초기화 아웃풋 채널은 job이 소유권을 가져야 한다.
 	instance := &Mock{
@@ -66,6 +73,11 @@ func NewMock(kServeClient kserve.Client, params *job.UserParams) (*Mock, error) 
 	return instance, nil
 }
 
+// Execute starts to execute model through KServe and pass the model output to out channel
+//
+// If the Job fails to perform its task, Execute returns an error.
+// If the Job completes successfully, it returns nil.
+// DO NOT CALL Execute() TWICE. IT MUST BE PANIC
 func (m *Mock) Execute() error {
 
 	defer close(m.out)
