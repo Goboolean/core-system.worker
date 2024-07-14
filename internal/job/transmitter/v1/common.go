@@ -10,6 +10,9 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/util/chanutil"
 )
 
+// Common publishes data to external systems using suitable dispatchers depending on the type of data received from the input channel.
+// Common distinguishes incoming data from the input channel into two types: order events and annotations, and dispatches them accordingly.
+// Order events are dispatched using the OrderEventDispatcher, while annotations are dispatched using the AnnotationDispatcher.
 type Common struct {
 	annotationDispatcher transmitter.AnnotationDispatcher
 	orderDispatcher      transmitter.OrderEventDispatcher
@@ -24,6 +27,12 @@ type Common struct {
 var ErrInvalidProductId = errors.New("transmit: can't parse productID")
 var ErrInvalidTaskString = errors.New("transmit: can't parse task")
 
+// NewCommon creates new Common instance
+//
+// Params list
+// job.ProductID: The unique identifier of the product in the format {type}.{ticker}.{locale}
+// job.Task: The type of task that this application performs
+// job.TaskID: The unique identifier of the task that this application performs
 func NewCommon(
 	annotationDispatcher transmitter.AnnotationDispatcher,
 	orderDispatcher transmitter.OrderEventDispatcher,
@@ -75,6 +84,11 @@ func NewCommon(
 
 }
 
+// Execute starts to receive and dispatch data
+//
+// If the Job fails to perform its task, Execute returns an error.
+// If the Job completes successfully, it returns nil.
+// DO NOT CALL Execute() TWICE. IT MUST BE PANIC
 func (b *Common) Execute() error {
 
 	defer func() {
@@ -109,7 +123,6 @@ func (b *Common) Execute() error {
 	return nil
 }
 
-// SetInput sets the input data channel for the transmitter.
 func (b *Common) SetInput(in job.DataChan) {
 	b.in = in
 }

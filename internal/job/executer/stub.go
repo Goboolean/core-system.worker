@@ -6,6 +6,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
+// Stub passes the fake model output to output channel
 type Stub struct {
 	in  job.DataChan `type:""`
 	out job.DataChan `type:""` //Job은 자신의 Output 채널에 대해 소유권을 가진다.

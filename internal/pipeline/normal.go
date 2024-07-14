@@ -19,7 +19,8 @@ import (
 
 var ErrTypeNotMatch = errors.New("pipeline: cannot build a pipeline because the types are not compatible between the jobs")
 
-// 아키텍처 설계 상 이 구조는 변경되면 안 된다.
+// Normal orchestrates a normal pipeline of data processing stages.
+// It uses interfaces (Fetcher, Joiner, etc.) to abstract each stage, making it flexible and modular.
 type Normal struct {
 	//jobs
 	fetcher       fetcher.Fetcher
@@ -30,10 +31,13 @@ type Normal struct {
 	transmitter   transmitter.Transmitter
 
 	//utils
-	mux  *chanutil.ChannelMux[model.Packet]
+	//mux used to pass duplicated trade data to model executer and joiner
+	mux *chanutil.ChannelMux[model.Packet]
+	// done is used to signal completion or termination of the pipeline.
 	done *util.StopNotifier
 }
 
+// NewNormalWithAdapter Initializes a Normal instance with all required components, including an adapter.
 func NewNormalWithAdapter(
 	fetcher fetcher.Fetcher,
 	joiner joiner.Joiner,
@@ -65,6 +69,7 @@ func NewNormalWithAdapter(
 	return &instance, nil
 }
 
+// NewNormalWithoutAdapter initializes a Normal instance without an adapter.
 func NewNormalWithoutAdapter(
 	fetch fetcher.Fetcher,
 	join joiner.Joiner,
@@ -94,10 +99,13 @@ func NewNormalWithoutAdapter(
 
 }
 
+// Executes the entire pipeline in a structured and concurrent manner.
 func (n *Normal) Run(ctx context.Context) error {
 	g := errgroup.Group{}
 	stop := util.StopNotifier{}
 
+	// A goroutine that terminates the entire pipeline
+	// if an external termination signal occurs or if any job terminates abnormally.
 	go func() {
 		select {
 		case <-stop.Done():

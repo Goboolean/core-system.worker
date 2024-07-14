@@ -11,6 +11,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// Normal orchestrates a pipeline without model of data processing stages.
+// It uses interfaces (Fetcher, Joiner, etc.) to abstract each stage, making it flexible and modular.
 type WithoutModel struct {
 	fetcher     fetcher.Fetcher
 	adapter     adapter.Adapter
@@ -20,6 +22,7 @@ type WithoutModel struct {
 	done *util.StopNotifier
 }
 
+// NewNormalWithAdapter Initializes a WithoutModel instance with all required components, including an adapter.
 func NewWithoutModelWithAdapter(
 	fetcher fetcher.Fetcher,
 	adapter adapter.Adapter,
@@ -42,6 +45,7 @@ func NewWithoutModelWithAdapter(
 	return &instance, nil
 }
 
+// NewNormalWithoutAdapter initializes a WithoutModel instance without an adapter
 func NewWithoutModelWithoutAdapter(
 	fetch fetcher.Fetcher,
 	analyze analyzer.Analyzer,
@@ -60,6 +64,7 @@ func NewWithoutModelWithoutAdapter(
 	return &instance, nil
 }
 
+// Executes the entire pipeline in a structured and concurrent manner.
 func (wom *WithoutModel) Run(ctx context.Context) error {
 	g := errgroup.Group{}
 	stop := util.StopNotifier{}

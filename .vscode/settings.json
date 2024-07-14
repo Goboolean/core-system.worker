@@ -1,17 +1,15 @@
 {
     "cSpell.words": [
+        "chanutil",
+        "errgroup",
         "Goboolean",
         "gomock",
-        "karfka",
         "kserve",
         "logrus",
         "outchan",
-        "parmas",
         "seze",
         "sirupsen",
         "stretchr",
-        "wireinject",
-        "wrie"
     ],
     "go.buildTags": "develop"
 }

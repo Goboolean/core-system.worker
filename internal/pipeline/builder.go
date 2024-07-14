@@ -31,6 +31,23 @@ var (
 	ErrNotImplemented       = errors.New("select pipeline: selected pipeline is not implemented")
 )
 
+// Build constructs the appropriate pipeline based on the application config.
+//
+// The build process proceeds as follows:
+//
+// 1. Select Pipeline
+//
+// Based on the configuration, determine which pipeline the user desires by verifying omitted or additional settings.
+// For example, if there is no configuration for a model, it indicates that the user wants a pipeline without a model.
+//
+// 2. Create Job
+//
+// Extract specs that distinguishes jobs for each stage from the application configuration,
+// and pass the spec and other parameters to Create to generate the necessary jobs for the selected pipeline.
+//
+// 3. Create Pipeline
+//
+// Inject the generated jobs into the appropriate pipeline to create the pipeline.
 func Build(config configuration.AppConfig) (Pipeline, error) {
 	//step1: select pipeline
 	t, err := selectPipeline(config)
@@ -48,6 +65,7 @@ func Build(config configuration.AppConfig) (Pipeline, error) {
 	}
 }
 
+// selectPipeline determine which pipeline the user desires by verifying omitted or additional settings.
 func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
 	if config.Model.ID == "" {
 		return PipelineWithoutModel, nil
@@ -62,6 +80,7 @@ func selectPipeline(config configuration.AppConfig) (PipelineType, error) {
 	return 0, fmt.Errorf("%w %s", ErrNoCompatiblePipeline, string(configStringBytes))
 }
 
+// buildNormal builds normal pipeline
 func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	p := extractUserParams(config)
 
@@ -70,7 +89,7 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	modelExecuter, err := executer.Create(extractModelExecterSpec(config), &p)
+	modelExecuter, err := executer.Create(extractModelExecuterSpec(config), &p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
@@ -82,8 +101,7 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
-	// 현재 생성자 미구현으로 dummy 객체로 대체
+
 	transmitter, err := v1.Create(&p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
@@ -118,6 +136,7 @@ func buildNormal(config configuration.AppConfig) (*Normal, error) {
 
 }
 
+// buildWithoutModel builds pipeline without model
 func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 	p := extractUserParams(config)
 
@@ -130,8 +149,7 @@ func buildWithoutModel(config configuration.AppConfig) (*WithoutModel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
 	}
-	// transmitter 패키지는 factory가 없다. 그 이유는 transmit job은 한 가지 종류밖에 없기 때문이다.
-	// 현재 생성자 미구현으로 dummy 객체로 대체
+
 	transmitter, err := v1.Create(&p)
 	if err != nil {
 		return nil, fmt.Errorf("build normal pipeline: %w", err)
@@ -171,7 +189,7 @@ func extractFetcherSpec(config configuration.AppConfig) fetcher.Spec {
 	return spec
 }
 
-func extractModelExecterSpec(config configuration.AppConfig) executer.Spec {
+func extractModelExecuterSpec(config configuration.AppConfig) executer.Spec {
 
 	var spec executer.Spec
 
