@@ -88,6 +88,7 @@ func NewPastStock(stockCursor *StockTradeCursor, parmas *job.UserParams) (*PastS
 func (ps *PastStock) Execute() error {
 
 	defer close(ps.out)
+	defer ps.stop.NotifyStop()
 	defer ps.cursor.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -102,24 +103,31 @@ func (ps *PastStock) Execute() error {
 		return fmt.Errorf("execute fetch job:fail to configure trade cursor %w", err)
 	}
 
-	e, err := ps.cursor.Next(ctx)
-	for ; e != nil; e, err = ps.cursor.Next(ctx) {
-		if err != nil {
-			return fmt.Errorf("execute fetch job:fail to fetch trade %w", err)
-		}
-
-		if e.ClosedTime > ps.endTime.Unix() {
+	for {
+		select {
+		case <-ps.stop.Done():
 			return nil
-		}
+		default:
+			e, err := ps.cursor.Next(ctx)
+			if e == nil {
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("execute fetch job:fail to fetch trade %w", err)
+			}
 
-		ps.out <- model.Packet{
-			Time: time.Unix(e.ClosedTime, 0),
-			Data: e,
+			if e.ClosedTime > ps.endTime.Unix() {
+				return nil
+			}
+
+			ps.out <- model.Packet{
+				Time: time.Unix(e.ClosedTime, 0),
+				Data: e,
+			}
 		}
 
 	}
 
-	return nil
 }
 
 func (ps *PastStock) Output() job.DataChan {
