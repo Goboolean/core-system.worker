@@ -11,7 +11,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/util"
 )
 
-// StockStub은 가짜 stock data를 packet에 실어서 output channel에 전달합니다.
+// StockStub delivers fake stock data encapsulated in a packet to the output channel.
 type StockStub struct {
 	numOfGeneration            int
 	maxRandomDelayMilliseconds int
