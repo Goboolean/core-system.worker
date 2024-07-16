@@ -88,7 +88,7 @@ func TestNormal(t *testing.T) {
 		done := util.NewStopNotifier()
 		go func() {
 			select {
-			//karfka, message broker
+			//kafka, message broker
 			case <-externalCh:
 				cancel()
 				stat = 1

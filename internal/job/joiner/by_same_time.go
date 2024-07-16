@@ -91,7 +91,7 @@ func (b *ByTime) Execute() error {
 // findLargestPacketIndexBySequence returns the index of the packet with the latest time
 // that is before or at the target time.
 // -1 means all element has time that is later than target
-// WARINING: TO BE USED ONLY WITH ARRAYS SORTED IN ASCENDING ORDER
+// WARNING: TO BE USED ONLY WITH ARRAYS SORTED IN ASCENDING ORDER
 func findLargestPacketIndexByTime(data []model.Packet, target time.Time) int {
 	// data는 순서가 보장돼 있고 대부분 앞 부분에 찾고자 하는 값이 있을 것이라
 	// 예상할 수 있으므로 순차탐색

@@ -12,7 +12,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 )
 
-// Injectors from wrie_setup.go:
+// Injectors from wire_setup.go:
 
 func initializeMock(p *job.UserParams) (ModelExecutor, error) {
 	executerKServeConfig := provideKServeConfig()
@@ -27,7 +27,7 @@ func initializeMock(p *job.UserParams) (ModelExecutor, error) {
 	return mock, nil
 }
 
-// wrie_setup.go:
+// wire_setup.go:
 
 type kServeConfig resolver.ConfigMap
 
