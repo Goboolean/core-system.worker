@@ -17,9 +17,9 @@ var (
 	ErrDocumentTypeMismatch = errors.New("fetch: mongo: document type mismatch")
 )
 
-// PastStock retrieves historical stock data sequentially and packages each piece into a model.Packet,
+// PastStock retrieves past stock trade data sequentially and wraps each piece into a model.Packet,
 // then sends it to the output channel.
-// PastStock fetches data for the specified stock within the given range.
+// PastStock fetches data for the specified stock trade data one at a time within the given range.
 type PastStock struct {
 	timeFrame string
 	startTime time.Time
