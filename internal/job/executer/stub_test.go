@@ -6,7 +6,6 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/model"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/sync/errgroup"
 )
@@ -56,6 +55,6 @@ func (suite *StubTestSuite) TestStub_ShouldReturnNDataItems_WhenNItemsAreStubbed
 	err = g.Wait()
 
 	//assert
-	assert.NoError(suite.T(), err)
-	assert.Len(suite.T(), res, num)
+	suite.NoError(err)
+	suite.Len(res, num)
 }

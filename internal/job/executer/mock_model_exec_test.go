@@ -10,7 +10,6 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job/executer"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 )
@@ -117,9 +116,9 @@ func (suite *MockTestSuite) TestMock_Should_ProcessBatchInferences_When_BatchSiz
 		return
 	}
 	//assert
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), expect, res)
-	assert.Len(suite.T(), errsInPipe, 0)
+	suite.NoError(err)
+	suite.Equal(expect, res)
+	suite.Len(errsInPipe, 0)
 }
 
 func TestMock(t *testing.T) {
