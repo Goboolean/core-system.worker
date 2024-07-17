@@ -83,9 +83,8 @@ func (suite *PastStockTestSuite) TestPastStock_ShouldNotOutputAnyTrade_WhenDataI
 
 	err = fetchJob.Execute()
 	//assert
-	assert.NoError(suite.T(), err)
-	assert.Len(suite.T(), out, 0)
-
+	suite.NoError(err)
+	suite.Len(out, 0)
 }
 
 // 저장소에 저장된 데이터를 모두 가져와야 한다.
@@ -117,8 +116,8 @@ func (suite *PastStockTestSuite) TestPastStock_ShouldFetchAllData_WhenDataIsStor
 
 	err = fetchJob.Execute()
 	//assert
-	assert.NoError(suite.T(), err)
-	assert.Len(suite.T(), out, storeNum)
+	suite.NoError(err)
+	suite.Len(out, storeNum)
 
 }
 
@@ -151,8 +150,8 @@ func (suite *PastStockTestSuite) TestPastStock_ShouldNotFetchData_WhenTimeFrameD
 
 	err = fetchJob.Execute()
 	//assert
-	assert.NoError(suite.T(), err)
-	assert.Len(suite.T(), out, 0)
+	suite.NoError(err)
+	suite.Len(out, 0)
 }
 
 // 존재하지 않는 ProductID일 때 데이터를 가져와선 안 된다.
@@ -183,8 +182,8 @@ func (suite *PastStockTestSuite) TestPastStock_shouldNotRetrieveData_whenProduct
 
 	err = fetchJob.Execute()
 	//assert
-	assert.NoError(suite.T(), err)
-	assert.Len(suite.T(), out, 0)
+	suite.NoError(err)
+	suite.Len(out, 0)
 }
 
 func (suite *PastStockTestSuite) recreateBucket(orgName, bucketName string) error {
