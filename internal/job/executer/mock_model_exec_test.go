@@ -121,3 +121,7 @@ func (suite *MockTestSuite) TestMock_Should_ProcessBatchInferences_When_BatchSiz
 	assert.Equal(suite.T(), expect, res)
 	assert.Len(suite.T(), errsInPipe, 0)
 }
+
+func TestMock(t *testing.T) {
+	suite.Run(t, new(MockTestSuite))
+}
