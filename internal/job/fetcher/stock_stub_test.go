@@ -3,13 +3,13 @@ package fetcher_test
 import (
 	"strconv"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/model"
 	"github.com/Goboolean/core-system.worker/internal/util"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -44,6 +44,10 @@ func (suite *StubTestSuite) TestStub_ShouldOutputRequiredNumOfData() {
 	}
 
 	//assert
-	assert.NoError(suite.T(), err, 0)
-	assert.Len(suite.T(), res, num)
+	suite.NoError(err, 0)
+	suite.Len(res, num)
+}
+
+func TestStub(t *testing.T) {
+	suite.Run(t, new(StubTestSuite))
 }
