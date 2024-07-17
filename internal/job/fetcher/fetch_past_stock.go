@@ -104,11 +104,12 @@ func (ps *PastStock) Execute() error {
 	}
 
 	for {
+		e, err := ps.cursor.Next(ctx)
+
 		select {
 		case <-ps.stop.Done():
 			return nil
 		default:
-			e, err := ps.cursor.Next(ctx)
 			if e == nil {
 				return nil
 			}
