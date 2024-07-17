@@ -8,7 +8,6 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/joiner"
 	"github.com/Goboolean/core-system.worker/internal/model"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -109,8 +108,8 @@ func (suite *ByTimeTestSuite) TestByTime_ShouldPackDataTogether_WhenDataFromRefe
 		wg.Wait()
 
 		//assert
-		assert.NoError(suite.T(), err)
-		assert.Equal(suite.T(), exp, res)
+		suite.NoError(err)
+		suite.Equal(exp, res)
 	}
 }
 
