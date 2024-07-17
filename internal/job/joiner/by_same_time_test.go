@@ -113,3 +113,7 @@ func (suite *ByTimeTestSuite) TestByTime_ShouldPackDataTogether_WhenDataFromRefe
 		assert.Equal(suite.T(), exp, res)
 	}
 }
+
+func TestByTime(t *testing.T) {
+	suite.Run(t, new(ByTimeTestSuite))
+}
