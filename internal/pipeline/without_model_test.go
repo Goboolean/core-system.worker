@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"testing"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
@@ -15,83 +14,73 @@ import (
 	v1 "github.com/Goboolean/core-system.worker/internal/job/transmitter/v1"
 	"github.com/Goboolean/core-system.worker/internal/pipeline"
 	"github.com/Goboolean/core-system.worker/internal/util"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 )
 
-func TestWithoutModel(t *testing.T) {
-	t.Run("어뎁터가 필요하지 않은 without model pipeline에 job을 주입했을 때 job사이에서 데이터가 흘러야 한다.", func(t *testing.T) {
-		//arrange
-		num := 100
-		fetchJob, err := fetcher.NewStockStub(&job.UserParams{
-			"numOfGeneration":            fmt.Sprint(num),
-			"maxRandomDelayMilliseconds": fmt.Sprint(5)})
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		analyzeJob, err := analyzer.NewStub(&job.UserParams{})
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		ctrl := gomock.NewController(t)
-		mockOrderEventDispatcher := transmitter.NewMockOrderEventDispatcher(ctrl)
-		mockAnnotationDispatcher := transmitter.NewMockAnnotationDispatcher(ctrl)
+type WithoutModelTestSuite struct {
+	suite.Suite
+}
 
-		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(num)
-		mockOrderEventDispatcher.EXPECT().Close().Times(1)
+func (suite *NormalTestSuite) TestNormal_ShouldFlowDataBetweenJobs_WhenJobInjectedInWithoutModelPipelineWithoutAdapter() {
+	//arrange
+	num := 100
+	fetchJob, err := fetcher.NewStockStub(&job.UserParams{
+		"numOfGeneration":            fmt.Sprint(num),
+		"maxRandomDelayMilliseconds": fmt.Sprint(5)})
+	suite.Require().NoError(err)
 
-		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-		mockAnnotationDispatcher.EXPECT().Close().Times(1)
+	analyzeJob, err := analyzer.NewStub(&job.UserParams{})
+	suite.Require().NoError(err)
 
-		transmitJob, err := v1.NewCommon(mockAnnotationDispatcher,
-			mockOrderEventDispatcher,
-			&job.UserParams{
-				job.TaskID: "2023-3240985",
-			})
+	ctrl := gomock.NewController(suite.T())
+	mockOrderEventDispatcher := transmitter.NewMockOrderEventDispatcher(ctrl)
+	mockAnnotationDispatcher := transmitter.NewMockAnnotationDispatcher(ctrl)
 
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
+	mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(num)
+	mockOrderEventDispatcher.EXPECT().Close().Times(1)
 
-		p, err := pipeline.NewWithoutModelWithoutAdapter(
-			fetchJob,
-			analyzeJob,
-			transmitJob,
-		)
+	mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any(), gomock.Any()).Times(num)
+	mockAnnotationDispatcher.EXPECT().Close().Times(1)
 
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
+	transmitJob, err := v1.NewCommon(mockAnnotationDispatcher,
+		mockOrderEventDispatcher,
+		&job.UserParams{
+			job.TaskID: "2023-3240985",
+		})
+	suite.Require().NoError(err)
 
-		ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	p, err := pipeline.NewWithoutModelWithoutAdapter(
+		fetchJob,
+		analyzeJob,
+		transmitJob,
+	)
+	suite.Require().NoError(err)
 
-		var stat = 0
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
-		externalCh := make(chan struct{})
-		done := util.NewStopNotifier()
-		go func() {
-			select {
-			//kafka, message broker
-			case <-externalCh:
-				cancel()
-				stat = 1
-			case <-done.Done():
-				break
-			}
-		}()
+	var stat = 0
 
-		err = p.Run(ctx)
-		done.NotifyStop()
-		if err != nil {
+	externalCh := make(chan struct{})
+	done := util.NewStopNotifier()
+	go func() {
+		select {
+		//kafka, message broker
+		case <-externalCh:
+			cancel()
 			stat = 1
+		case <-done.Done():
+			break
 		}
+	}()
 
-		//assert
-		assert.NoError(t, err)
-		assert.Equal(t, 0, stat)
-	})
+	err = p.Run(ctx)
+	done.NotifyStop()
+	if err != nil {
+		stat = 1
+	}
+
+	//assert
+	suite.NoError(err)
+	suite.Equal(0, stat)
 }

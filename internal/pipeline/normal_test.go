@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"testing"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
@@ -17,94 +16,84 @@ import (
 	v1 "github.com/Goboolean/core-system.worker/internal/job/transmitter/v1"
 	"github.com/Goboolean/core-system.worker/internal/pipeline"
 	"github.com/Goboolean/core-system.worker/internal/util"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 )
 
-func TestNormal(t *testing.T) {
-	t.Run("어뎁터가 필요하지 않은 normal pipeline에 job을 주입했을 때 job사이에서 데이터가 흘러야 한다.", func(t *testing.T) {
-		//arrange
-		num := 100
-		fetchJob, err := fetcher.NewStockStub(&job.UserParams{
-			"numOfGeneration":            fmt.Sprint(num),
-			"maxRandomDelayMilliseconds": fmt.Sprint(5)})
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		executeJob, err := executer.NewStub(&job.UserParams{})
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		analyzeJob, err := analyzer.NewStub(&job.UserParams{})
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		joinJob, err := joiner.NewByTime(&job.UserParams{})
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		ctrl := gomock.NewController(t)
-		mockOrderEventDispatcher := transmitter.NewMockOrderEventDispatcher(ctrl)
-		mockAnnotationDispatcher := transmitter.NewMockAnnotationDispatcher(ctrl)
+type NormalTestSuite struct {
+	suite.Suite
+}
 
-		mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(num)
-		mockOrderEventDispatcher.EXPECT().Close().Times(1)
+func (suite *NormalTestSuite) TestNormal_ShouldFlowDataBetweenJobs_WhenJobInjectedInNormalPipelineWithoutAdapter() {
+	//arrange
+	num := 100
 
-		mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-		mockAnnotationDispatcher.EXPECT().Close().Times(1)
+	fetchJob, err := fetcher.NewStockStub(&job.UserParams{
+		"numOfGeneration":            fmt.Sprint(num),
+		"maxRandomDelayMilliseconds": fmt.Sprint(5)})
+	suite.Require().NoError(err)
 
-		transmitJob, err := v1.NewCommon(mockAnnotationDispatcher,
-			mockOrderEventDispatcher,
-			&job.UserParams{
-				job.TaskID: "2023-3240985",
-			})
+	executeJob, err := executer.NewStub(&job.UserParams{})
+	suite.Require().NoError(err)
 
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
+	analyzeJob, err := analyzer.NewStub(&job.UserParams{})
+	suite.Require().NoError(err)
 
-		p, err := pipeline.NewNormalWithoutAdapter(
-			fetchJob,
-			joinJob,
-			executeJob,
-			analyzeJob,
-			transmitJob,
-		)
+	joinJob, err := joiner.NewByTime(&job.UserParams{})
+	suite.Require().NoError(err)
 
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	ctrl := gomock.NewController(suite.T())
 
-		var stat = 0
+	mockOrderEventDispatcher := transmitter.NewMockOrderEventDispatcher(ctrl)
+	mockAnnotationDispatcher := transmitter.NewMockAnnotationDispatcher(ctrl)
 
-		externalCh := make(chan struct{})
-		done := util.NewStopNotifier()
-		go func() {
-			select {
-			//kafka, message broker
-			case <-externalCh:
-				cancel()
-				stat = 1
-			case <-done.Done():
-				break
-			}
-		}()
+	mockOrderEventDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(num)
+	mockOrderEventDispatcher.EXPECT().Close().Times(1)
 
-		err = p.Run(ctx)
-		done.NotifyStop()
-		if err != nil {
+	mockAnnotationDispatcher.EXPECT().Dispatch(gomock.Any(), gomock.Any(), gomock.Any()).Times(num)
+	mockAnnotationDispatcher.EXPECT().Close().Times(1)
+
+	transmitJob, err := v1.NewCommon(mockAnnotationDispatcher,
+		mockOrderEventDispatcher,
+		&job.UserParams{
+			job.TaskID: "2023-3240985",
+		})
+
+	suite.Require().NoError(err)
+
+	p, err := pipeline.NewNormalWithoutAdapter(
+		fetchJob,
+		joinJob,
+		executeJob,
+		analyzeJob,
+		transmitJob,
+	)
+	suite.Require().NoError(err)
+
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+
+	var stat = 0
+
+	externalCh := make(chan struct{})
+	done := util.NewStopNotifier()
+	go func() {
+		select {
+		//kafka, message broker
+		case <-externalCh:
+			cancel()
 			stat = 1
+		case <-done.Done():
+			break
 		}
+	}()
 
-		//assert
-		assert.NoError(t, err)
-		assert.Equal(t, 0, stat)
-	})
+	err = p.Run(ctx)
+	done.NotifyStop()
+	if err != nil {
+		stat = 1
+	}
+
+	//assert
+	suite.NoError(err)
+	suite.Equal(0, stat)
 }

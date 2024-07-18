@@ -1,4 +1,4 @@
-package model
+package kserve
 
 // InferenceReq is a struct for sending requests to kserve.
 type InferenceReq struct {
