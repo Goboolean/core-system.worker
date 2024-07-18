@@ -1,7 +1,6 @@
 package influx_test
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -26,25 +25,4 @@ func TestMain(m *testing.M) {
 	rawInfluxDBClient = influxdb2.NewClient(url, token)
 	m.Run()
 	rawInfluxDBClient.Close()
-}
-
-func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
-
-	org, err := client.OrganizationsAPI().FindOrganizationByName(context.Background(), orgName)
-	if err != nil {
-		return err
-	}
-
-	bucket, err := client.BucketsAPI().FindBucketByName(context.Background(), bucketName)
-	if err != nil {
-		return nil
-	}
-
-	if err := client.BucketsAPI().DeleteBucket(context.Background(), bucket); err != nil {
-		return err
-	}
-
-	_, err = client.BucketsAPI().CreateBucketWithName(context.Background(), org, bucketName)
-
-	return err
 }

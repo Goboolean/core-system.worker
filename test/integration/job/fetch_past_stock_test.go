@@ -1,4 +1,4 @@
-package fetcher_test
+package job
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/model"
+	influxutil "github.com/Goboolean/core-system.worker/test/util/influx"
 	"github.com/Goboolean/fetch-system.IaC/pkg/influx"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
@@ -34,27 +35,6 @@ func TestMain(m *testing.M) {
 	rawInfluxClient.Close()
 }
 
-func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
-
-	org, err := client.OrganizationsAPI().FindOrganizationByName(context.Background(), orgName)
-	if err != nil {
-		return err
-	}
-
-	bucket, err := client.BucketsAPI().FindBucketByName(context.Background(), bucketName)
-	if err != nil {
-		return err
-	}
-
-	if err := client.BucketsAPI().DeleteBucket(context.Background(), bucket); err != nil {
-		return err
-	}
-
-	_, err = client.BucketsAPI().CreateBucketWithName(context.Background(), org, bucketName)
-
-	return err
-}
-
 func TestPing(t *testing.T) {
 	ok, err := rawInfluxClient.Ping(context.Background())
 	assert.True(t, ok)
@@ -64,7 +44,7 @@ func TestPing(t *testing.T) {
 func TestPastStock(t *testing.T) {
 	t.Run("저장된 데이터가 없을 때, 0개의 데이터를 가져와야 한다.", func(t *testing.T) {
 		//arrange
-		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
@@ -116,7 +96,7 @@ func TestPastStock(t *testing.T) {
 
 	t.Run("데이터가 저장된 만큼, 데이터를 가져와야 한다.", func(t *testing.T) {
 		//arrange
-		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
@@ -193,7 +173,7 @@ func TestPastStock(t *testing.T) {
 
 	t.Run("존재하지 않는 timeFrame일 때 데이터를 가져와선 안 된다.", func(t *testing.T) {
 		//arrange
-		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
@@ -271,7 +251,7 @@ func TestPastStock(t *testing.T) {
 
 	t.Run("존재하지 않는 ProductID일 때 데이터를 가져와선 안 된다.", func(t *testing.T) {
 		//arrange
-		if err := RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxClient, opts.Org, opts.TradeBucketName); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}

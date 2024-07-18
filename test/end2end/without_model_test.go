@@ -7,35 +7,36 @@ import (
 
 	"github.com/Goboolean/core-system.worker/configuration"
 	"github.com/Goboolean/core-system.worker/internal/pipeline"
+	influxutil "github.com/Goboolean/core-system.worker/test/util/influx"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	"github.com/stretchr/testify/suite"
 )
 
-type NormalTestSuite struct {
+type WithoutModelTestSuite struct {
 	suite.Suite
 	rawClient influxdb2.Client
 }
 
-func (suite *NormalTestSuite) SetupSuite() {
+func (suite *WithoutModelTestSuite) SetupSuite() {
 	suite.rawClient = influxdb2.NewClient(influxDBUrl, influxDBToken)
 }
 
-func (suite *NormalTestSuite) TearDownTestSuite() {
+func (suite *WithoutModelTestSuite) TearDownTestSuite() {
 	suite.rawClient.Close()
 }
 
-func (suite *NormalTestSuite) SetupTest() {
-	suite.Require().NoError(RecreateBucket(rawInfluxClient, influxDBOrg, tradeBucket))
-	suite.Require().NoError(RecreateBucket(rawInfluxClient, influxDBOrg, orderBucket))
-	suite.Require().NoError(RecreateBucket(rawInfluxClient, influxDBOrg, annotationBucket))
+func (suite *WithoutModelTestSuite) SetupTest() {
+	suite.Require().NoError(influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, tradeBucket))
+	suite.Require().NoError(influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, orderBucket))
+	suite.Require().NoError(influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, annotationBucket))
 
 }
 
-func (suite *NormalTestSuite) TestNormal_ShouldProcessAllData_WhenVirtualBackTesting() {
-	//arrange
+func (suite *WithoutModelTestSuite) TestWithoutModel_ShouldProcessAllData_WhenVirtualBackTesting() {
+	// arrange
 	startTime := time.Unix(1720396800, 0)
-	num := 390
+	num := 350
 	writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, tradeBucket)
 	for i := 0; i < num; i++ {
 		err := writer.WritePoint(context.Background(),
@@ -54,8 +55,8 @@ func (suite *NormalTestSuite) TestNormal_ShouldProcessAllData_WhenVirtualBackTes
 		suite.Require().NoError(err)
 	}
 
-	//act
-	config, err := configuration.ImportAppConfigFromFile("./normal.test.yml")
+	// act
+	config, err := configuration.ImportAppConfigFromFile("./without_model.test.yml")
 	suite.Require().NoError(err)
 
 	p, err := pipeline.Build(*config)
@@ -64,11 +65,11 @@ func (suite *NormalTestSuite) TestNormal_ShouldProcessAllData_WhenVirtualBackTes
 	ctx := context.Background()
 	err = p.Run(ctx)
 
-	//assert
+	// assert
 	suite.NoError(err)
 
 	var count int
-	count, err = suite.countMeasurement(orderBucket, config.TaskID)
+	count, err = suite.countMeasurement(annotationBucket, config.TaskID)
 	suite.NoError(err)
 	suite.Equal(num, count)
 
@@ -77,10 +78,10 @@ func (suite *NormalTestSuite) TestNormal_ShouldProcessAllData_WhenVirtualBackTes
 	suite.Equal(num, count)
 }
 
-func (suite *NormalTestSuite) countMeasurement(bucket, measurement string) (int, error) {
-	return CountRecordsInMeasurement(suite.rawClient, influxDBOrg, bucket, measurement)
+func (suite *WithoutModelTestSuite) countMeasurement(bucket, measurement string) (int, error) {
+	return influxutil.CountRecordsInMeasurement(suite.rawClient, influxDBOrg, bucket, measurement)
 }
 
-func TestNormal(t *testing.T) {
+func TestWithoutNormal(t *testing.T) {
 	suite.Run(t, new(NormalTestSuite))
 }

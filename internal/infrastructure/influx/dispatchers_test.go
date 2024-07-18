@@ -8,13 +8,14 @@ import (
 
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/influx"
 	"github.com/Goboolean/core-system.worker/internal/model"
+	influxutil "github.com/Goboolean/core-system.worker/test/util/influx"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestOrderEventDispatcher(t *testing.T) {
 	t.Run("발송한 order event의 개수와 bucket에 있는 order event의 개수가 같아야 한다.", func(t *testing.T) {
 		//arrange
-		if err := RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
@@ -73,7 +74,7 @@ func TestAnnotationDispatcher(t *testing.T) {
 	// "Testing for the mapper has already been conducted, so specific tests for the mapper will be omitted.
 	t.Run("발송한 order event의 개수와 bucket에 있는 order event의 개수가 같아야 한다.", func(t *testing.T) {
 		//arrange
-		if err := RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
