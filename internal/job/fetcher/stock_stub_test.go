@@ -38,10 +38,10 @@ func (suite *StubTestSuite) TestStub_ShouldOutputRequiredNumOfData() {
 	}()
 
 	err = stub.Execute()
-	if util.IsWaitGroupTimeout(wg, 10*time.Second) {
-		suite.T().Errorf("Deadline exceed")
-		suite.T().FailNow()
-	}
+	suite.Require().False(
+		util.IsWaitGroupTimeout(wg, 5*time.Second),
+		"deadline exceed:",
+	)
 
 	//assert
 	suite.NoError(err, 0)
