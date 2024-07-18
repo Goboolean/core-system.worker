@@ -111,10 +111,8 @@ func (suite *MockTestSuite) TestMock_Should_ProcessBatchInferences_When_BatchSiz
 
 	err = execute.Execute()
 
-	if util.IsWaitGroupTimeout(wg, 5*time.Second) {
-		suite.T().Error("deadline exceed")
-		return
-	}
+	suite.Require().False(util.IsWaitGroupTimeout(wg, 5*time.Second))
+
 	//assert
 	suite.NoError(err)
 	suite.Equal(expect, res)
