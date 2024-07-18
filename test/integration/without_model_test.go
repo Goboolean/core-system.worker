@@ -7,75 +7,80 @@ import (
 
 	"github.com/Goboolean/core-system.worker/configuration"
 	"github.com/Goboolean/core-system.worker/internal/pipeline"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestPipelineWithoutModel(t *testing.T) {
-	t.Run("backTesting useCase에서 influxDB에 데이터가 N개 저장됐을 때,"+
-		"annotation과 orderEvent에도 N개가 저장돼야 한다.", func(t *testing.T) {
-		//arrange
-		if err := RecreateBucket(rawInfluxClient, influxDBOrg, tradeBucket); err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		if err := RecreateBucket(rawInfluxClient, influxDBOrg, orderBucket); err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		if err := RecreateBucket(rawInfluxClient, influxDBOrg, annotationBucket); err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-		startTime := time.Unix(1720396800, 0)
-		num := 350
-		writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, tradeBucket)
-		for i := 0; i < num; i++ {
-			err := writer.WritePoint(context.Background(),
-				write.NewPoint(
-					"stock.aapl.usa.1m",
-					map[string]string{},
-					map[string]interface{}{
-						"open":   float64(i),
-						"close":  float64(2.0),
-						"high":   float64(3.0),
-						"low":    float64(4.0),
-						"volume": float64(4),
-					},
-					startTime.Add(time.Duration(i)*time.Minute),
-				))
-			if err != nil {
-				t.Error(err)
-				t.FailNow()
-			}
-		}
+type WithoutModelTestSuite struct {
+	suite.Suite
+	rawClient influxdb2.Client
+}
 
-		//act
-		config, err := configuration.ImportAppConfigFromFile("./without_model.test.yml")
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
+func (suite *WithoutModelTestSuite) SetupSuite() {
+	suite.rawClient = influxdb2.NewClient(influxDBUrl, influxDBToken)
+}
 
-		p, err := pipeline.Build(*config)
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
+func (suite *WithoutModelTestSuite) TearDownTestSuite() {
+	suite.rawClient.Close()
+}
 
-		ctx := context.Background()
-		err = p.Run(ctx)
+func (suite *WithoutModelTestSuite) SetupTest() {
+	suite.Require().NoError(RecreateBucket(rawInfluxClient, influxDBOrg, tradeBucket))
+	suite.Require().NoError(RecreateBucket(rawInfluxClient, influxDBOrg, orderBucket))
+	suite.Require().NoError(RecreateBucket(rawInfluxClient, influxDBOrg, annotationBucket))
 
-		//assert
-		assert.NoError(t, err)
+}
 
-		var count int
-		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, orderBucket, config.TaskID)
-		assert.NoError(t, err)
-		assert.Equal(t, num, count)
+func (suite *WithoutModelTestSuite) TestWithoutModel_ShouldProcessAllData_WhenVirtualBackTesting() {
+	// arrange
+	startTime := time.Unix(1720396800, 0)
+	num := 350
+	writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, tradeBucket)
+	for i := 0; i < num; i++ {
+		err := writer.WritePoint(context.Background(),
+			write.NewPoint(
+				"stock.aapl.usa.1m",
+				map[string]string{},
+				map[string]interface{}{
+					"open":   float64(i),
+					"close":  float64(2.0),
+					"high":   float64(3.0),
+					"low":    float64(4.0),
+					"volume": float64(4),
+				},
+				startTime.Add(time.Duration(i)*time.Minute),
+			))
+		suite.Require().NoError(err)
+	}
 
-		count, err = CountRecordsInMeasurement(rawInfluxClient, influxDBOrg, annotationBucket, config.TaskID)
-		assert.NoError(t, err)
-		assert.Equal(t, num, count)
-	})
+	// act
+	config, err := configuration.ImportAppConfigFromFile("./without_model.test.yml")
+	suite.Require().NoError(err)
+
+	p, err := pipeline.Build(*config)
+	suite.Require().NoError(err)
+
+	ctx := context.Background()
+	err = p.Run(ctx)
+
+	// assert
+	suite.NoError(err)
+
+	var count int
+	count, err = suite.countMeasurement(annotationBucket, config.TaskID)
+	suite.NoError(err)
+	suite.Equal(num, count)
+
+	count, err = suite.countMeasurement(annotationBucket, config.TaskID)
+	suite.NoError(err)
+	suite.Equal(num, count)
+}
+
+func (suite *WithoutModelTestSuite) countMeasurement(bucket, measurement string) (int, error) {
+	return CountRecordsInMeasurement(suite.rawClient, influxDBOrg, bucket, measurement)
+}
+
+func TestWithoutNormal(t *testing.T) {
+	suite.Run(t, new(NormalTestSuite))
 }
