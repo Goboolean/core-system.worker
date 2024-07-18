@@ -2,10 +2,10 @@ package integration
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
+	"github.com/Goboolean/core-system.worker/configuration"
 	influxutil "github.com/Goboolean/core-system.worker/test/util/influx"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
@@ -15,13 +15,13 @@ import (
 var rawInfluxClient influxdb2.Client
 
 var (
-	influxDBUrl   = os.Getenv("INFLUXDB_URL")
-	influxDBOrg   = os.Getenv("INFLUXDB_ORG")
-	influxDBToken = os.Getenv("INFLUXDB_TOKEN")
+	influxDBUrl   = configuration.InfluxDBURL
+	influxDBOrg   = configuration.InfluxDBOrg
+	influxDBToken = configuration.InfluxDBToken
 
-	tradeBucket      = os.Getenv("INFLUXDB_TRADE_BUCKET")
-	orderBucket      = os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET")
-	annotationBucket = os.Getenv("INFLUXDB_ANNOTATION_BUCKET")
+	tradeBucket      = configuration.InfluxDBTradeBucket
+	orderBucket      = configuration.InfluxDBOrderEventBucket
+	annotationBucket = configuration.InfluxDBAnnotationBucket
 )
 
 func TestPing(t *testing.T) {

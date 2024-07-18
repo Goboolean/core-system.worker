@@ -15,7 +15,7 @@ import (
 func TestOrderEventDispatcher(t *testing.T) {
 	t.Run("발송한 order event의 개수와 bucket에 있는 order event의 개수가 같아야 한다.", func(t *testing.T) {
 		//arrange
-		if err := influxutil.RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxDBClient, org, orderEventBucket); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
@@ -24,7 +24,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 			URL:        url,
 			Token:      token,
 			Org:        org,
-			BucketName: bucket,
+			BucketName: orderEventBucket,
 		})
 
 		if err != nil {
@@ -52,7 +52,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 				|> range(start:0)
 				|> filter(fn: (r)=> r._measurement == "%s")
 				|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-				`, bucket, taskID))
+				`, orderEventBucket, taskID))
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -72,9 +72,9 @@ func TestOrderEventDispatcher(t *testing.T) {
 
 func TestAnnotationDispatcher(t *testing.T) {
 	// "Testing for the mapper has already been conducted, so specific tests for the mapper will be omitted.
-	t.Run("발송한 order event의 개수와 bucket에 있는 order event의 개수가 같아야 한다.", func(t *testing.T) {
+	t.Run("발송한 annotation의 개수와 bucket에 있는 annotation의 개수가 같아야 한다.", func(t *testing.T) {
 		//arrange
-		if err := influxutil.RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxDBClient, org, annotationBucket); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
@@ -84,7 +84,7 @@ func TestAnnotationDispatcher(t *testing.T) {
 			URL:        url,
 			Token:      token,
 			Org:        org,
-			BucketName: bucket,
+			BucketName: annotationBucket,
 		})
 
 		if err != nil {
@@ -110,7 +110,7 @@ func TestAnnotationDispatcher(t *testing.T) {
 				|> range(start:0)
 				|> filter(fn: (r)=> r._measurement == "%s")
 				|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-				`, bucket, taskID))
+				`, annotationBucket, taskID))
 		if err != nil {
 			t.Error(err)
 			t.FailNow()

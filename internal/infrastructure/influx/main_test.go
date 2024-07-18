@@ -1,17 +1,18 @@
 package influx_test
 
 import (
-	"os"
 	"testing"
 
+	"github.com/Goboolean/core-system.worker/configuration"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
 var (
-	url    = os.Getenv("INFLUXDB_URL")
-	bucket = os.Getenv("INFLUXDB_BUCKET")
-	token  = os.Getenv("INFLUXDB_TOKEN")
-	org    = os.Getenv("INFLUXDB_ORG")
+	url              = configuration.InfluxDBURL
+	orderEventBucket = configuration.InfluxDBOrderEventBucket
+	annotationBucket = configuration.InfluxDBAnnotationBucket
+	token            = configuration.InfluxDBToken
+	org              = configuration.InfluxDBOrg
 )
 
 var rawInfluxDBClient influxdb2.Client

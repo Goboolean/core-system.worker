@@ -1,15 +1,16 @@
 package job
 
 import (
-	"os"
 	"testing"
+
+	"github.com/Goboolean/core-system.worker/configuration"
 )
 
 var (
-	url             = os.Getenv("INFLUXDB_URL")
-	token           = os.Getenv("INFLUXDB_TOKEN")
-	org             = os.Getenv("INFLUXDB_ORG")
-	tradeBucketName = os.Getenv("INFLUXDB_TRADE_BUCKET")
+	url             = configuration.InfluxDBURL
+	token           = configuration.InfluxDBToken
+	org             = configuration.InfluxDBOrg
+	tradeBucketName = configuration.InfluxDBTradeBucket
 )
 
 const (
