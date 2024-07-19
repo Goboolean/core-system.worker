@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/Goboolean/core-system.worker/configuration"
+
+	"github.com/Goboolean/core-system.worker/test/container"
 	influxutil "github.com/Goboolean/core-system.worker/test/util/influx"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	"github.com/stretchr/testify/assert"
 )
-
-var rawInfluxClient influxdb2.Client
 
 var (
 	influxDBUrl   = configuration.InfluxDBURL
@@ -24,13 +24,25 @@ var (
 	annotationBucket = configuration.InfluxDBAnnotationBucket
 )
 
+var influxC *container.InfluxContainer
+
 func TestPing(t *testing.T) {
+	rawInfluxClient := influxdb2.NewClient(influxDBUrl, influxDBToken)
+	t.Cleanup(func() {
+		rawInfluxClient.Close()
+	})
+
 	ok, err := rawInfluxClient.Ping(context.Background())
 	assert.True(t, ok)
 	assert.NoError(t, err)
 }
 
 func TestCountRecordsInMeasurement(t *testing.T) {
+	rawInfluxClient := influxdb2.NewClient(influxDBUrl, influxDBToken)
+	t.Cleanup(func() {
+		rawInfluxClient.Close()
+	})
+
 	bucket := annotationBucket
 	measurement := "testMeasurement"
 	if err := influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, bucket); err != nil {
@@ -65,7 +77,14 @@ func TestCountRecordsInMeasurement(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	rawInfluxClient = influxdb2.NewClient(influxDBUrl, influxDBToken)
+	var err error
+	influxC, err = container.InitInfluxContainerWithPortBinding(context.Background(), "8086", tradeBucket, orderBucket, annotationBucket)
+	if err != nil {
+		panic(err)
+	}
 	m.Run()
-	rawInfluxClient.Close()
+	err = influxC.Terminate(context.Background())
+	if err != nil {
+		panic(err)
+	}
 }

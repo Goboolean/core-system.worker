@@ -1,13 +1,32 @@
-package pipeline_test
+package pipeline
 
 import (
+	"context"
+	"testing"
+
 	"github.com/Goboolean/core-system.worker/configuration"
-	"github.com/Goboolean/core-system.worker/internal/pipeline"
+	"github.com/Goboolean/core-system.worker/test/container"
 	"github.com/stretchr/testify/suite"
 )
 
 type BuildTestSuite struct {
 	suite.Suite
+	influxC *container.InfluxContainer
+}
+
+func (suite *BuildTestSuite) SetupSuite() {
+	var err error
+	suite.influxC, err = container.InitInfluxContainerWithPortBinding(
+		context.Background(),
+		"8086",
+		configuration.InfluxDBOrderEventBucket,
+		configuration.InfluxDBAnnotationBucket)
+	suite.Require().NoError(err)
+}
+
+func (suite *BuildTestSuite) TearDownSuite() {
+	suite.Require().NoError(
+		suite.influxC.Terminate(context.Background()))
 }
 
 func (suite *BuildTestSuite) TestBuild_ShouldBuildNormalPipeline_WhenGivenVirtualNormalPipelineScenarioInYMLConfiguration() {
@@ -16,12 +35,12 @@ func (suite *BuildTestSuite) TestBuild_ShouldBuildNormalPipeline_WhenGivenVirtua
 	suite.Require().NoError(err)
 
 	// act
-	p, err := pipeline.Build(*cfg)
+	p, err := Build(*cfg)
 
 	// assert
 	suite.NoError(err)
 
-	_, ok := p.(*pipeline.Normal)
+	_, ok := p.(*Normal)
 	suite.True(ok)
 }
 
@@ -31,11 +50,15 @@ func (suite *BuildTestSuite) TestBuild_ShouldBuildWithoutNormalPipeline_WhenGive
 	suite.Require().NoError(err)
 
 	//act
-	p, err := pipeline.Build(*cfg)
+	p, err := Build(*cfg)
 
 	//assert
 	suite.NoError(err)
-	_, ok := p.(*pipeline.WithoutModel)
+	_, ok := p.(*WithoutModel)
 	suite.True(ok)
 
+}
+
+func TestBuilder(t *testing.T) {
+	suite.Run(t, new(BuildTestSuite))
 }

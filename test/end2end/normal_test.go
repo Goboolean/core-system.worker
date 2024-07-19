@@ -27,9 +27,9 @@ func (suite *NormalTestSuite) TearDownTestSuite() {
 }
 
 func (suite *NormalTestSuite) SetupTest() {
-	suite.Require().NoError(influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, tradeBucket))
-	suite.Require().NoError(influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, orderBucket))
-	suite.Require().NoError(influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, annotationBucket))
+	suite.Require().NoError(influxutil.RecreateBucket(suite.rawClient, influxDBOrg, tradeBucket))
+	suite.Require().NoError(influxutil.RecreateBucket(suite.rawClient, influxDBOrg, orderBucket))
+	suite.Require().NoError(influxutil.RecreateBucket(suite.rawClient, influxDBOrg, annotationBucket))
 
 }
 
@@ -37,7 +37,7 @@ func (suite *NormalTestSuite) TestNormal_ShouldProcessAllData_WhenVirtualBackTes
 	//arrange
 	startTime := time.Unix(1720396800, 0)
 	num := 390
-	writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, tradeBucket)
+	writer := suite.rawClient.WriteAPIBlocking(influxDBOrg, tradeBucket)
 	for i := 0; i < num; i++ {
 		err := writer.WritePoint(context.Background(),
 			write.NewPoint(
