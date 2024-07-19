@@ -1,4 +1,4 @@
-package integration
+package end2end
 
 import (
 	"context"
