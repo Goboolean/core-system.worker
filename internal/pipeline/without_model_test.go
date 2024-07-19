@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"testing"
 
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/analyzer"
@@ -22,7 +23,7 @@ type WithoutModelTestSuite struct {
 	suite.Suite
 }
 
-func (suite *NormalTestSuite) TestNormal_ShouldFlowDataBetweenJobs_WhenJobInjectedInWithoutModelPipelineWithoutAdapter() {
+func (suite *WithoutModelTestSuite) TestNormal_ShouldFlowDataBetweenJobs_WhenJobInjectedInWithoutModelPipelineWithoutAdapter() {
 	//arrange
 	num := 100
 	fetchJob, err := fetcher.NewStockStub(&job.UserParams{
@@ -83,4 +84,8 @@ func (suite *NormalTestSuite) TestNormal_ShouldFlowDataBetweenJobs_WhenJobInject
 	//assert
 	suite.NoError(err)
 	suite.Equal(0, stat)
+}
+
+func TestWithoutModel(t *testing.T) {
+	suite.Run(t, new(WithoutModelTestSuite))
 }
