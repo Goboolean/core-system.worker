@@ -16,11 +16,12 @@ type BuildTestSuite struct {
 
 func (suite *BuildTestSuite) SetupSuite() {
 	var err error
-	suite.influxC, err = container.InitInfluxContainerWithPortBinding(
-		context.Background(),
-		"8086",
+	suite.influxC, err = container.InitInfluxContainerWithRandomPort(context.Background(),
+		configuration.InfluxDBTradeBucket,
 		configuration.InfluxDBOrderEventBucket,
 		configuration.InfluxDBAnnotationBucket)
+
+	configuration.InfluxDBURL = suite.influxC.URL
 	suite.Require().NoError(err)
 }
 

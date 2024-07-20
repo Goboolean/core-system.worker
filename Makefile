@@ -21,5 +21,7 @@ wire-job:
 	wire ${STAGE_PACKAGES}
 
 test:
-	go test ./... -tags develop
+	go clean -testcache
+	go test ./... -tags develop 
+
  

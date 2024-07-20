@@ -15,7 +15,6 @@ import (
 )
 
 var (
-	influxDBUrl   = configuration.InfluxDBURL
 	influxDBOrg   = configuration.InfluxDBOrg
 	influxDBToken = configuration.InfluxDBToken
 
@@ -24,10 +23,8 @@ var (
 	annotationBucket = configuration.InfluxDBAnnotationBucket
 )
 
-var influxC *container.InfluxContainer
-
 func TestPing(t *testing.T) {
-	rawInfluxClient := influxdb2.NewClient(influxDBUrl, influxDBToken)
+	rawInfluxClient := influxdb2.NewClient(configuration.InfluxDBURL, influxDBToken)
 	t.Cleanup(func() {
 		rawInfluxClient.Close()
 	})
@@ -38,7 +35,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestCountRecordsInMeasurement(t *testing.T) {
-	rawInfluxClient := influxdb2.NewClient(influxDBUrl, influxDBToken)
+	rawInfluxClient := influxdb2.NewClient(configuration.InfluxDBURL, influxDBToken)
 	t.Cleanup(func() {
 		rawInfluxClient.Close()
 	})
@@ -77,11 +74,11 @@ func TestCountRecordsInMeasurement(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	var err error
-	influxC, err = container.InitInfluxContainerWithPortBinding(context.Background(), "8086", tradeBucket, orderBucket, annotationBucket)
+	influxC, err := container.InitInfluxContainerWithRandomPort(context.Background(), tradeBucket, orderBucket, annotationBucket)
 	if err != nil {
 		panic(err)
 	}
+	configuration.InfluxDBURL = influxC.URL
 	m.Run()
 	err = influxC.Terminate(context.Background())
 	if err != nil {

@@ -19,7 +19,7 @@ type NormalTestSuite struct {
 }
 
 func (suite *NormalTestSuite) SetupSuite() {
-	suite.rawClient = influxdb2.NewClient(influxDBUrl, influxDBToken)
+	suite.rawClient = influxdb2.NewClient(configuration.InfluxDBURL, influxDBToken)
 }
 
 func (suite *NormalTestSuite) TearDownTestSuite() {
