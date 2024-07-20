@@ -33,6 +33,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 		}
 
 		//act
+		start := time.Now().Add(-time.Duration(num) * time.Second)
 		for i := 0; i < num; i++ {
 			dispatcher.Dispatch(taskID, &model.OrderEvent{
 				ProductID: productID,
@@ -40,7 +41,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 					ProportionPercent: 0,
 					Action:            model.Buy,
 				},
-				CreatedAt: time.Now(),
+				CreatedAt: start.Add(time.Duration(i) * time.Second),
 				Task:      model.BackTest,
 			})
 		}
