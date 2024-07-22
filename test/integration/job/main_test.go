@@ -24,7 +24,7 @@ const (
 
 func TestMain(m *testing.M) {
 	var err error
-	influxC, err = container.InitInfluxContainerWithRandomPort(context.Background(), tradeBucket)
+	influxC, err = container.InitInfluxContainer(context.Background(), tradeBucket)
 	if err != nil {
 		panic(err)
 	}

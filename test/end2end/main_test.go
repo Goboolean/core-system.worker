@@ -74,7 +74,7 @@ func TestCountRecordsInMeasurement(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	influxC, err := container.InitInfluxContainerWithRandomPort(context.Background(), tradeBucket, orderBucket, annotationBucket)
+	influxC, err := container.InitInfluxContainer(context.Background(), tradeBucket, orderBucket, annotationBucket)
 	if err != nil {
 		panic(err)
 	}

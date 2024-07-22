@@ -28,7 +28,7 @@ var (
 
 func TestMain(m *testing.M) {
 	var err error
-	influxC, err = container.InitInfluxContainerWithRandomPort(
+	influxC, err = container.InitInfluxContainer(
 		context.Background(),
 		os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET"),
 		os.Getenv("INFLUXDB_ANNOTATION_BUCKET"))
