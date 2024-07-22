@@ -33,6 +33,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 		}
 
 		//act
+		start := time.Now().Add(-time.Duration(num) * time.Second)
 		for i := 0; i < num; i++ {
 			dispatcher.Dispatch(taskID, &model.OrderEvent{
 				ProductID: productID,
@@ -40,7 +41,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 					ProportionPercent: 0,
 					Action:            model.Buy,
 				},
-				CreatedAt: time.Now(),
+				CreatedAt: start.Add(time.Duration(i) * time.Second),
 				Task:      model.BackTest,
 			})
 		}
@@ -96,11 +97,12 @@ func TestAnnotationDispatcher(t *testing.T) {
 			Price       float64 `name:"price"`
 		}
 		//act
+		start := time.Now().Add(-time.Duration(num) * time.Second)
 		for i := 0; i < num; i++ {
 			dispatcher.Dispatch(taskID, AnnotationSample{
 				Description: "hello world",
 				Price:       3.14,
-			}, time.Now())
+			}, start.Add(time.Duration(i)*time.Second))
 		}
 		dispatcher.Close()
 		//assert

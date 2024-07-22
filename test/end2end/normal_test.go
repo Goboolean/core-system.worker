@@ -19,7 +19,7 @@ type NormalTestSuite struct {
 }
 
 func (suite *NormalTestSuite) SetupSuite() {
-	suite.rawClient = influxdb2.NewClient(influxDBUrl, influxDBToken)
+	suite.rawClient = influxdb2.NewClient(url, influxDBToken)
 }
 
 func (suite *NormalTestSuite) TearDownTestSuite() {
@@ -27,9 +27,9 @@ func (suite *NormalTestSuite) TearDownTestSuite() {
 }
 
 func (suite *NormalTestSuite) SetupTest() {
-	suite.Require().NoError(influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, tradeBucket))
-	suite.Require().NoError(influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, orderBucket))
-	suite.Require().NoError(influxutil.RecreateBucket(rawInfluxClient, influxDBOrg, annotationBucket))
+	suite.Require().NoError(influxutil.RecreateBucket(suite.rawClient, influxDBOrg, tradeBucket))
+	suite.Require().NoError(influxutil.RecreateBucket(suite.rawClient, influxDBOrg, orderBucket))
+	suite.Require().NoError(influxutil.RecreateBucket(suite.rawClient, influxDBOrg, annotationBucket))
 
 }
 
@@ -37,7 +37,7 @@ func (suite *NormalTestSuite) TestNormal_ShouldProcessAllData_WhenVirtualBackTes
 	//arrange
 	startTime := time.Unix(1720396800, 0)
 	num := 390
-	writer := rawInfluxClient.WriteAPIBlocking(influxDBOrg, tradeBucket)
+	writer := suite.rawClient.WriteAPIBlocking(influxDBOrg, tradeBucket)
 	for i := 0; i < num; i++ {
 		err := writer.WritePoint(context.Background(),
 			write.NewPoint(
@@ -56,7 +56,7 @@ func (suite *NormalTestSuite) TestNormal_ShouldProcessAllData_WhenVirtualBackTes
 	}
 
 	//act
-	config, err := configuration.ImportAppConfigFromFile("./normal.test.yml")
+	config, err := configuration.ImportAppConfigFromFile("./ymls/normal.test.yml")
 	suite.Require().NoError(err)
 
 	p, err := pipeline.Build(*config)

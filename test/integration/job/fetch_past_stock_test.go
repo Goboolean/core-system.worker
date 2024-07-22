@@ -42,14 +42,14 @@ func (suite *PastStockTestSuite) SetupTest() {
 		URL:             url,
 		Token:           token,
 		Org:             org,
-		TradeBucketName: tradeBucketName,
+		TradeBucketName: tradeBucket,
 	})
 	suite.Require().NoError(err)
 
 	suite.cursor, err = fetcher.NewStockTradeCursor(suite.query)
 	suite.Require().NoError(err)
 
-	err = influxutil.RecreateBucket(suite.rawClient, org, tradeBucketName)
+	err = influxutil.RecreateBucket(suite.rawClient, org, tradeBucket)
 	suite.Require().NoError(err)
 
 }
@@ -188,7 +188,7 @@ func (suite *PastStockTestSuite) TestPastStock_shouldNotRetrieveData_whenProduct
 }
 
 func (suite *PastStockTestSuite) insertTestStockData(start time.Time, interval time.Duration, num int) error {
-	writer := suite.rawClient.WriteAPIBlocking(org, tradeBucketName)
+	writer := suite.rawClient.WriteAPIBlocking(org, tradeBucket)
 
 	for i := 0; i < num; i++ {
 		err := writer.WritePoint(

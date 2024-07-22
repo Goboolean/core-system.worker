@@ -4,7 +4,8 @@
 package fetcher
 
 import (
-	"github.com/Goboolean/core-system.worker/configuration"
+	"os"
+
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/fetch-system.IaC/pkg/influx"
 
@@ -13,10 +14,10 @@ import (
 
 func provideInfluxConfig() *influx.Opts {
 	return &influx.Opts{
-		URL:             configuration.InfluxDBURL,
-		Token:           configuration.InfluxDBToken,
-		Org:             configuration.InfluxDBOrg,
-		TradeBucketName: configuration.InfluxDBTradeBucket,
+		URL:             os.Getenv("INFLUXDB_URL"),
+		Token:           os.Getenv("INFLUXDB_TOKEN"),
+		Org:             os.Getenv("INFLUXDB_ORG"),
+		TradeBucketName: os.Getenv("INFLUXDB_TRADE_BUCKET"),
 	}
 }
 

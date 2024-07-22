@@ -4,7 +4,8 @@
 package v1
 
 import (
-	"github.com/Goboolean/core-system.worker/configuration"
+	"os"
+
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/influx"
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/transmitter"
@@ -13,19 +14,19 @@ import (
 
 func provideOrderEventDispatcher() (transmitter.OrderEventDispatcher, error) {
 	return influx.NewOrderEventDispatcher(&influx.Opts{
-		URL:        configuration.InfluxDBURL,
-		Token:      configuration.InfluxDBToken,
-		Org:        configuration.InfluxDBOrg,
-		BucketName: configuration.InfluxDBOrderEventBucket,
+		URL:        os.Getenv("INFLUXDB_URL"),
+		Token:      os.Getenv("INFLUXDB_TOKEN"),
+		Org:        os.Getenv("INFLUXDB_ORG"),
+		BucketName: os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET"),
 	})
 }
 
 func provideAnnotationDispatcher() (transmitter.AnnotationDispatcher, error) {
 	return influx.NewAnnotationDispatcher(&influx.Opts{
-		URL:        configuration.InfluxDBURL,
-		Token:      configuration.InfluxDBToken,
-		Org:        configuration.InfluxDBOrg,
-		BucketName: configuration.InfluxDBAnnotationBucket,
+		URL:        os.Getenv("INFLUXDB_URL"),
+		Token:      os.Getenv("INFLUXDB_TOKEN"),
+		Org:        os.Getenv("INFLUXDB_ORG"),
+		BucketName: os.Getenv("INFLUXDB_ANNOTATION_BUCKET"),
 	})
 }
 
