@@ -2,19 +2,19 @@ package influx_test
 
 import (
 	"context"
+	"os"
 	"testing"
 
-	"github.com/Goboolean/core-system.worker/configuration"
 	"github.com/Goboolean/core-system.worker/test/container"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
 var (
 	url              = ""
-	orderEventBucket = configuration.InfluxDBOrderEventBucket
-	annotationBucket = configuration.InfluxDBAnnotationBucket
-	token            = configuration.InfluxDBToken
-	org              = configuration.InfluxDBOrg
+	orderEventBucket = os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET")
+	annotationBucket = os.Getenv("INFLUXDB_ANNOTATION_BUCKET")
+	token            = os.Getenv("INFLUXDB_TOKEN")
+	org              = os.Getenv("INFLUXDB_ORG")
 )
 
 var influxC *container.InfluxContainer
@@ -30,8 +30,8 @@ func TestMain(m *testing.M) {
 	var err error
 	influxC, err = container.InitInfluxContainerWithRandomPort(
 		context.Background(),
-		configuration.InfluxDBOrderEventBucket,
-		configuration.InfluxDBAnnotationBucket)
+		os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET"),
+		os.Getenv("INFLUXDB_ANNOTATION_BUCKET"))
 	if err != nil {
 		panic(err)
 	}

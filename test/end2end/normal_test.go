@@ -19,7 +19,7 @@ type NormalTestSuite struct {
 }
 
 func (suite *NormalTestSuite) SetupSuite() {
-	suite.rawClient = influxdb2.NewClient(configuration.InfluxDBURL, influxDBToken)
+	suite.rawClient = influxdb2.NewClient(url, influxDBToken)
 }
 
 func (suite *NormalTestSuite) TearDownTestSuite() {
@@ -56,7 +56,7 @@ func (suite *NormalTestSuite) TestNormal_ShouldProcessAllData_WhenVirtualBackTes
 	}
 
 	//act
-	config, err := configuration.ImportAppConfigFromFile("./normal.test.yml")
+	config, err := configuration.ImportAppConfigFromFile("./ymls/normal.test.yml")
 	suite.Require().NoError(err)
 
 	p, err := pipeline.Build(*config)

@@ -2,10 +2,9 @@ package integration
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
-
-	"github.com/Goboolean/core-system.worker/configuration"
 
 	"github.com/Goboolean/core-system.worker/test/container"
 	influxutil "github.com/Goboolean/core-system.worker/test/util/influx"
@@ -15,16 +14,17 @@ import (
 )
 
 var (
-	influxDBOrg   = configuration.InfluxDBOrg
-	influxDBToken = configuration.InfluxDBToken
+	url           = ""
+	influxDBOrg   = os.Getenv("INFLUXDB_ORG")
+	influxDBToken = os.Getenv("INFLUXDB_TOKEN")
 
-	tradeBucket      = configuration.InfluxDBTradeBucket
-	orderBucket      = configuration.InfluxDBOrderEventBucket
-	annotationBucket = configuration.InfluxDBAnnotationBucket
+	tradeBucket      = os.Getenv("INFLUXDB_TRADE_BUCKET")
+	orderBucket      = os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET")
+	annotationBucket = os.Getenv("INFLUXDB_ANNOTATION_BUCKET")
 )
 
 func TestPing(t *testing.T) {
-	rawInfluxClient := influxdb2.NewClient(configuration.InfluxDBURL, influxDBToken)
+	rawInfluxClient := influxdb2.NewClient(url, influxDBToken)
 	t.Cleanup(func() {
 		rawInfluxClient.Close()
 	})
@@ -35,7 +35,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestCountRecordsInMeasurement(t *testing.T) {
-	rawInfluxClient := influxdb2.NewClient(configuration.InfluxDBURL, influxDBToken)
+	rawInfluxClient := influxdb2.NewClient(url, influxDBToken)
 	t.Cleanup(func() {
 		rawInfluxClient.Close()
 	})
@@ -78,7 +78,11 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
-	configuration.InfluxDBURL = influxC.URL
+	url = influxC.URL
+	// 고언어 테스트가 병렬적으로 실행될 때는 멀티프로세스 환경에서 실행되므로
+	// 한 패키지에서 설정한 환경변수는 다른 패키지 테스트에서 영향을 미치지 않는다.
+	os.Setenv("INFLUXDB_URL", url)
+
 	m.Run()
 	err = influxC.Terminate(context.Background())
 	if err != nil {

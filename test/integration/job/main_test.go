@@ -2,17 +2,17 @@ package job
 
 import (
 	"context"
+	"os"
 	"testing"
 
-	"github.com/Goboolean/core-system.worker/configuration"
 	"github.com/Goboolean/core-system.worker/test/container"
 )
 
 var (
 	url         = ""
-	token       = configuration.InfluxDBToken
-	org         = configuration.InfluxDBOrg
-	tradeBucket = configuration.InfluxDBTradeBucket
+	token       = os.Getenv("INFLUXDB_TOKEN")
+	org         = os.Getenv("INFLUXDB_ORG")
+	tradeBucket = os.Getenv("INFLUXDB_TRADE_BUCKET")
 )
 
 var influxC *container.InfluxContainer

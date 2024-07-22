@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/Goboolean/core-system.worker/configuration"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	log "github.com/sirupsen/logrus"
@@ -25,9 +25,9 @@ var influxEnvs = map[string]string{
 	"DOCKER_INFLUXDB_INIT_MODE":        "setup",
 	"DOCKER_INFLUXDB_INIT_USERNAME":    "admin",
 	"DOCKER_INFLUXDB_INIT_PASSWORD":    "password",
-	"DOCKER_INFLUXDB_INIT_ORG":         configuration.InfluxDBOrg,
+	"DOCKER_INFLUXDB_INIT_ORG":         os.Getenv("INFLUXDB_ORG"),
 	"DOCKER_INFLUXDB_INIT_BUCKET":      "bucket",
-	"DOCKER_INFLUXDB_INIT_ADMIN_TOKEN": configuration.InfluxDBToken,
+	"DOCKER_INFLUXDB_INIT_ADMIN_TOKEN": os.Getenv("INFLUXDB_TOKEN"),
 	"INFLUXD_LOG_LEVEL":                "debug",
 }
 
@@ -121,7 +121,7 @@ func createBucket(ctx context.Context, container testcontainers.Container, b str
 
 	log.WithField("bucketName", b).Debug("Creating Influxdb bucket")
 
-	cmd := fmt.Sprintf(`influx bucket create --token %s --org %s --name %s`, configuration.InfluxDBToken, configuration.InfluxDBOrg, b)
+	cmd := fmt.Sprintf(`influx bucket create --token %s --org %s --name %s`, os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_ORG"), b)
 
 	_, res, err := container.Exec(ctx, []string{"sh", "-c", cmd})
 	if err != nil {

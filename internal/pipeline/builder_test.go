@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/Goboolean/core-system.worker/configuration"
@@ -17,11 +18,13 @@ type BuildTestSuite struct {
 func (suite *BuildTestSuite) SetupSuite() {
 	var err error
 	suite.influxC, err = container.InitInfluxContainerWithRandomPort(context.Background(),
-		configuration.InfluxDBTradeBucket,
-		configuration.InfluxDBOrderEventBucket,
-		configuration.InfluxDBAnnotationBucket)
+		os.Getenv("INFLUXDB_TRADE_BUCKET"),
+		os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET"),
+		os.Getenv("INFLUXDB_ANNOTATION_BUCKET"))
 
-	configuration.InfluxDBURL = suite.influxC.URL
+	// 고언어 테스트가 병렬적으로 실행될 때는 멀티프로세스 환경에서 실행되므로
+	// 한 패키지에서 설정한 환경변수는 다른 패키지 테스트에서 영향을 미치지 않는다.
+	os.Setenv("INFLUXDB_URL", suite.influxC.URL)
 	suite.Require().NoError(err)
 }
 

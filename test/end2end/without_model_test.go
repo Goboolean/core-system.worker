@@ -19,7 +19,7 @@ type WithoutModelTestSuite struct {
 }
 
 func (suite *WithoutModelTestSuite) SetupSuite() {
-	suite.rawClient = influxdb2.NewClient(configuration.InfluxDBURL, influxDBToken)
+	suite.rawClient = influxdb2.NewClient(url, influxDBToken)
 }
 
 func (suite *WithoutModelTestSuite) TearDownTestSuite() {
@@ -56,7 +56,7 @@ func (suite *WithoutModelTestSuite) TestWithoutModel_ShouldProcessAllData_WhenVi
 	}
 
 	// act
-	config, err := configuration.ImportAppConfigFromFile("./without_model.test.yml")
+	config, err := configuration.ImportAppConfigFromFile("./ymls/without_model.test.yml")
 	suite.Require().NoError(err)
 
 	p, err := pipeline.Build(*config)
