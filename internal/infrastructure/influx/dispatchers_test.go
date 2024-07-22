@@ -8,13 +8,14 @@ import (
 
 	"github.com/Goboolean/core-system.worker/internal/infrastructure/influx"
 	"github.com/Goboolean/core-system.worker/internal/model"
+	influxutil "github.com/Goboolean/core-system.worker/test/util/influx"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestOrderEventDispatcher(t *testing.T) {
 	t.Run("발송한 order event의 개수와 bucket에 있는 order event의 개수가 같아야 한다.", func(t *testing.T) {
 		//arrange
-		if err := RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxDBClient, org, orderEventBucket); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
@@ -23,7 +24,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 			URL:        url,
 			Token:      token,
 			Org:        org,
-			BucketName: bucket,
+			BucketName: orderEventBucket,
 		})
 
 		if err != nil {
@@ -32,6 +33,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 		}
 
 		//act
+		start := time.Now().Add(-time.Duration(num) * time.Second)
 		for i := 0; i < num; i++ {
 			dispatcher.Dispatch(taskID, &model.OrderEvent{
 				ProductID: productID,
@@ -39,7 +41,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 					ProportionPercent: 0,
 					Action:            model.Buy,
 				},
-				CreatedAt: time.Now(),
+				CreatedAt: start.Add(time.Duration(i) * time.Second),
 				Task:      model.BackTest,
 			})
 		}
@@ -51,7 +53,7 @@ func TestOrderEventDispatcher(t *testing.T) {
 				|> range(start:0)
 				|> filter(fn: (r)=> r._measurement == "%s")
 				|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-				`, bucket, taskID))
+				`, orderEventBucket, taskID))
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -71,9 +73,9 @@ func TestOrderEventDispatcher(t *testing.T) {
 
 func TestAnnotationDispatcher(t *testing.T) {
 	// "Testing for the mapper has already been conducted, so specific tests for the mapper will be omitted.
-	t.Run("발송한 order event의 개수와 bucket에 있는 order event의 개수가 같아야 한다.", func(t *testing.T) {
+	t.Run("발송한 annotation의 개수와 bucket에 있는 annotation의 개수가 같아야 한다.", func(t *testing.T) {
 		//arrange
-		if err := RecreateBucket(rawInfluxDBClient, org, bucket); err != nil {
+		if err := influxutil.RecreateBucket(rawInfluxDBClient, org, annotationBucket); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
@@ -83,7 +85,7 @@ func TestAnnotationDispatcher(t *testing.T) {
 			URL:        url,
 			Token:      token,
 			Org:        org,
-			BucketName: bucket,
+			BucketName: annotationBucket,
 		})
 
 		if err != nil {
@@ -95,11 +97,12 @@ func TestAnnotationDispatcher(t *testing.T) {
 			Price       float64 `name:"price"`
 		}
 		//act
+		start := time.Now().Add(-time.Duration(num) * time.Second)
 		for i := 0; i < num; i++ {
 			dispatcher.Dispatch(taskID, AnnotationSample{
 				Description: "hello world",
 				Price:       3.14,
-			}, time.Now())
+			}, start.Add(time.Duration(i)*time.Second))
 		}
 		dispatcher.Close()
 		//assert
@@ -109,7 +112,7 @@ func TestAnnotationDispatcher(t *testing.T) {
 				|> range(start:0)
 				|> filter(fn: (r)=> r._measurement == "%s")
 				|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-				`, bucket, taskID))
+				`, annotationBucket, taskID))
 		if err != nil {
 			t.Error(err)
 			t.FailNow()

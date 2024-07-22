@@ -5,15 +5,19 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Goboolean/core-system.worker/test/container"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
 var (
-	url    = os.Getenv("INFLUXDB_URL")
-	bucket = os.Getenv("INFLUXDB_BUCKET")
-	token  = os.Getenv("INFLUXDB_TOKEN")
-	org    = os.Getenv("INFLUXDB_ORG")
+	url              = ""
+	orderEventBucket = os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET")
+	annotationBucket = os.Getenv("INFLUXDB_ANNOTATION_BUCKET")
+	token            = os.Getenv("INFLUXDB_TOKEN")
+	org              = os.Getenv("INFLUXDB_ORG")
 )
+
+var influxC *container.InfluxContainer
 
 var rawInfluxDBClient influxdb2.Client
 
@@ -23,28 +27,21 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	var err error
+	influxC, err = container.InitInfluxContainerWithRandomPort(
+		context.Background(),
+		os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET"),
+		os.Getenv("INFLUXDB_ANNOTATION_BUCKET"))
+	if err != nil {
+		panic(err)
+	}
+
+	url = influxC.URL
+
 	rawInfluxDBClient = influxdb2.NewClient(url, token)
 	m.Run()
-	rawInfluxDBClient.Close()
-}
-
-func RecreateBucket(client influxdb2.Client, orgName, bucketName string) error {
-
-	org, err := client.OrganizationsAPI().FindOrganizationByName(context.Background(), orgName)
+	err = influxC.Terminate(context.Background())
 	if err != nil {
-		return err
+		panic(err)
 	}
-
-	bucket, err := client.BucketsAPI().FindBucketByName(context.Background(), bucketName)
-	if err != nil {
-		return nil
-	}
-
-	if err := client.BucketsAPI().DeleteBucket(context.Background(), bucket); err != nil {
-		return err
-	}
-
-	_, err = client.BucketsAPI().CreateBucketWithName(context.Background(), org, bucketName)
-
-	return err
 }

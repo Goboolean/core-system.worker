@@ -1,6 +1,6 @@
 SQL_API_PATH=./api/sql
 .PHONY: test
-STAGE_PACKAGES = ./internal/job/fetcher ./internal/job/executer 
+WIRE_PACKAGES = ./internal/job/fetcher ./internal/job/executer ./internal/job/transmitter/v1 
 
 proto-generate:
 	protoc \
@@ -18,7 +18,10 @@ build-dockerfile:
 	docker build -t worker -f build/Dockerfile .
 
 wire-job: 
-	wire ${STAGE_PACKAGES}
+	wire ${WIRE_PACKAGES}
 
 test:
-	go test ./... -tags develop -p 1
+	go clean -testcache
+	go test ./... -tags develop
+
+ 

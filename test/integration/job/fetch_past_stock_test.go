@@ -1,4 +1,4 @@
-package fetcher_test
+package job
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"github.com/Goboolean/core-system.worker/internal/job"
 	"github.com/Goboolean/core-system.worker/internal/job/fetcher"
 	"github.com/Goboolean/core-system.worker/internal/model"
+	influxutil "github.com/Goboolean/core-system.worker/test/util/influx"
 	"github.com/Goboolean/fetch-system.IaC/pkg/influx"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
@@ -41,14 +42,14 @@ func (suite *PastStockTestSuite) SetupTest() {
 		URL:             url,
 		Token:           token,
 		Org:             org,
-		TradeBucketName: tradeBucketName,
+		TradeBucketName: tradeBucket,
 	})
 	suite.Require().NoError(err)
 
 	suite.cursor, err = fetcher.NewStockTradeCursor(suite.query)
 	suite.Require().NoError(err)
 
-	err = suite.recreateBucket(org, tradeBucketName)
+	err = influxutil.RecreateBucket(suite.rawClient, org, tradeBucket)
 	suite.Require().NoError(err)
 
 }
@@ -186,29 +187,8 @@ func (suite *PastStockTestSuite) TestPastStock_shouldNotRetrieveData_whenProduct
 	suite.Len(out, 0)
 }
 
-func (suite *PastStockTestSuite) recreateBucket(orgName, bucketName string) error {
-
-	org, err := suite.rawClient.OrganizationsAPI().FindOrganizationByName(context.Background(), orgName)
-	if err != nil {
-		return err
-	}
-
-	bucket, err := suite.rawClient.BucketsAPI().FindBucketByName(context.Background(), bucketName)
-	if err != nil {
-		return err
-	}
-
-	if err := suite.rawClient.BucketsAPI().DeleteBucket(context.Background(), bucket); err != nil {
-		return err
-	}
-
-	_, err = suite.rawClient.BucketsAPI().CreateBucketWithName(context.Background(), org, bucketName)
-
-	return err
-}
-
 func (suite *PastStockTestSuite) insertTestStockData(start time.Time, interval time.Duration, num int) error {
-	writer := suite.rawClient.WriteAPIBlocking(org, tradeBucketName)
+	writer := suite.rawClient.WriteAPIBlocking(org, tradeBucket)
 
 	for i := 0; i < num; i++ {
 		err := writer.WritePoint(
