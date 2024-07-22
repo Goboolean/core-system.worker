@@ -17,7 +17,7 @@ type BuildTestSuite struct {
 
 func (suite *BuildTestSuite) SetupSuite() {
 	var err error
-	suite.influxC, err = container.InitInfluxContainerWithRandomPort(context.Background(),
+	suite.influxC, err = container.InitInfluxContainer(context.Background(),
 		os.Getenv("INFLUXDB_TRADE_BUCKET"),
 		os.Getenv("INFLUXDB_ORDER_EVENT_BUCKET"),
 		os.Getenv("INFLUXDB_ANNOTATION_BUCKET"))
